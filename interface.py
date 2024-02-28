@@ -6,13 +6,16 @@ import json
 import spectra
 import sys
 import time
+import copy
+
+REPOS_PATH = "/home/gabriel/repos/spectra-interface"
 
 
 class SpectraTools:
     """Class with general spectra tools."""
 
     @staticmethod
-    def run_solver(input_template):
+    def _run_solver(input_template):
         """Run spectra.
 
         Args:
@@ -40,36 +43,134 @@ class SpectraTools:
         print("elapsed time: {0:.1f} s".format(dt))
         return solver
 
+    @staticmethod
+    def _set_accelerator_config(accelerator, input_template):
+        input_template["Accelerator"]["Energy (GeV)"] = accelerator.energy
+        input_template["Accelerator"]["Current (mA)"] = accelerator.current
 
-class CalcFlux(SpectraTools, StorageRingParameters):
-    """Class with methods to calculate flux."""
+        input_template["Accelerator"][
+            "&sigma;<sub>z</sub> (mm)"
+        ] = accelerator.sigmaz
 
-    class CalcTypes:
-        """Sub class to define calculation parameters."""
+        input_template["Accelerator"][
+            "Nat. Emittance (m.rad)"
+        ] = accelerator.nat_emittance
 
-        user_defined = "userdefined"
-        near_field = "nearfield"
-        wigner = "wigner"
-        energy = "en"
-        mesh_xy = "xy"
-        flux_density = "flux_density"
-        flux_circ_slit = "partialflux_circslit"
-        flux_ret_slit = "partialflux_retslit"
+        input_template["Accelerator"][
+            "Coupling Constant"
+        ] = accelerator.coupling_constant
+
+        input_template["Accelerator"][
+            "Energy Spread"
+        ] = accelerator.energy_spread
+
+        input_template["Accelerator"]["&beta;<sub>x,y</sub> (m)"] = [
+            accelerator.betax,
+            accelerator.betay,
+        ]
+
+        input_template["Accelerator"]["&alpha;<sub>x,y</sub>"] = [
+            accelerator.alphax,
+            accelerator.alphay,
+        ]
+
+        input_template["Accelerator"]["&eta;<sub>x,y</sub> (m)"] = [
+            accelerator.etax,
+            accelerator.etay,
+        ]
+
+        input_template["Accelerator"]["&eta;'<sub>x,y</sub>"] = [
+            accelerator.etapx,
+            accelerator.etapy,
+        ]
+
+        input_template["Accelerator"]["Options"][
+            "Injection Condition"
+        ] = accelerator.injection_condition
+
+        input_template["Accelerator"]["Options"][
+            "Zero Emittance"
+        ] = accelerator.zero_emittance
+
+        input_template["Accelerator"]["Options"][
+            "Zero Energy Spread"
+        ] = accelerator.zero_energy_spread
+
+        return input_template
+
+
+class GeneralConfigs:
+    """Class with general configs."""
 
     def __init__(self):
         """Class constructor."""
-        self._source_type = self.CalcTypes.user_defined
-        self._method = self.CalcTypes.near_field
-        self._indep_var = self.CalcTypes.energy
-        self._output = self.CalcTypes.flux_density
+        self._distance_from_source = 10  # [m]
+
+    @property
+    def distance_from_source(self):
+        """Distance from source.
+
+        Returns:
+            float: Distance from source [m]
+        """
+        return self._distance_from_source
+
+    @distance_from_source.setter
+    def distance_from_source(self, value):
+        self._distance_from_source = value
+
+
+class CalcFlux(GeneralConfigs, SpectraTools):
+    """Class with methods to calculate flux."""
+
+    class CalcConfigs:
+        """Sub class to define calculation parameters."""
+
+        class SourceType:
+            """Sub class to define source type."""
+
+            user_defined = "userdefined"
+
+        class Method:
+            """Sub class to define calculation method."""
+
+            near_field = "nearfield"
+            wigner = "wigner"
+
+        class Variable:
+            """Sub class to define independet variable."""
+
+            energy = "en"
+            mesh_xy = "xy"
+
+        class Output:
+            """Sub class to define output type."""
+
+            flux_density = "fluxdensity"
+            flux_circ_slit = "partialflux_circslit"
+            flux_ret_slit = "partialflux_retslit"
+
+    def __init__(self, accelerator):
+        """Class constructor."""
+        self._source_type = self.CalcConfigs.SourceType.user_defined
+        self._method = self.CalcConfigs.Method.near_field
+        self._indep_var = self.CalcConfigs.Variable.energy
+        self._output_type = self.CalcConfigs.Output.flux_density
+        self._accelerator = accelerator
         self._field = None
+        self._energy_range = None
+        self._energy_step = None
+        self._input_template = None
+        self._output_captions = None
+        self._output_data = None
+        self._output_variables = None
 
     @property
     def source_type(self):
         """Source type.
 
         Returns:
-            CalcTypes variables: Magnetic field, it can be defined by user or
+            CalcConfigs variables: Magnetic field, it can be defined by user or
             generated by spectra.
         """
         return self._source_type
@@ -79,7 +180,7 @@ class CalcFlux(SpectraTools, StorageRingParameters):
         """Method of calculation.
 
         Returns:
-            CalcTypes variables: Method of calculation, it can be near field
+            CalcConfigs variables: Method of calculation, it can be near field
             or wigner functions, for example.
         """
         return self._method
@@ -89,20 +190,20 @@ class CalcFlux(SpectraTools, StorageRingParameters):
         """Independent variable.
 
         Returns:
-            CalcTypes variables: Independet variable, it can be energy of a
+            CalcConfigs variables: Independet variable, it can be energy of a
             mesh in the xy plane
         """
         return self._indep_var
 
     @property
-    def output(self):
+    def output_type(self):
         """Output type.
 
         Returns:
-            CalcTypes variables: Output type, it can be flux density or
+            CalcConfigs variables: Output type, it can be flux density or
             partial flux, for example.
         """
-        return self._output
+        return self._output_type
 
     @property
     def field(self):
@@ -114,6 +215,52 @@ class CalcFlux(SpectraTools, StorageRingParameters):
             [T], and third column constais horizontal field [T].
         """
         return self._field
+
+    @property
+    def energy_range(self):
+        """Energy range.
+
+        Returns:
+            List of ints: Energy range to calculate spectrum
+             [initial point, final point].
+        """
+        return self._energy_range
+
+    @property
+    def energy_step(self):
+        """Energy step.
+
+        Returns:
+            float: Spectrum energy step.
+        """
+        return self._energy_step
+
+    @property
+    def output_captions(self):
+        """Output captions.
+
+        Returns:
+            dict: Captions with spectra output
+        """
+        return self._output_captions
+
+    @property
+    def output_data(self):
+        """Output data.
+
+        Returns:
+            dict: Data output from spectra
+        """
+        return self._output_data
+
+    @property
+    def output_variables(self):
+        """Output variables.
+
+        Returns:
+            dict: Variables from spectra
+        """
+        return self._output_variables
 
     @source_type.setter
     def source_type(self, value):
@@ -127,15 +274,126 @@ class CalcFlux(SpectraTools, StorageRingParameters):
     def indep_var(self, value):
         self._indep_var = value
 
-    @output.setter
-    def output(self, value):
-        self._output = value
+    @output_type.setter
+    def output_type(self, value):
+        self._output_type = value
 
     @field.setter
     def field(self, value):
-        if self.source_type != self.CalcTypes.user_defined:
+        if self.source_type != self.CalcConfigs.SourceType.user_defined:
             raise ValueError(
                 "Field can only be defined if source type is user_defined."
             )
         else:
             self._field = value
+
+    @energy_range.setter
+    def energy_range(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.energy:
+            raise ValueError(
+                "Energy range can only be defined if the independent variable is energy."  # noqa: E501
+            )
+        else:
+            self._energy_range = value
+
+    @energy_step.setter
+    def energy_step(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.energy:
+            raise ValueError(
+                "Energy step can only be defined if the independent variable is energy."  # noqa: E501
+            )
+        else:
+            self._energy_step = value
+
+    def set_config(self):
+        """Set calc config."""
+        config_name = REPOS_PATH + "/calculation_parameters/"
+        config_name += self.source_type
+        config_name += "_"
+        config_name += self.method
+        config_name += "_"
+        config_name += self.indep_var
+        config_name += "_"
+        config_name += self.output
+        config_name += ".json"
+
+        file = open(config_name)
+        input_temp = json.load(file)
+        input_temp = self._set_accelerator_config(
+            self._accelerator, input_temp
+        )
+
+        if self.field is not None:
+            data = _np.zeros((3, len(self.field[:, 0])))
+            data[0, :] = self.field[:, 0]
+            data[1, :] = self.field[:, 1]
+            data[2, :] = self.field[:, 2]
+            input_temp["Light Source"]["Field Profile"]["data"] = data.tolist()
+
+        if self.energy_range is not None:
+            input_temp["Configurations"][
+                "Energy Range (eV)"
+            ] = self.energy_range
+
+        if self.energy_step is not None:
+            input_temp["Configurations"][
+                "Energy Pitch (eV)"
+            ] = self.energy_step
+
+        input_temp["Configurations"][
+            "Distance from the Source (m)"
+        ] = self.distance_from_source
+
+        self._input_template = input_temp
+
+    def run_calculation(self):
+        """Run calculation."""
+        solver = self._run_solver(self._input_template)
+        captions, data, variables = self.extractdata(solver)
+        self._output_captions = captions
+        self._output_data = data
+        self._output_variables = variables
+
+    @staticmethod
+    def extractdata(solver):
+        """Extract solver data.
+
+        Args:
+            solver (spectra solver): Spectra solver object
+
+        Returns:
+            dict: captions
+            dict: data
+            dict: variables
+        """
+        captions = solver.GetCaptions()
+        data = _np.array(solver.GetData()['data'])
+        variables = _np.array(solver.GetData()['variables'])
+        return captions, data, variables
+
+
+class SpectraInterface:
+    """Spectra Interface class."""
+
+    def __init__(self):
+        """Class constructor."""
+        self._accelerator = StorageRingParameters()
+        self._calc_flux = CalcFlux(self._accelerator)
+
+    @property
+    def accelerator(self):
+        """Accelerator parameters.
+
+        Returns:
+            StorageRingParameters object: class to config accelerator.
+        """
+        return self._accelerator
+
+    @property
+    def calc_flux(self):
+        """CalcFlux object.
+
+        Returns:
+            CalcFlux object: Class to calculate flux
+        """
+        return self._calc_flux

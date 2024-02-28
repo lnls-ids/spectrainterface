@@ -97,7 +97,7 @@ class SourceFunctions:
 
         Returns:
             numpy array: First column contains longitudinal spatial
-            coordinate (z) [mm], second column contais vertical field
+            coordinate (z) [m], second column contais vertical field
             [T], and third column constais horizontal field [T].
         """
         field = _np.zeros(((nr_periods + 2) * pts_period, 3))
@@ -124,5 +124,5 @@ class SourceFunctions:
             )
             field[:, 2] = bx
 
-        field[:, 0] = s
+        field[:, 0] = 1e-3*s
         return field
