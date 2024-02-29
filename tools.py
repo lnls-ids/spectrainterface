@@ -8,6 +8,7 @@ from scipy.optimize import minimize
 ECHARGE = _constants.elementary_charge
 EMASS = _constants.electron_mass
 LSPEED = _constants.light_speed
+PLACK = _constants.reduced_planck_constant
 
 
 class SourceFunctions:
@@ -124,5 +125,46 @@ class SourceFunctions:
             )
             field[:, 2] = bx
 
-        field[:, 0] = 1e-3*s
+        field[:, 0] = 1e-3 * s
         return field
+
+    @staticmethod
+    def get_harmonic_wavelength(n, gamma, theta, period, k):
+        """Get harmonic wavelength.
+
+        Args:
+            n (int): harmonic number
+            gamma (float): lorentz factor
+            theta (float): Observation angle [mrad]
+            period (float): Undulator period [mm]
+            k (float): Deflection parameter
+
+        Returns:
+            float: Harmonic wavelength [m].
+        """
+        return (
+            1e-3
+            * period
+            / (n * 2 * gamma**2)
+            * (1 + 0.5 * k**2 + (gamma * 1e-3 * theta) ** 2)
+        )
+
+    @staticmethod
+    def get_harmonic_energy(n, gamma, theta, period, k):
+        """Get harmonic energy.
+
+        Args:
+            n (int): harmonic number
+            gamma (float): lorentz factor
+            theta (float): Observation angle [mrad]
+            period (float): Undulator period [mm]
+            k (float): Deflection parameter
+
+        Returns:
+            float: Harmonic energy [eV].
+        """
+        lamb = SourceFunctions.get_harmonic_wavelength(
+            n, gamma, theta, period, k
+        )
+        energy = PLACK * 2 * _np.pi * LSPEED / lamb / ECHARGE
+        return energy

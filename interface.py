@@ -147,8 +147,14 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             """Sub class to define output type."""
 
             flux_density = "fluxdensity"
-            flux_circ_slit = "partialflux_circslit"
-            flux_ret_slit = "partialflux_retslit"
+            flux = "partialflux"
+
+        class SlitShape:
+            """Sub class to define slit shape."""
+
+            none = ""
+            circular = "circslit"
+            retangular = "retslit"
 
     def __init__(self, accelerator):
         """Class constructor."""
@@ -156,10 +162,14 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         self._method = self.CalcConfigs.Method.near_field
         self._indep_var = self.CalcConfigs.Variable.energy
         self._output_type = self.CalcConfigs.Output.flux_density
+        self._slit_shape = self.CalcConfigs.SlitShape.none
+        self._distance_from_source = 1
         self._accelerator = accelerator
         self._field = None
         self._energy_range = None
         self._energy_step = None
+        self._slit_position = None
+        self._slit_acceptance = None
         self._input_template = None
         self._output_captions = None
         self._output_data = None
@@ -236,6 +246,33 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         return self._energy_step
 
     @property
+    def observation_position(self):
+        """Observation position [mrad].
+
+        Returns:
+            List of floats: Slit position [xpos, ypos] [mrad]
+        """
+        return self._slit_position
+
+    @property
+    def slit_acceptance(self):
+        """Slit acceptance [mrad].
+
+        Returns:
+            List of floats: Slit acceptance [xpos, ypos] [mrad]
+        """
+        return self._slit_acceptance
+
+    @property
+    def slit_shape(self):
+        """Slit shape.
+
+        Returns:
+            string: It can be circular or rectangular.
+        """
+        return self._slit_shape
+
+    @property
     def output_captions(self):
         """Output captions.
 
@@ -273,6 +310,10 @@ class CalcFlux(GeneralConfigs, SpectraTools):
     @indep_var.setter
     def indep_var(self, value):
         self._indep_var = value
+        if value == self.CalcConfigs.Variable.energy:
+            self._slit_position = [0, 0]
+        elif value == self.CalcConfigs.Variable.mesh_xy:
+            self._slit_position = None
 
     @output_type.setter
     def output_type(self, value):
@@ -305,6 +346,33 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         else:
             self._energy_step = value
 
+    @observation_position.setter
+    def observation_position(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.energy:
+            raise ValueError(
+                "Observation position can only be defined if the independent variable is energy."  # noqa: E501
+            )
+        else:
+            self._slit_position = value
+
+    @slit_acceptance.setter
+    def slit_acceptance(self, value):
+        if self.output_type != self.CalcConfigs.Output.flux:
+            raise ValueError(
+                "Slit acceptance can only be defined if the output type is flux."  # noqa: E501
+            )
+        else:
+            self._slit_acceptance = value
+
+    @slit_shape.setter
+    def slit_shape(self, value):
+        if self.output_type != self.CalcConfigs.Output.flux:
+            raise ValueError(
+                "Slit shape can only be defined if the output type is flux."  # noqa: E501
+            )
+        else:
+            self._slit_shape = value
+
     def set_config(self):
         """Set calc config."""
         config_name = REPOS_PATH + "/calculation_parameters/"
@@ -314,7 +382,12 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         config_name += "_"
         config_name += self.indep_var
         config_name += "_"
-        config_name += self.output
+        config_name += self.output_type
+
+        if self.slit_shape != "":
+            config_name += "_"
+            config_name += self.slit_shape
+
         config_name += ".json"
 
         file = open(config_name)
@@ -339,6 +412,26 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             input_temp["Configurations"][
                 "Energy Pitch (eV)"
             ] = self.energy_step
+
+        if self.observation_position is not None:
+            if self.output_type == self.CalcConfigs.Output.flux_density:
+                input_temp["Configurations"][
+                    "Angle &theta;<sub>x,y</sub> (mrad)"
+                ] = self.observation_position
+            elif self.output_type == self.CalcConfigs.Output.flux:
+                input_temp["Configurations"][
+                    "Slit Pos.: &theta;<sub>x,y</sub> (mrad)"
+                ] = self.observation_position
+
+        if self.slit_acceptance is not None:
+            if self.slit_shape == self.CalcConfigs.SlitShape.circular:
+                input_temp["Configurations"][
+                        "Slit &theta;<sub>1,2</sub> (mrad)"
+                    ] = self.slit_acceptance
+            elif self.slit_shape == self.CalcConfigs.SlitShape.retangular:
+                input_temp["Configurations"][
+                        "&Delta;&theta;<sub>x,y</sub> (mrad)"
+                    ] = self.slit_acceptance
 
         input_temp["Configurations"][
             "Distance from the Source (m)"
@@ -367,8 +460,8 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             dict: variables
         """
         captions = solver.GetCaptions()
-        data = _np.array(solver.GetData()['data'])
-        variables = _np.array(solver.GetData()['variables'])
+        data = _np.array(solver.GetData()["data"])
+        variables = _np.array(solver.GetData()["variables"])
         return captions, data, variables
 
 

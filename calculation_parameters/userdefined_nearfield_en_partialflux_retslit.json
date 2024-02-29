@@ -36,7 +36,7 @@
     "Energy Range (eV)": [1,10000],
     "Energy Pitch (eV)": 1,
     "Slit Pos.: &theta;<sub>x,y</sub> (mrad)": [0,0],
-    "&Delta;&theta;<sub>x,y</sub> (mrad)": [0.026087,0.0130435],
+    "&Delta;&theta;<sub>x,y</sub> (mrad)": [0.0,0.0],
     "Type": "Near Field::Energy Dependence::Partial Flux::Rectangular Slit",
     "Options": {
       "Filtering": "None",
