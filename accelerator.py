@@ -241,14 +241,14 @@ class StorageRingParameters:
         if type(value) is not bool:
             raise ValueError('Argument must be bool!')
         else:
-            self.zero_emittance = value
+            self._zero_emittance = value
 
     @zero_energy_spread.setter
     def zero_energy_spread(self, value):
         if type(value) is not bool:
             raise ValueError('Argument must be bool!')
         else:
-            self.zero_energy_spread = value
+            self._zero_energy_spread = value
 
     @injection_condition.setter
     def injection_condition(self, value):

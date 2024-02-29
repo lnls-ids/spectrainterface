@@ -34,13 +34,13 @@
   "Configurations": {
     "Distance from the Source (m)": 10,
     "Target Energy (eV)": 10000,
-    "x Range (mm)": [-2,2],
-    "Points (x)": 21,
-    "y Range (mm)": [-0.5,0.5],
-    "Points (y)": 21,
+    "&theta;<sub>x</sub> Range (mrad)": [-0.03,0.03],
+    "Points (x)": 41,
+    "&theta;<sub>y</sub> Range (mrad)": [-0.02,0.02],
+    "Points (y)": 41,
     "Type": "Near Field::Spatial Dependence::Spatial Flux Density::Mesh: x-y",
     "Options": {
-      "Define Obs. Point in": "Position",
+      "Define Obs. Point in": "Angle",
       "Wiggler Approximation": false,
       "Spectral Smoothing": false,
       "Accuracy": "Default"

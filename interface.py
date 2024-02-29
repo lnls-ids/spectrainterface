@@ -6,7 +6,6 @@ import json
 import spectra
 import sys
 import time
-import copy
 
 REPOS_PATH = "/home/gabriel/repos/spectra-interface"
 
@@ -154,22 +153,27 @@ class CalcFlux(GeneralConfigs, SpectraTools):
 
             none = ""
             circular = "circslit"
-            retangular = "retslit"
+            rectangular = "retslit"
 
     def __init__(self, accelerator):
         """Class constructor."""
+        super().__init__()
         self._source_type = self.CalcConfigs.SourceType.user_defined
         self._method = self.CalcConfigs.Method.near_field
         self._indep_var = self.CalcConfigs.Variable.energy
         self._output_type = self.CalcConfigs.Output.flux_density
         self._slit_shape = self.CalcConfigs.SlitShape.none
-        self._distance_from_source = 1
         self._accelerator = accelerator
         self._field = None
         self._energy_range = None
         self._energy_step = None
         self._slit_position = None
         self._slit_acceptance = None
+        self._target_energy = None
+        self._x_range = None
+        self._y_range = None
+        self._x_nr_pts = None
+        self._y_nr_pts = None
         self._input_template = None
         self._output_captions = None
         self._output_data = None
@@ -273,6 +277,51 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         return self._slit_shape
 
     @property
+    def target_energy(self):
+        """Target energy.
+
+        Returns:
+            float: Target energy to analyse.
+        """
+        return self._target_energy
+
+    @property
+    def x_range(self):
+        """Mesh x range.
+
+        Returns:
+            List of floats: x limits [mrad] [initial point, final point]
+        """
+        return self._x_range
+
+    @property
+    def y_range(self):
+        """Mesh y range.
+
+        Returns:
+            List of floats: y limits [mrad] [initial point, final point]
+        """
+        return self._y_range
+
+    @property
+    def x_nr_pts(self):
+        """Nr of x points.
+
+        Returns:
+            float: Number of horizontal mesh points
+        """
+        return self._x_nr_pts
+
+    @property
+    def y_nr_pts(self):
+        """Nr of y points.
+
+        Returns:
+            float: Number of vertical mesh points
+        """
+        return self._y_nr_pts
+
+    @property
     def output_captions(self):
         """Output captions.
 
@@ -314,6 +363,7 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             self._slit_position = [0, 0]
         elif value == self.CalcConfigs.Variable.mesh_xy:
             self._slit_position = None
+            self._slit_shape = self.CalcConfigs.SlitShape.none
 
     @output_type.setter
     def output_type(self, value):
@@ -373,7 +423,52 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         else:
             self._slit_shape = value
 
-    def set_config(self):
+    @target_energy.setter
+    def target_energy(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
+            raise ValueError(
+                "Target energy can only be defined if the variable is a xy mesh."  # noqa: E501
+            )
+        else:
+            self._target_energy = value
+
+    @x_range.setter
+    def x_range(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
+            raise ValueError(
+                "X range can only be defined if the variable is a xy mesh."  # noqa: E501
+            )
+        else:
+            self._x_range = value
+
+    @y_range.setter
+    def y_range(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
+            raise ValueError(
+                "Y range can only be defined if the variable is a xy mesh."  # noqa: E501
+            )
+        else:
+            self._y_range = value
+
+    @x_nr_pts.setter
+    def x_nr_pts(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
+            raise ValueError(
+                "X range can only be defined if the variable is a xy mesh."  # noqa: E501
+            )
+        else:
+            self._x_nr_pts = value
+
+    @y_nr_pts.setter
+    def y_nr_pts(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
+            raise ValueError(
+                "Y range can only be defined if the variable is a xy mesh."  # noqa: E501
+            )
+        else:
+            self._y_nr_pts = value
+
+    def set_config(self):  # noqa: C901
         """Set calc config."""
         config_name = REPOS_PATH + "/calculation_parameters/"
         config_name += self.source_type
@@ -426,12 +521,27 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         if self.slit_acceptance is not None:
             if self.slit_shape == self.CalcConfigs.SlitShape.circular:
                 input_temp["Configurations"][
-                        "Slit &theta;<sub>1,2</sub> (mrad)"
-                    ] = self.slit_acceptance
-            elif self.slit_shape == self.CalcConfigs.SlitShape.retangular:
+                    "Slit &theta;<sub>1,2</sub> (mrad)"
+                ] = self.slit_acceptance
+            elif self.slit_shape == self.CalcConfigs.SlitShape.rectangular:
                 input_temp["Configurations"][
-                        "&Delta;&theta;<sub>x,y</sub> (mrad)"
-                    ] = self.slit_acceptance
+                    "&Delta;&theta;<sub>x,y</sub> (mrad)"
+                ] = self.slit_acceptance
+
+        if self.target_energy is not None:
+            input_temp["Configurations"][
+                "Target Energy (eV)"
+            ] = self.target_energy
+
+        if self.x_range is not None:
+            input_temp["Configurations"][
+                "&theta;<sub>x</sub> Range (mrad)"
+            ] = self.x_range
+            input_temp["Configurations"][
+                "&theta;<sub>y</sub> Range (mrad)"
+            ] = self.y_range
+            input_temp["Configurations"]["Points (x)"] = self.x_nr_pts
+            input_temp["Configurations"]["Points (y)"] = self.y_nr_pts
 
         input_temp["Configurations"][
             "Distance from the Source (m)"
