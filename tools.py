@@ -168,3 +168,15 @@ class SourceFunctions:
         )
         energy = PLACK * 2 * _np.pi * LSPEED / lamb / ECHARGE
         return energy
+
+    @staticmethod
+    def calc_k_given_1sth(energy, gamma, period):
+        """Calc k given first harmonic.
+
+        Args:
+            energy (float): energy of first [eV]
+            gamma (float): lorentz factor
+            period (float): Undulator period [mm]
+        """
+        k = _np.sqrt(8 * PLACK * _np.pi * gamma**2 / (energy * period) - 2)
+        return k

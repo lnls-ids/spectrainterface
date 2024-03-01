@@ -1,0 +1,50 @@
+{
+  "Accelerator": {
+    "Energy (GeV)": 3,
+    "Current (mA)": 100,
+    "&sigma;<sub>z</sub> (mm)": 2.9,
+    "Nat. Emittance (m.rad)": 2.5e-10,
+    "Coupling Constant": 0.01,
+    "Energy Spread": 0.00084,
+    "&beta;<sub>x,y</sub> (m)": [1.499,1.435],
+    "&alpha;<sub>x,y</sub>": [0,0],
+    "&eta;<sub>x,y</sub> (m)": [0,0],
+    "&eta;'<sub>x,y</sub>": [0,0],
+    "Type": "Storage Ring",
+    "Options": {
+      "Zero Emittance": true,
+      "Zero Energy Spread": true
+    }
+  },
+  "Light Source": {
+    "&lambda;<sub>u</sub> (mm)": 20,
+    "Device Length (m)": 1,
+    "K value": 1.867458,
+    "Type": "Linear Undulator",
+    "Options": {
+      "Field Structure": "Antisymmetric",
+      "End Correction Magnet": true,
+      "Segmentation": "None"
+    }
+  },
+  "Configurations": {
+    "Distance from the Source (m)": 10,
+    "Energy Range (eV)": [1,10000],
+    "Energy Pitch (eV)": 1,
+    "Angle &theta;<sub>x,y</sub> (mrad)": [0,0],
+    "Type": "Far Field & Ideal Condition::Energy Dependence::Angular Flux Density",
+    "Options": {
+      "Filtering": "None",
+      "Define Obs. Point in": "Angle",
+      "Wiggler Approximation": false,
+      "Accuracy": "Default"
+    }
+  },
+  "Output File": {
+    "Format": "JSON",
+    "Folder": "/home/",
+    "Prefix": "flux_density",
+    "Serial Number": 12,
+    "Comment": ""
+  }
+}
