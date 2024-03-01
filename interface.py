@@ -253,11 +253,18 @@ class GeneralConfigs(SourceFunctions):
                 "By peak can only be defined if source type is not user_defined."  # noqa: E501
             )
         elif self.source_type == self.SourceType.vertical_undulator:
-            raise ValueError("By peak can not be defined if source type is a vertical undulator.")   # noqa: E501
+            raise ValueError(
+                "By peak can not be defined if source type is a vertical undulator."  # noqa: E501
+            )
         else:
             self._by_peak = value
             if self.period is not None:
                 self._ky = 1e-3 * ECHARGE_MC * self._by_peak * self.period
+                if (
+                    self.source_type
+                    == self.SourceType.vertical_figure8_undulator
+                ):
+                    self._ky *= 2
 
             if self.source_type == self.SourceType.helical_undulator:
                 self._bx_peak = value
@@ -271,11 +278,15 @@ class GeneralConfigs(SourceFunctions):
                 "Bx peak can only be defined if source type is not user_defined."  # noqa: E501
             )
         elif self.source_type == self.SourceType.horizontal_undulator:
-            raise ValueError("Bx peak can not be defined if source type is a horizontal undulator.")   # noqa: E501
+            raise ValueError(
+                "Bx peak can not be defined if source type is a horizontal undulator."  # noqa: E501
+            )
         else:
             self._bx_peak = value
             if self.period is not None:
                 self._kx = 1e-3 * ECHARGE_MC * self._bx_peak * self.period
+                if self.source_type == self.SourceType.figure8_undulator:
+                    self._kx *= 2
 
             if self.source_type == self.SourceType.helical_undulator:
                 self._by_peak = value
@@ -289,7 +300,9 @@ class GeneralConfigs(SourceFunctions):
                 "Ky can only be defined if source type is not user_defined."  # noqa: E501
             )
         elif self.source_type == self.SourceType.vertical_undulator:
-            raise ValueError("Ky can not be defined if source type is a vertical undulator.")   # noqa: E501
+            raise ValueError(
+                "Ky can not be defined if source type is a vertical undulator."
+            )  # noqa: E501
         else:
             self._ky = value
             if self.period is not None:
@@ -307,7 +320,9 @@ class GeneralConfigs(SourceFunctions):
                 "Kx can only be defined if source type is not user_defined."  # noqa: E501
             )
         elif self.source_type == self.SourceType.horizontal_undulator:
-            raise ValueError("Kx can not be defined if source type is a horizontal undulator.")   # noqa: E501
+            raise ValueError(
+                "Kx can not be defined if source type is a horizontal undulator."  # noqa: E501
+            )
         else:
             self._kx = value
             if self.period is not None:
@@ -673,12 +688,27 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             input_temp["Light Source"]["Field Profile"]["data"] = data.tolist()
 
         if self.ky is not None:
-            if self.source_type == self.SourceType.horizontal_undulator:
+            if (
+                self.source_type == self.SourceType.horizontal_undulator
+                or self.source_type == self.SourceType.helical_undulator
+            ):
                 input_temp["Light Source"]["K value"] = self.ky
 
         if self.kx is not None:
             if self.source_type == self.SourceType.vertical_undulator:
                 input_temp["Light Source"]["K value"] = self.kx
+
+        if self.kx is not None and self.ky is not None:
+            if (
+                self.source_type == self.SourceType.elliptic_undulator
+                or self.source_type == self.SourceType.figure8_undulator
+                or self.source_type
+                == self.SourceType.vertical_figure8_undulator
+            ):
+                input_temp["Light Source"]["K<sub>x,y</sub>"] = [
+                    self.kx,
+                    self.ky,
+                ]
 
         if self.period is not None:
             input_temp["Light Source"][
