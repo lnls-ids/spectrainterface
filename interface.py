@@ -307,6 +307,11 @@ class GeneralConfigs(SourceFunctions):
             self._ky = value
             if self.period is not None:
                 self._by_peak = self._ky / (ECHARGE_MC * 1e-3 * self.period)
+                if (
+                    self.source_type
+                    == self.SourceType.vertical_figure8_undulator
+                ):
+                    self._by_peak /= 2
 
             if self.source_type == self.SourceType.helical_undulator:
                 self._kx = value
@@ -327,6 +332,8 @@ class GeneralConfigs(SourceFunctions):
             self._kx = value
             if self.period is not None:
                 self._bx_peak = self._kx / (ECHARGE_MC * 1e-3 * self.period)
+                if self.source_type == self.SourceType.figure8_undulator:
+                    self._bx_peak /= 2
 
             if self.source_type == self.SourceType.helical_undulator:
                 self._kx = value
@@ -399,6 +406,16 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         self._output_captions = None
         self._output_data = None
         self._output_variables = None
+
+        # Output
+        self._flux = None
+        self._brilliance = None
+        self._pl = None
+        self._pc = None
+        self._pl45 = None
+        self._energies = None
+        self._x = None
+        self._y = None
 
     @property
     def method(self):
@@ -547,6 +564,38 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             dict: Variables from spectra
         """
         return self._output_variables
+
+    @property
+    def flux(self):
+        return self._flux
+
+    @property
+    def brilliance(self):
+        return self._brilliance
+
+    @property
+    def pl(self):
+        return self._pl
+
+    @property
+    def pc(self):
+        return self._pc
+
+    @property
+    def pl45(self):
+        return self._pl45
+
+    @property
+    def energies(self):
+        return self._energies
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
 
     @method.setter
     def method(self, value):
@@ -776,6 +825,40 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         self._output_captions = captions
         self._output_data = data
         self._output_variables = variables
+        self._set_outputs()
+
+    def _set_outputs(self):
+        data = self._output_data
+        captions = self._output_captions
+        self._flux = data[0, :]
+        if len(captions['titles']) == 5:
+            self._pl = data[1, :]
+            self._pc = data[2, :]
+            self._pl45 = data[3, :]
+        elif len(captions['titles']) == 6:
+            self._brilliance = data[1, :]
+            self._pl = data[2, :]
+            self._pc = data[3, :]
+            self._pl45 = data[4, :]
+
+        if self.indep_var == self.CalcConfigs.Variable.energy:
+            self._energies = self._output_variables[0, :]
+
+        elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            self._x = self._output_variables[0, :]
+            self._y = self._output_variables[1, :]
+
+            self._flux = _np.reshape(self._flux, (len(self._x), len(self._y)))
+            self._flux = _np.flip(self._flux, axis=0)
+
+            self._pl = _np.reshape(self._pl, (len(self._x), len(self._y)))
+            self._pl = _np.flip(self._pl, axis=0)
+
+            self._pc = _np.reshape(self._pc, (len(self._x), len(self._y)))
+            self._pc = _np.flip(self._pc, axis=0)
+
+            self._pl45 = _np.reshape(self._pl45, (len(self._x), len(self._y)))
+            self._pl45 = _np.flip(self._pl45, axis=0)
 
     @staticmethod
     def extractdata(solver):
