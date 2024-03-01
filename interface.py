@@ -252,10 +252,17 @@ class GeneralConfigs(SourceFunctions):
             raise ValueError(
                 "By peak can only be defined if source type is not user_defined."  # noqa: E501
             )
+        elif self.source_type == self.SourceType.vertical_undulator:
+            raise ValueError("By peak can not be defined if source type is a vertical undulator.")   # noqa: E501
         else:
             self._by_peak = value
             if self.period is not None:
                 self._ky = 1e-3 * ECHARGE_MC * self._by_peak * self.period
+
+            if self.source_type == self.SourceType.helical_undulator:
+                self._bx_peak = value
+                if self.period is not None:
+                    self._kx = self.ky
 
     @bx_peak.setter
     def bx_peak(self, value):
@@ -263,10 +270,17 @@ class GeneralConfigs(SourceFunctions):
             raise ValueError(
                 "Bx peak can only be defined if source type is not user_defined."  # noqa: E501
             )
+        elif self.source_type == self.SourceType.horizontal_undulator:
+            raise ValueError("Bx peak can not be defined if source type is a horizontal undulator.")   # noqa: E501
         else:
             self._bx_peak = value
             if self.period is not None:
                 self._kx = 1e-3 * ECHARGE_MC * self._bx_peak * self.period
+
+            if self.source_type == self.SourceType.helical_undulator:
+                self._by_peak = value
+                if self.period is not None:
+                    self._ky = self.kx
 
     @ky.setter
     def ky(self, value):
@@ -274,10 +288,17 @@ class GeneralConfigs(SourceFunctions):
             raise ValueError(
                 "Ky can only be defined if source type is not user_defined."  # noqa: E501
             )
+        elif self.source_type == self.SourceType.vertical_undulator:
+            raise ValueError("Ky can not be defined if source type is a vertical undulator.")   # noqa: E501
         else:
             self._ky = value
             if self.period is not None:
                 self._by_peak = self._ky / (ECHARGE_MC * 1e-3 * self.period)
+
+            if self.source_type == self.SourceType.helical_undulator:
+                self._kx = value
+                if self.period is not None:
+                    self._bx_peak = self.bx_peak
 
     @kx.setter
     def kx(self, value):
@@ -285,10 +306,17 @@ class GeneralConfigs(SourceFunctions):
             raise ValueError(
                 "Kx can only be defined if source type is not user_defined."  # noqa: E501
             )
+        elif self.source_type == self.SourceType.horizontal_undulator:
+            raise ValueError("Kx can not be defined if source type is a horizontal undulator.")   # noqa: E501
         else:
             self._kx = value
             if self.period is not None:
                 self._bx_peak = self._kx / (ECHARGE_MC * 1e-3 * self.period)
+
+            if self.source_type == self.SourceType.helical_undulator:
+                self._kx = value
+                if self.period is not None:
+                    self._bx_peak = self.bx_peak
 
     @id_length.setter
     def id_length(self, value):
@@ -524,7 +552,6 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         if value == self.CalcConfigs.Output.flux_density:
             self._slit_shape = self.CalcConfigs.SlitShape.none
 
-
     @energy_range.setter
     def energy_range(self, value):
         if self.indep_var != self.CalcConfigs.Variable.energy:
@@ -648,6 +675,10 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         if self.ky is not None:
             if self.source_type == self.SourceType.horizontal_undulator:
                 input_temp["Light Source"]["K value"] = self.ky
+
+        if self.kx is not None:
+            if self.source_type == self.SourceType.vertical_undulator:
+                input_temp["Light Source"]["K value"] = self.kx
 
         if self.period is not None:
             input_temp["Light Source"][
