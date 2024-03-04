@@ -407,6 +407,13 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         self._output_data = None
         self._output_variables = None
 
+        # Phase error
+        self._add_phase_error = None
+        self._random_seed = None
+        self._rms_peak_field_var = None
+        self._rms_phase_error = None
+        self._rms_traj_error = None
+
         # Output
         self._flux = None
         self._brilliance = None
@@ -566,35 +573,120 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         return self._output_variables
 
     @property
+    def add_phase_error(self):
+        """Add phase error.
+
+        Returns:
+            bool: If true user can set phase errors.
+        """
+        return self._add_phase_error
+
+    @property
+    def random_seed(self):
+        """random phase error seed.
+
+        Returns:
+            float: Seed for generation of phase errors.
+        """
+        return self._random_seed
+
+    @property
+    def rms_peak_field_var(self):
+        """RMS of the peak field variation.
+
+        Returns:
+            float: RMS of peak field variation.
+        """
+        return self._rms_peak_field_var
+
+    @property
+    def rms_phase_error(self):
+        """RMS of phase error.
+
+        Returns:
+            float: RMS of phase error.
+        """
+        return self._rms_phase_error
+
+    @property
+    def rms_trajectory_error(self):
+        """RMS of trajectory error.
+
+        Returns:
+            float: RMS of trajectory error.
+        """
+        return self._rms_traj_error
+
+    @property
     def flux(self):
+        """Flux output.
+
+        Returns:
+            numpy array: Flux [ph/s/mr²/0.1%B.W].
+        """
         return self._flux
 
     @property
     def brilliance(self):
+        """Brilliance output.
+
+        Returns:
+            numpy array: Brilliance [ph/s/mr²/0.1%B.W/mm²].
+        """
         return self._brilliance
 
     @property
     def pl(self):
+        """Linear polarization.
+
+        Returns:
+            numpy array: Linear polarization s1/s0
+        """
         return self._pl
 
     @property
     def pc(self):
+        """Circular polarization.
+
+        Returns:
+            numpy array: Circular polarization s3/s0
+        """
         return self._pc
 
     @property
     def pl45(self):
+        """Linear polarization 45°.
+
+        Returns:
+            numpy array: Linear polarization 45° s2/s0
+        """
         return self._pl45
 
     @property
     def energies(self):
+        """Energies.
+
+        Returns:
+            numpy array: Energyes [eV]
+        """
         return self._energies
 
     @property
     def x(self):
+        """Horizontal angle.
+
+        Returns:
+            numpy array: Horizontal angle [mrad]
+        """
         return self._x
 
     @property
     def y(self):
+        """Vertical angle.
+
+        Returns:
+            numpy array: Vertical angle [mrad]
+        """
         return self._y
 
     @method.setter
@@ -705,6 +797,51 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             )
         else:
             self._y_nr_pts = value
+
+    @add_phase_error.setter
+    def add_phase_error(self, value):
+        if self.method != self.CalcConfigs.Method.near_field:
+            raise ValueError(
+                "Phase error can only be defined if the method of calculation is near field"  # noqa: E501
+            )
+        else :
+            self._add_phase_error = value
+
+    @random_seed.setter
+    def random_seed(self, value):
+        if self.add_phase_error is not True:
+            raise ValueError(
+                "Phase error's parameters can only be defined if add_phase_error is True"  # noqa: E501
+            )
+        else:
+            self._random_seed = value
+
+    @rms_peak_field_var.setter
+    def rms_peak_field_var(self, value):
+        if self.add_phase_error is not True:
+            raise ValueError(
+                "Phase error's parameters can only be defined if add_phase_error is True"  # noqa: E501
+            )
+        else:
+            self._rms_peak_field_var = value
+
+    @rms_phase_error.setter
+    def rms_phase_error(self, value):
+        if self.add_phase_error is not True:
+            raise ValueError(
+                "Phase error's parameters can only be defined if add_phase_error is True"  # noqa: E501
+            )
+        else:
+            self._rms_phase_error = value
+
+    @rms_trajectory_error.setter
+    def rms_trajectory_error(self, value):
+        if self.add_phase_error is not True:
+            raise ValueError(
+                "Phase error's parameters can only be defined if add_phase_error is True"  # noqa: E501
+            )
+        else:
+            self._rms_traj_error = value
 
     def set_config(self):  # noqa: C901
         """Set calc config."""
@@ -818,8 +955,50 @@ class CalcFlux(GeneralConfigs, SpectraTools):
 
         self._input_template = input_temp
 
+    def verify_valid_parameters(self):  # noqa: C901
+        """Check if calculation parameters are valid.
+
+        Returns:
+            bool: Returns True of False.
+        """
+        if self.indep_var == self.CalcConfigs.Variable.energy:
+            if self.energy_range is None:
+                raise ValueError("Energy range must be defined.")
+
+            if self.energy_step is None:
+                raise ValueError("Energy step must be defined.")
+
+            if self.observation_angle is None:
+                raise ValueError("Observation angle must be defined.")
+
+            if self.output_type == self.CalcConfigs.Output.flux:
+                if self.slit_acceptance is None:
+                    raise ValueError("Slit acceptance must be defined.")
+
+                if self.slit_shape is None:
+                    raise ValueError("Slit shape must be defined.")
+
+        if self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            if self.target_energy is None:
+                raise ValueError("Energy target must be defined")
+
+            if self.x_range is None:
+                raise ValueError("X range must be defined.")
+
+            if self.y_range is None:
+                raise ValueError("Y range must be defined.")
+
+            if self.x_nr_pts is None:
+                raise ValueError("Nr. of x points must be defined.")
+
+            if self.y_nr_pts is None:
+                raise ValueError("Nr. of y points must be defined.")
+
+        return True
+
     def run_calculation(self):
         """Run calculation."""
+        self.verify_valid_parameters()
         solver = self._run_solver(self._input_template)
         captions, data, variables = self.extractdata(solver)
         self._output_captions = captions
@@ -831,20 +1010,24 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         data = self._output_data
         captions = self._output_captions
         self._flux = data[0, :]
-        if len(captions['titles']) == 5:
-            self._pl = data[1, :]
-            self._pc = data[2, :]
-            self._pl45 = data[3, :]
-        elif len(captions['titles']) == 6:
-            self._brilliance = data[1, :]
-            self._pl = data[2, :]
-            self._pc = data[3, :]
-            self._pl45 = data[4, :]
 
         if self.indep_var == self.CalcConfigs.Variable.energy:
+            if len(captions['titles']) == 5:
+                self._pl = data[1, :]
+                self._pc = data[2, :]
+                self._pl45 = data[3, :]
+            elif len(captions['titles']) == 6:
+                self._brilliance = data[1, :]
+                self._pl = data[2, :]
+                self._pc = data[3, :]
+                self._pl45 = data[4, :]
             self._energies = self._output_variables[0, :]
 
         elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            self._pl = data[1, :]
+            self._pc = data[2, :]
+            self._pl45 = data[3, :]
+
             self._x = self._output_variables[0, :]
             self._y = self._output_variables[1, :]
 
