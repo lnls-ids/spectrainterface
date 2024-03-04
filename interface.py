@@ -355,7 +355,7 @@ class GeneralConfigs(SourceFunctions):
         self._distance_from_source = value
 
 
-class CalcFlux(GeneralConfigs, SpectraTools):
+class Calc(GeneralConfigs, SpectraTools):
     """Class with methods to calculate flux."""
 
     class CalcConfigs:
@@ -366,18 +366,21 @@ class CalcFlux(GeneralConfigs, SpectraTools):
 
             near_field = "nearfield"
             far_field = "farfield"
+            wigner = "wigner"
 
         class Variable:
             """Sub class to define independet variable."""
 
             energy = "en"
             mesh_xy = "xy"
+            k = "k"
 
         class Output:
             """Sub class to define output type."""
 
             flux_density = "fluxdensity"
             flux = "partialflux"
+            brilliance = "brilliance"
 
         class SlitShape:
             """Sub class to define slit shape."""
@@ -394,21 +397,31 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         self._output_type = self.CalcConfigs.Output.flux_density
         self._slit_shape = self.CalcConfigs.SlitShape.none
         self._accelerator = accelerator
+        self._input_template = None
+
+        # Energy related
         self._energy_range = None
         self._energy_step = None
         self._slit_position = None
         self._slit_acceptance = None
+
+        #  Mesh xy related
         self._target_energy = None
         self._x_range = None
         self._y_range = None
         self._x_nr_pts = None
         self._y_nr_pts = None
-        self._input_template = None
-        self._output_captions = None
-        self._output_data = None
-        self._output_variables = None
 
-        # Phase error
+        #  K related
+        self._harmonic_range = None
+        self._k_range = None
+        self._k_nr_pts = None
+        self._slice_x = None
+        self._slice_y = None
+        self._slice_px = None
+        self._slice_py = None
+
+        #  Phase error
         self._add_phase_error = None
         self._random_seed = None
         self._rms_peak_field_var = None
@@ -416,6 +429,10 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         self._rms_traj_error = None
 
         # Output
+        self._output_captions = None
+        self._output_data = None
+        self._output_variables = None
+
         self._flux = None
         self._brilliance = None
         self._pl = None
@@ -424,6 +441,7 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         self._energies = None
         self._x = None
         self._y = None
+        self._k = None
 
     @property
     def method(self):
@@ -545,6 +563,73 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             float: Number of vertical mesh points
         """
         return self._y_nr_pts
+
+    @property
+    def harmonic_range(self):
+        """Harmonic range.
+
+        Returns:
+            list of ints: List of harmonics to calculate brilliance.
+        """
+        return self._harmonic_range
+
+    @property
+    def k_range(self):
+        """K range.
+
+        Returns:
+            list of ints: List of k to calculate brilliance [kmin, kmax].
+        """
+        return self._k_range
+
+    @property
+    def k_nr_pts(self):
+        """Number of k points.
+
+        Returns:
+            int: Number of K points.
+        """
+        return self._k_nr_pts
+
+    @property
+    def slice_x(self):
+        """Slice x.
+
+        Returns:
+            float: Horizontal source point where Wigner function is
+             calculated [mm].
+        """
+        return self._slice_x
+
+    @property
+    def slice_y(self):
+        """Slice y.
+
+        Returns:
+            float: Vertical source point where Wigner function is
+             calculated [mm].
+        """
+        return self._slice_y
+
+    @property
+    def slice_px(self):
+        """Slice x'.
+
+        Returns:
+            float: Horizontal source angle where Wigner function is
+             calculated [mrad].
+        """
+        return self._slice_px
+
+    @property
+    def slice_py(self):
+        """Slice y'.
+
+        Returns:
+            float: Horizontal source angle where Wigner function is
+             calculated [mrad].
+        """
+        return self._slice_py
 
     @property
     def output_captions(self):
@@ -690,6 +775,15 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         """
         return self._y
 
+    @property
+    def k(self):
+        """Deflection parameter K.
+
+        Returns:
+            numpy array: Deflecetion parameter K.
+        """
+        return self._k
+
     @method.setter
     def method(self, value):
         self._method = value
@@ -798,6 +892,69 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             )
         else:
             self._y_nr_pts = value
+
+    @harmonic_range.setter
+    def harmonic_range(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.k:
+            raise ValueError(
+                "Harmonic range can only be defined if the variable is k."
+            )
+        else:
+            self._harmonic_range = value
+
+    @k_range.setter
+    def k_range(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.k:
+            raise ValueError(
+                "K range can only be defined if the variable is k."
+            )
+        else:
+            self._k_range = value
+
+    @k_nr_pts.setter
+    def k_nr_pts(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.k:
+            raise ValueError(
+                "K nr points can only be defined if the variable is k."
+            )
+        else:
+            self._k_nr_pts = value
+
+    @slice_x.setter
+    def slice_x(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.k:
+            raise ValueError(
+                "Slice x can only be defined if the variable is k."
+            )
+        else:
+            self._slice_x = value
+
+    @slice_y.setter
+    def slice_y(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.k:
+            raise ValueError(
+                "Slice y can only be defined if the variable is k."
+            )
+        else:
+            self._slice_y = value
+
+    @slice_px.setter
+    def slice_px(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.k:
+            raise ValueError(
+                "Slice x' can only be defined if the variable is k."
+            )
+        else:
+            self._slice_px = value
+
+    @slice_py.setter
+    def slice_py(self, value):
+        if self.indep_var != self.CalcConfigs.Variable.k:
+            raise ValueError(
+                "Slice y' can only be defined if the variable is k."
+            )
+        else:
+            self._slice_py = value
 
     @add_phase_error.setter
     def add_phase_error(self, value):
@@ -950,6 +1107,17 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             input_temp["Configurations"]["Points (x)"] = self.x_nr_pts
             input_temp["Configurations"]["Points (y)"] = self.y_nr_pts
 
+        if self.harmonic_range is not None:
+            input_temp["Configurations"]["Harmonic Range"] = (
+                self.harmonic_range
+            )
+            input_temp["Configurations"]["K Range"] = self.k_range
+            input_temp["Configurations"]["Points (K)"] = self.k_nr_pts
+            input_temp["Configurations"]["Slice X (mm)"] = self.slice_x
+            input_temp["Configurations"]["Slice Y (mm)"] = self.slice_y
+            input_temp["Configurations"]["Slice X' (mrad)"] = self.slice_px
+            input_temp["Configurations"]["Slice Y' (mrad)"] = self.slice_py
+
         input_temp["Configurations"]["Distance from the Source (m)"] = (
             self.distance_from_source
         )
@@ -994,6 +1162,28 @@ class CalcFlux(GeneralConfigs, SpectraTools):
 
             if self.y_nr_pts is None:
                 raise ValueError("Nr. of y points must be defined.")
+
+        if self.indep_var == self.CalcConfigs.Variable.k:
+            if self.harmonic_range is None:
+                raise ValueError("Harmonic range must be defined.")
+
+            if self.k_range is None:
+                raise ValueError("K range must be defined.")
+
+            if self.k_nr_pts is None:
+                raise ValueError("Number of K points must be defined.")
+
+            if self.slice_x is None:
+                raise ValueError("Slice x must be defined.")
+
+            if self.slice_y is None:
+                raise ValueError("Slice y must be defined.")
+
+            if self.slice_px is None:
+                raise ValueError("Slice px must be defined.")
+
+            if self.slice_py is None:
+                raise ValueError("Slice py must be defined.")
 
         return True
 
@@ -1044,8 +1234,7 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             self._pl45 = _np.reshape(self._pl45, (len(self._x), len(self._y)))
             self._pl45 = _np.flip(self._pl45, axis=0)
 
-    @staticmethod
-    def extractdata(solver):
+    def extractdata(self, solver):
         """Extract solver data.
 
         Args:
@@ -1058,7 +1247,21 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         """
         captions = solver.GetCaptions()
         data = _np.array(solver.GetData()["data"])
-        variables = _np.array(solver.GetData()["variables"])
+        if self.indep_var != self.CalcConfigs.Variable.k:
+            variables = _np.array(solver.GetData()["variables"])
+        else:
+            nr_harmonics = (
+                int((self.harmonic_range[-1] - self.harmonic_range[0]) / 2) + 1
+            )
+            variables = _np.zeros((nr_harmonics, self.k_nr_pts))
+            data = _np.zeros((nr_harmonics, 2, self.k_nr_pts))
+            for i in range(nr_harmonics):
+                variables[i, :] = _np.array(
+                    solver.GetDetailData(i)["variables"]
+                )
+                data[i, :, :] = _np.array(
+                    solver.GetDetailData(i)["data"]
+                )
         return captions, data, variables
 
 
@@ -1068,7 +1271,7 @@ class SpectraInterface:
     def __init__(self):
         """Class constructor."""
         self._accelerator = StorageRingParameters()
-        self._calc_flux = CalcFlux(self._accelerator)
+        self._calc = Calc(self._accelerator)
 
     @property
     def accelerator(self):
@@ -1080,10 +1283,10 @@ class SpectraInterface:
         return self._accelerator
 
     @property
-    def calc_flux(self):
+    def calc(self):
         """CalcFlux object.
 
         Returns:
             CalcFlux object: Class to calculate flux
         """
-        return self._calc_flux
+        return self._calc
