@@ -22,7 +22,7 @@
     "&lambda;<sub>u</sub> (mm)": 18,
     "Device Length (m)": 0.4,
     "K value": 1.6807121999999999,
-    "Type": "Linear Undulator",
+    "Type": "Helical Undulator",
     "Options": {
       "Field Structure": "Antisymmetric",
       "End Correction Magnet": true,
@@ -34,13 +34,15 @@
   },
   "Configurations": {
     "Distance from the Source (m)": 10,
-    "Energy Range (eV)": [1,10000],
-    "Energy Pitch (eV)": 1,
-    "Angle &theta;<sub>x,y</sub> (mrad)": [0,0],
-    "Type": "Near Field::Energy Dependence::Spatial Flux Density",
+    "Target Energy (eV)": 12661,
+    "&theta;<sub>x</sub> Range (mrad)": [-0.03,0.03],
+    "Points (x)": 41,
+    "&theta;<sub>y</sub> Range (mrad)": [-0.02,0.02],
+    "Points (y)": 41,
+    "Type": "Near Field::Spatial Dependence::Spatial Flux Density::Mesh: x-y",
     "Options": {
-      "Filtering": "None",
       "Define Obs. Point in": "Angle",
+      "Normalize Photon Energy": false,
       "Accuracy": "Default"
     }
   },

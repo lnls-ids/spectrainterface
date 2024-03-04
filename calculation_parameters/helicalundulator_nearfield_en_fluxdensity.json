@@ -13,7 +13,7 @@
     "Type": "Storage Ring",
     "Options": {
       "Bunch Profile": "Gaussian",
-      "Injection Condition": "Automatic",
+      "Injection Condition": "Align at Entrance",
       "Zero Emittance": false,
       "Zero Energy Spread": false
     }
@@ -22,7 +22,7 @@
     "&lambda;<sub>u</sub> (mm)": 18,
     "Device Length (m)": 0.4,
     "K value": 1.6807121999999999,
-    "Type": "Linear Undulator",
+    "Type": "Helical Undulator",
     "Options": {
       "Field Structure": "Antisymmetric",
       "End Correction Magnet": true,

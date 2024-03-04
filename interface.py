@@ -1,4 +1,5 @@
 """Spectra functions."""
+
 import numpy as _np
 import matplotlib.pyplot as _plt
 from accelerator import StorageRingParameters
@@ -55,21 +56,21 @@ class SpectraTools:
         input_template["Accelerator"]["Energy (GeV)"] = accelerator.energy
         input_template["Accelerator"]["Current (mA)"] = accelerator.current
 
-        input_template["Accelerator"][
-            "&sigma;<sub>z</sub> (mm)"
-        ] = accelerator.sigmaz
+        input_template["Accelerator"]["&sigma;<sub>z</sub> (mm)"] = (
+            accelerator.sigmaz
+        )
 
-        input_template["Accelerator"][
-            "Nat. Emittance (m.rad)"
-        ] = accelerator.nat_emittance
+        input_template["Accelerator"]["Nat. Emittance (m.rad)"] = (
+            accelerator.nat_emittance
+        )
 
-        input_template["Accelerator"][
-            "Coupling Constant"
-        ] = accelerator.coupling_constant
+        input_template["Accelerator"]["Coupling Constant"] = (
+            accelerator.coupling_constant
+        )
 
-        input_template["Accelerator"][
-            "Energy Spread"
-        ] = accelerator.energy_spread
+        input_template["Accelerator"]["Energy Spread"] = (
+            accelerator.energy_spread
+        )
 
         input_template["Accelerator"]["&beta;<sub>x,y</sub> (m)"] = [
             accelerator.betax,
@@ -91,17 +92,17 @@ class SpectraTools:
             accelerator.etapy,
         ]
 
-        input_template["Accelerator"]["Options"][
-            "Injection Condition"
-        ] = accelerator.injection_condition
+        input_template["Accelerator"]["Options"]["Injection Condition"] = (
+            accelerator.injection_condition
+        )
 
-        input_template["Accelerator"]["Options"][
-            "Zero Emittance"
-        ] = accelerator.zero_emittance
+        input_template["Accelerator"]["Options"]["Zero Emittance"] = (
+            accelerator.zero_emittance
+        )
 
-        input_template["Accelerator"]["Options"][
-            "Zero Energy Spread"
-        ] = accelerator.zero_energy_spread
+        input_template["Accelerator"]["Options"]["Zero Energy Spread"] = (
+            accelerator.zero_energy_spread
+        )
 
         return input_template
 
@@ -613,7 +614,7 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         """RMS of trajectory error.
 
         Returns:
-            float: RMS of trajectory error.
+            list of float: RMS of trajectory error [x, y].
         """
         return self._rms_traj_error
 
@@ -804,7 +805,7 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             raise ValueError(
                 "Phase error can only be defined if the method of calculation is near field"  # noqa: E501
             )
-        else :
+        else:
             self._add_phase_error = value
 
     @random_seed.setter
@@ -897,22 +898,22 @@ class CalcFlux(GeneralConfigs, SpectraTools):
                 ]
 
         if self.period is not None:
-            input_temp["Light Source"][
-                "&lambda;<sub>u</sub> (mm)"
-            ] = self.period
+            input_temp["Light Source"]["&lambda;<sub>u</sub> (mm)"] = (
+                self.period
+            )
 
         if self.id_length is not None:
             input_temp["Light Source"]["Device Length (m)"] = self.id_length
 
         if self.energy_range is not None:
-            input_temp["Configurations"][
-                "Energy Range (eV)"
-            ] = self.energy_range
+            input_temp["Configurations"]["Energy Range (eV)"] = (
+                self.energy_range
+            )
 
         if self.energy_step is not None:
-            input_temp["Configurations"][
-                "Energy Pitch (eV)"
-            ] = self.energy_step
+            input_temp["Configurations"]["Energy Pitch (eV)"] = (
+                self.energy_step
+            )
 
         if self.observation_angle is not None:
             if self.output_type == self.CalcConfigs.Output.flux_density:
@@ -935,9 +936,9 @@ class CalcFlux(GeneralConfigs, SpectraTools):
                 ] = self.slit_acceptance
 
         if self.target_energy is not None:
-            input_temp["Configurations"][
-                "Target Energy (eV)"
-            ] = self.target_energy
+            input_temp["Configurations"]["Target Energy (eV)"] = (
+                self.target_energy
+            )
 
         if self.x_range is not None:
             input_temp["Configurations"][
@@ -949,9 +950,9 @@ class CalcFlux(GeneralConfigs, SpectraTools):
             input_temp["Configurations"]["Points (x)"] = self.x_nr_pts
             input_temp["Configurations"]["Points (y)"] = self.y_nr_pts
 
-        input_temp["Configurations"][
-            "Distance from the Source (m)"
-        ] = self.distance_from_source
+        input_temp["Configurations"]["Distance from the Source (m)"] = (
+            self.distance_from_source
+        )
 
         self._input_template = input_temp
 
@@ -1012,11 +1013,11 @@ class CalcFlux(GeneralConfigs, SpectraTools):
         self._flux = data[0, :]
 
         if self.indep_var == self.CalcConfigs.Variable.energy:
-            if len(captions['titles']) == 5:
+            if len(captions["titles"]) == 5:
                 self._pl = data[1, :]
                 self._pc = data[2, :]
                 self._pl45 = data[3, :]
-            elif len(captions['titles']) == 6:
+            elif len(captions["titles"]) == 6:
                 self._brilliance = data[1, :]
                 self._pl = data[2, :]
                 self._pc = data[3, :]

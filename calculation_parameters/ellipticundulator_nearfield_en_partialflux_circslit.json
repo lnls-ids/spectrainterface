@@ -13,7 +13,7 @@
     "Type": "Storage Ring",
     "Options": {
       "Bunch Profile": "Gaussian",
-      "Injection Condition": "Automatic",
+      "Injection Condition": "Align at Entrance",
       "Zero Emittance": false,
       "Zero Energy Spread": false
     }
@@ -21,9 +21,10 @@
   "Light Source": {
     "&lambda;<sub>u</sub> (mm)": 18,
     "Device Length (m)": 0.4,
-    "K value": 1.6807121999999999,
-    "Type": "Linear Undulator",
+    "K<sub>x,y</sub>": [1.6807121999999999,1.6807121999999999],
+    "Type": "Elliptic Undulator",
     "Options": {
+      "APPLE Configuration": false,
       "Field Structure": "Antisymmetric",
       "End Correction Magnet": true,
       "Natural Focusing": "None",
@@ -36,8 +37,9 @@
     "Distance from the Source (m)": 10,
     "Energy Range (eV)": [1,10000],
     "Energy Pitch (eV)": 1,
-    "Angle &theta;<sub>x,y</sub> (mrad)": [0,0],
-    "Type": "Near Field::Energy Dependence::Spatial Flux Density",
+    "Slit Pos.: &theta;<sub>x,y</sub> (mrad)": [0,0],
+    "Slit &theta;<sub>1,2</sub> (mrad)": [0,0.03],
+    "Type": "Near Field::Energy Dependence::Partial Flux::Circular Slit",
     "Options": {
       "Filtering": "None",
       "Define Obs. Point in": "Angle",

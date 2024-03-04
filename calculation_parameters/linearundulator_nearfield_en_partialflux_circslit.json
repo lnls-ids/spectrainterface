@@ -12,8 +12,6 @@
     "&eta;'<sub>x,y</sub>": [0,0],
     "Type": "Storage Ring",
     "Options": {
-      "Bunch Profile": "Gaussian",
-      "Injection Condition": "Automatic",
       "Zero Emittance": false,
       "Zero Energy Spread": false
     }
@@ -26,9 +24,6 @@
     "Options": {
       "Field Structure": "Antisymmetric",
       "End Correction Magnet": true,
-      "Natural Focusing": "None",
-      "Field Offset & Taper": false,
-      "Add Phase Error": false,
       "Segmentation": "None"
     }
   },
@@ -36,11 +31,13 @@
     "Distance from the Source (m)": 10,
     "Energy Range (eV)": [1,10000],
     "Energy Pitch (eV)": 1,
-    "Angle &theta;<sub>x,y</sub> (mrad)": [0,0],
-    "Type": "Near Field::Energy Dependence::Spatial Flux Density",
+    "Slit Pos.: &theta;<sub>x,y</sub> (mrad)": [0,0],
+    "Slit &theta;<sub>1,2</sub> (mrad)": [0,0.03],
+    "Type": "Far Field & Ideal Condition::Energy Dependence::Partial Flux::Circular Slit",
     "Options": {
       "Filtering": "None",
       "Define Obs. Point in": "Angle",
+      "Wiggler Approximation": false,
       "Accuracy": "Default"
     }
   },
