@@ -1,0 +1,53 @@
+{
+  "Accelerator": {
+    "Energy (GeV)": 3,
+    "Current (mA)": 100,
+    "&sigma;<sub>z</sub> (mm)": 2.9,
+    "Nat. Emittance (m.rad)": 2.5e-10,
+    "Coupling Constant": 0.01,
+    "Energy Spread": 0.00084,
+    "&beta;<sub>x,y</sub> (m)": [1.499,1.435],
+    "&alpha;<sub>x,y</sub>": [0,0],
+    "&eta;<sub>x,y</sub> (m)": [0,0],
+    "&eta;'<sub>x,y</sub>": [0,0],
+    "Type": "Storage Ring",
+    "Options": {
+      "Injection Condition": "Align at Entrance",
+      "Zero Emittance": false,
+      "Zero Energy Spread": false
+    }
+  },
+  "Light Source": {
+    "&lambda;<sub>u</sub> (mm)": 18,
+    "Device Length (m)": 0.4,
+    "K<sub>x,y</sub>": [0.42017804999999997,0.42017804999999997],
+    "Type": "Figure-8 Undulator",
+    "Options": {
+      "Gap-Field Relation": "None",
+      "Field Structure": "Antisymmetric",
+      "End Correction Magnet": true,
+      "Segmentation": "None"
+    }
+  },
+  "Configurations": {
+    "Harmonic Range": [1,5],
+    "Detuning": 0,
+    "K<sub>&perp;</sub> Range": [0,5],
+    "Points (K)": 51,
+    "Slice X (mm)": 0,
+    "Slice Y (mm)": 0,
+    "Slice X' (mrad)": 0,
+    "Slice Y' (mrad)": 0,
+    "Type": "Characterization at the Source Point::Wigner Function::K Dependence::Target Harmonics",
+    "Options": {
+      "Accuracy": "Default"
+    }
+  },
+  "Output File": {
+    "Format": "JSON",
+    "Folder": "/home/gabriel/spectra/spectra11/tests_GUI",
+    "Prefix": "power_density",
+    "Serial Number": 31,
+    "Comment": ""
+  }
+}
