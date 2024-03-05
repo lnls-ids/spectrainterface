@@ -1200,9 +1200,10 @@ class Calc(GeneralConfigs, SpectraTools):
     def _set_outputs(self):
         data = self._output_data
         captions = self._output_captions
-        self._flux = data[0, :]
+        variables = self._output_variables
 
         if self.indep_var == self.CalcConfigs.Variable.energy:
+            self._flux = data[0, :]
             if len(captions["titles"]) == 5:
                 self._pl = data[1, :]
                 self._pc = data[2, :]
@@ -1215,6 +1216,7 @@ class Calc(GeneralConfigs, SpectraTools):
             self._energies = self._output_variables[0, :]
 
         elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            self._flux = data[0, :]
             self._pl = data[1, :]
             self._pc = data[2, :]
             self._pl45 = data[3, :]
@@ -1233,6 +1235,12 @@ class Calc(GeneralConfigs, SpectraTools):
 
             self._pl45 = _np.reshape(self._pl45, (len(self._x), len(self._y)))
             self._pl45 = _np.flip(self._pl45, axis=0)
+
+        elif self.indep_var == self.CalcConfigs.Variable.k:
+            if self.method == self.CalcConfigs.Method.wigner:
+                self._brilliance = data[:, 1, :]
+                self._k = data[:, 0, :]
+                self._energies = variables[:, :]
 
     def extractdata(self, solver):
         """Extract solver data.
