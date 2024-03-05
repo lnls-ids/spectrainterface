@@ -442,6 +442,8 @@ class Calc(GeneralConfigs, SpectraTools):
         self._x = None
         self._y = None
         self._k = None
+        self._kx = None
+        self._ky = None
 
     @property
     def method(self):
@@ -784,6 +786,24 @@ class Calc(GeneralConfigs, SpectraTools):
         """
         return self._k
 
+    @property
+    def kx(self):
+        """Deflection parameter Kx.
+
+        Returns:
+            numpy array: Deflecetion parameter Kx.
+        """
+        return self._kx
+
+    @property
+    def ky(self):
+        """Deflection parameter Ky.
+
+        Returns:
+            numpy array: Deflecetion parameter Ky.
+        """
+        return self._ky
+
     @method.setter
     def method(self, value):
         self._method = value
@@ -1111,7 +1131,16 @@ class Calc(GeneralConfigs, SpectraTools):
             input_temp["Configurations"]["Harmonic Range"] = (
                 self.harmonic_range
             )
-            input_temp["Configurations"]["K Range"] = self.k_range
+            if (
+                self.source_type == self.SourceType.horizontal_undulator
+                or self.source_type == self.SourceType.vertical_undulator
+                or self.source_type == self.SourceType.helical_undulator
+            ):
+                input_temp["Configurations"]["K Range"] = self.k_range
+            else:
+                input_temp["Configurations"]["K<sub>&perp;</sub> Range"] = (
+                    self.k_range
+                )
             input_temp["Configurations"]["Points (K)"] = self.k_nr_pts
             input_temp["Configurations"]["Slice X (mm)"] = self.slice_x
             input_temp["Configurations"]["Slice Y (mm)"] = self.slice_y
@@ -1238,9 +1267,20 @@ class Calc(GeneralConfigs, SpectraTools):
 
         elif self.indep_var == self.CalcConfigs.Variable.k:
             if self.method == self.CalcConfigs.Method.wigner:
-                self._brilliance = data[:, 1, :]
-                self._k = data[:, 0, :]
-                self._energies = variables[:, :]
+                if (
+                    self.source_type != self.SourceType.elliptic_undulator
+                    and self.source_type != self.SourceType.figure8_undulator
+                    and self.source_type
+                    != self.SourceType.vertical_figure8_undulator
+                ):
+                    self._k = data[:, 0, :]
+                    self._brilliance = data[:, 1, :]
+                    self._energies = variables[:, :]
+                else:
+                    self._kx = data[:, 0, :]
+                    self._ky = data[:, 1, :]
+                    self._brilliance = data[:, 2, :]
+                    self._energies = variables[:, :]
 
     def extractdata(self, solver):
         """Extract solver data.
@@ -1258,18 +1298,31 @@ class Calc(GeneralConfigs, SpectraTools):
         if self.indep_var != self.CalcConfigs.Variable.k:
             variables = _np.array(solver.GetData()["variables"])
         else:
-            nr_harmonics = (
-                int((self.harmonic_range[-1] - self.harmonic_range[0]) / 2) + 1
-            )
+            if (
+                self.source_type == self.SourceType.figure8_undulator
+                or self.source_type
+                == self.SourceType.vertical_figure8_undulator
+            ):
+                nr_harmonics = (
+                    int((self.harmonic_range[-1] - self.harmonic_range[0]) * 2)
+                    + 1
+                )
+                data = _np.zeros((nr_harmonics, 3, self.k_nr_pts))
+            else:
+                nr_harmonics = (
+                    int((self.harmonic_range[-1] - self.harmonic_range[0]) / 2)
+                    + 1
+                )
+                if self.source_type == self.SourceType.elliptic_undulator:
+                    data = _np.zeros((nr_harmonics, 3, self.k_nr_pts))
+                else:
+                    data = _np.zeros((nr_harmonics, 2, self.k_nr_pts))
             variables = _np.zeros((nr_harmonics, self.k_nr_pts))
-            data = _np.zeros((nr_harmonics, 2, self.k_nr_pts))
             for i in range(nr_harmonics):
                 variables[i, :] = _np.array(
                     solver.GetDetailData(i)["variables"]
                 )
-                data[i, :, :] = _np.array(
-                    solver.GetDetailData(i)["data"]
-                )
+                data[i, :, :] = _np.array(solver.GetDetailData(i)["data"])
         return captions, data, variables
 
 
