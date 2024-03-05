@@ -2,16 +2,18 @@
 
 import numpy as _np
 import matplotlib.pyplot as _plt
-from accelerator import StorageRingParameters
+from spectrainterface.accelerator import StorageRingParameters
 import mathphys
-from tools import SourceFunctions
+from spectrainterface.tools import SourceFunctions
 import json
-import spectra
+from spectrainterface import spectra
 import sys
 import time
 import os
 
-REPOS_PATH = os.path.abspath("./")
+#REPOS_PATH = os.path.abspath("./")
+# REPOS_PATH = __file__
+REPOS_PATH = os.path.dirname(os.path.abspath(__file__))
 
 ECHARGE = mathphys.constants.elementary_charge
 EMASS = mathphys.constants.electron_mass

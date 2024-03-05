@@ -1,3 +1,3 @@
-import tools
-import accelerator
-import interface
+from . import tools
+from . import accelerator
+from . import interface
