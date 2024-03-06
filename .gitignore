@@ -1,0 +1,5 @@
+spectrainterface/__pycache__/
+spectrainterface.egg-info/
+__pycache__/
+build/
+dist/
