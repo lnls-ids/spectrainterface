@@ -444,8 +444,8 @@ class Calc(GeneralConfigs, SpectraTools):
         self._x = None
         self._y = None
         self._k = None
-        self._kx = None
-        self._ky = None
+        self._output_kx = None
+        self._output_ky = None
 
     @property
     def method(self):
@@ -673,7 +673,7 @@ class Calc(GeneralConfigs, SpectraTools):
 
     @property
     def random_seed(self):
-        """random phase error seed.
+        """Random phase error seed.
 
         Returns:
             float: Seed for generation of phase errors.
@@ -789,7 +789,7 @@ class Calc(GeneralConfigs, SpectraTools):
         return self._k
 
     @property
-    def kx(self):
+    def output_kx(self):
         """Deflection parameter Kx.
 
         Returns:
@@ -798,7 +798,7 @@ class Calc(GeneralConfigs, SpectraTools):
         return self._kx
 
     @property
-    def ky(self):
+    def output_ky(self):
         """Deflection parameter Ky.
 
         Returns:
