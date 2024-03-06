@@ -290,3 +290,42 @@ class StorageRingParameters:
         self.etay = 0
         self.etapx = 0
         self.etapy = 0
+
+
+    @staticmethod
+    def calc_beam_stay_clear(pos, section, delta_prototype_chamber=False):
+        """Calculate horizontal and vertical beam stay clear at a given position 'pos'. 
+
+        Args:
+            pos (float): position (distance from straight section center) in [m]
+            section (str): label of straight section type
+            delta_prototype_chamber (bool, optional): Check if the delta prototype is being considered. Defaults to False.
+
+        Returns:
+            float, float: Horizontal and Vertical beam stay clear at 'pos'.
+        """
+        if section.lower() in ('sb', 'sp'):
+            beta0_h = 1.499
+            beta0_v = 1.435
+            bsc0_h = 3.32
+            bsc0_v = 1.85
+
+            if delta_prototype_chamber:
+                bsc0_h = 2.85
+
+        elif section.lower() == 'sa':
+            beta0_h = 17.20
+            beta0_v = 3.605
+            bsc0_h = 11.27
+            bsc0_v = 2.92
+
+            if delta_prototype_chamber:
+                bsc0_h = 9.66
+
+        beta_h = pos**2/beta0_h + beta0_h
+        beta_v = pos**2/beta0_v + beta0_v
+
+        bsc_h = bsc0_h*_np.sqrt(beta_h/beta0_h)
+        bsc_v = bsc0_v*_np.sqrt(beta_v/beta0_v)
+
+        return bsc_h, bsc_v
