@@ -5,6 +5,7 @@ import matplotlib.pyplot as _plt
 import mathphys.constants as _constants
 from scipy.integrate import cumtrapz
 from scipy.optimize import minimize
+from accelerator import StorageRingParameters
 
 ECHARGE = _constants.elementary_charge
 EMASS = _constants.electron_mass
@@ -264,73 +265,6 @@ class SourceFunctions:
         ]
         return cpmus
 
-
-    @staticmethod
-    def calc_min_gap(
-        device,
-        length,
-        polarization,
-        section,
-        dg_out_vacuum=1.0,
-        dg_in_vacuum=0.2,
-        dg_delta_prototype=0.6,
-        delta_gap=0.0,
-    ):
-        """Calculate minimum gap due to beam stay clear, vacuum chamber and tolerances, given a device type and length.
-
-        Args:
-            device (str): device label
-            length (float): length of the device in [m]
-            polarization (str): light polarization 'hp', 'vp' or 'cp'
-            section (str): straight section 'sb', 'sp' or 'sa'
-            dg_out_vacuum (float, optional): Vacuum chamber wall thickness (x2) in [mm]. Defaults to 1.0.
-            dg_in_vacuum (float, optional): tolerances + sheet thickness. Defaults to 0.2.
-            dg_delta_prototype (float, optional): Vacuum chamber wall thickness (x2) in [mm]. Defaults to 0.6.
-            delta_gap (float, optional): Addicional tolerance for the gap. Defaults to 0.0.
-
-        Returns:
-            float: minimum gap in [mm]
-        """
-
-        pos = length / 2
-
-        if device == "delta_prototype":
-            delta_prototype_chamber = True
-            pos = pos + 0.1
-        else:
-            delta_prototype_chamber = False
-
-        bsc_h, bsc_v = SourceFunctions.calc_beam_stay_clear(
-            pos,
-            section=section,
-            delta_prototype_chamber=delta_prototype_chamber,
-        )
-
-        planar_devices = SourceFunctions.get_planar_devices()
-
-        ivu_devices = SourceFunctions.get_invacuum_devices()
-
-        if device in planar_devices:
-            if polarization.lower() == "vp":
-                gap0 = 2 * bsc_h
-            else:
-                gap0 = 2 * bsc_v
-        elif device == "apple2":
-            gap0 = 2 * bsc_v
-        elif device in ("delta", "delta_prototype"):
-            gap0 = _np.sqrt(2 * (bsc_v**2 + bsc_h**2))
-        else:
-            raise Exception("device not found: ", device)
-
-        if device in ivu_devices:
-            gap = gap0 + dg_in_vacuum
-        elif device == "delta_prototype":
-            gap = gap0 + dg_delta_prototype
-        else:
-            gap = gap0 + dg_out_vacuum
-
-        return gap + delta_gap
-
     @staticmethod
     def beff_function(gap_over_period, br, a, b, c):
         """Calculate peak magnetic field for a given gap (Halbach equation).
@@ -540,6 +474,44 @@ class Undulator(SourceFunctions):
             gap_over_period=gap_over_period, br=br, a=a, b=b, c=c
         )
 
+    def calc_min_gap(
+        self, si_parameters=None, section="SB", vc_thickness=0.5, tolerance=0.0
+    ):
+        """Calculate minimum gap of undulator.
+
+        Args:
+        si_parameters (StorageRingParameters, optional): StorageRingParameters
+         object. Defaults to None.
+        section (str, optional): Straight section (SB, SP or SA).
+         Defaults to 'SB'.
+        vc_thickness (float, optional): Vacuum chamber thickness.
+         Defaults to 0.5.
+        tolerance (float, optional): Extra delta in gap. Defaults to 0.0.
+
+        Returns:
+            float: (min gap vertical, min gap horizontal) minimum gap allowed.
+        """
+        pos = self.length / 2
+        section = section.lower()
+
+        if si_parameters is None:
+            acc = StorageRingParameters()
+            acc.set_bsc_with_ivu18()
+            if section == 'sb' or section == 'sp':
+                acc.set_low_beta_section()
+            elif section == 'sa':
+                acc.set_high_beta_section()
+            else:
+                raise ValueError('Section not defined.')
+        else:
+            acc = si_parameters
+
+        bsch, bscv = acc.calc_beam_stay_clear(pos)
+        gaph = 2*bsch + vc_thickness + tolerance
+        gapv = 2*bscv + vc_thickness + tolerance
+
+        return gapv, gaph
+
 
 class Planar(Undulator):
     """Planar Undulator class.
@@ -557,7 +529,7 @@ class Planar(Undulator):
         """
         super().__init__()
         self._undulator_type = "planar"
-        self._label = 'Planar'
+        self._label = "Planar"
         self._br = 1.37
         self._polarization = "hp"
         self._efficiency = 1
@@ -582,15 +554,15 @@ class Apple2(Undulator):
         """
         super().__init__()
         self._undulator_type = "apple2"
-        self._label = 'Apple-II'
+        self._label = "Apple-II"
         self._br = 1.37
         self._polarization = "hp"
         self._efficiency = 1
         self._halbach_coef = {
-                "hp": {"a": 1.732, "b": -3.238, "c": 0.0},
-                "vp": {"a": 1.926, "b": -5.629, "c": 1.448},
-                "cp": {"a": 1.356, "b": -4.875, "c": 0.947},
-            }
+            "hp": {"a": 1.732, "b": -3.238, "c": 0.0},
+            "vp": {"a": 1.926, "b": -5.629, "c": 1.448},
+            "cp": {"a": 1.356, "b": -4.875, "c": 0.947},
+        }
         self._period = period
         self._length = length
 
@@ -611,15 +583,15 @@ class Delta(Undulator):
         """
         super().__init__()
         self._undulator_type = "delta"
-        self._label = 'Delta'
+        self._label = "Delta"
         self._br = 1.37
         self._polarization = "hp"
         self._efficiency = 1
         self._halbach_coef = {
-                "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
-                "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
-                "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
-            }
+            "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
+            "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
+            "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
+        }
         self._period = period
         self._length = length
 
@@ -640,7 +612,7 @@ class Hybrid(Undulator):
         """
         super().__init__()
         self._undulator_type = "hybrid"
-        self._label = 'Hybrid (Nd)'
+        self._label = "Hybrid (Nd)"
         self._br = 1.24
         self._polarization = "hp"
         self._efficiency = 1
@@ -665,7 +637,7 @@ class Hybrid_smco(Undulator):
         """
         super().__init__()
         self._undulator_type = "hybrid_smco"
-        self._label = 'Hybrid (SmCo)'
+        self._label = "Hybrid (SmCo)"
         self._br = 1.24
         self._polarization = "hp"
         self._efficiency = 1
@@ -690,7 +662,7 @@ class Cpmu_nd(Undulator):
         """
         super().__init__()
         self._undulator_type = "cpmu_nd"
-        self._label = 'CPMU (Nd)'
+        self._label = "CPMU (Nd)"
         self._br = 1.5
         self._polarization = "hp"
         self._efficiency = 0.9
@@ -715,7 +687,7 @@ class Cpmu_pr_nd(Undulator):
         """
         super().__init__()
         self._undulator_type = "cpmu_prnd"
-        self._label = 'CPMU (Pr,Nd)'
+        self._label = "CPMU (Pr,Nd)"
         self._br = 1.62
         self._polarization = "hp"
         self._efficiency = 0.9
@@ -740,7 +712,7 @@ class Cpmu_pr(Undulator):
         """
         super().__init__()
         self._undulator_type = "cpmu_pr"
-        self._label = 'CPMU (Pr)'
+        self._label = "CPMU (Pr)"
         self._br = 1.67
         self._polarization = "hp"
         self._efficiency = 0.9
