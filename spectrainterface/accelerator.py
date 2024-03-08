@@ -1,4 +1,5 @@
 """Storage ring parameters."""
+
 import numpy as _np
 import matplotlib.pyplot as _plt
 
@@ -25,7 +26,16 @@ class StorageRingParameters:
 
         self._zero_emittance = False
         self._zero_energy_spread = False
-        self._injection_condition = 'Align at Entrance'
+        self._injection_condition = "Align at Entrance"
+
+        # BSC parameters
+        self._bsc0_h = 0
+        self._bsc0_v = 0
+
+        self._bsc0_h_lowbeta = 3.4529
+        self._bsc0_v_lowbeta = 1.8627
+        self._bsc0_h_highbeta = 11.6952
+        self._bsc0_v_highbeta = 2.9524
 
     @property
     def energy(self):
@@ -180,6 +190,60 @@ class StorageRingParameters:
         """
         return self._injection_condition
 
+    @property
+    def bsc0_h(self):
+        """Hozizontal Beam Stay Clear at center of straight section.
+
+        Returns:
+            float: Horizontal BSC [mm]
+        """
+        return self._bsc0_h
+
+    @property
+    def bsc0_v(self):
+        """Vertical Beam Stay Clear at center of straight section.
+
+        Returns:
+            float: Vertical BSC [mm]
+        """
+        return self._bsc0_v
+
+    @property
+    def bsc0_h_highbeta(self):
+        """Horizontal BSC at center of high beta section.
+
+        Returns:
+            float: Horizontal BSC High Beta [mm]
+        """
+        return self._bsc0_h_highbeta
+
+    @property
+    def bsc0_v_highbeta(self):
+        """Vertical BSC at center of high beta section.
+
+        Returns:
+            float: Vertical BSC High Beta [mm]
+        """
+        return self._bsc0_v_highbeta
+
+    @property
+    def bsc0_h_lowbeta(self):
+        """Horizontal BSC at center of low beta section.
+
+        Returns:
+            float: Horizontal BSC low Beta [mm]
+        """
+        return self._bsc0_h_lowbeta
+
+    @property
+    def bsc0_v_lowbeta(self):
+        """Vertical BSC at center of low beta section.
+
+        Returns:
+            float: Vertical BSC low Beta [mm]
+        """
+        return self._bsc0_v_lowbeta
+
     @energy.setter
     def energy(self, value):
         self._energy = value
@@ -239,23 +303,45 @@ class StorageRingParameters:
     @zero_emittance.setter
     def zero_emittance(self, value):
         if type(value) is not bool:
-            raise ValueError('Argument must be bool!')
+            raise ValueError("Argument must be bool!")
         else:
             self._zero_emittance = value
 
     @zero_energy_spread.setter
     def zero_energy_spread(self, value):
         if type(value) is not bool:
-            raise ValueError('Argument must be bool!')
+            raise ValueError("Argument must be bool!")
         else:
             self._zero_energy_spread = value
 
     @injection_condition.setter
     def injection_condition(self, value):
         if type(value) is not str:
-            raise ValueError('Argument must be str!')
+            raise ValueError("Argument must be str!")
         else:
             self._injection_condition = value
+
+    @bsc0_h.setter
+    def bsc0_h(self, value):
+        self._bsc0_h = value
+
+    @bsc0_v.setter
+    def bsc0_v(self, value):
+        self._bsc0_v = value
+
+    def set_current_bsc(self):
+        """Set current BSC (03/07/2024)."""
+        self._bsc0_h_lowbeta = 3.4529
+        self._bsc0_v_lowbeta = 1.8627
+        self._bsc0_h_highbeta = 11.6952
+        self._bsc0_v_highbeta = 2.9524
+
+    def set_bsc_with_ivu18(self):
+        """Set BSC with IVU18."""
+        self._bsc0_h_lowbeta = 3.4529
+        self._bsc0_v_lowbeta = 1.6818
+        self._bsc0_h_highbeta = 11.6952
+        self._bsc0_v_highbeta = 2.6658
 
     def set_low_beta_section(self):
         """Set low beta section."""
@@ -273,6 +359,8 @@ class StorageRingParameters:
         self.etay = 0
         self.etapx = 0
         self.etapy = 0
+        self.bsc0_h = self.bsc0_h_lowbeta
+        self.bsc0_v = self.bsc0_v_lowbeta
 
     def set_high_beta_section(self):
         """Set high beta section."""
@@ -290,42 +378,23 @@ class StorageRingParameters:
         self.etay = 0
         self.etapx = 0
         self.etapy = 0
+        self.bsc0_h = self.bsc0_h_highbeta
+        self.bsc0_v = self.bsc0_v_highbeta
 
-
-    @staticmethod
-    def calc_beam_stay_clear(pos, section, delta_prototype_chamber=False):
-        """Calculate horizontal and vertical beam stay clear at a given position 'pos'. 
+    def calc_beam_stay_clear(self, pos):
+        """Calculate horizontal and vertical BSC at a given position.
 
         Args:
-            pos (float): position (distance from straight section center) in [m]
-            section (str): label of straight section type
-            delta_prototype_chamber (bool, optional): Check if the delta prototype is being considered. Defaults to False.
+            pos (float): position (distance from straight section center)
+             in [m]
 
         Returns:
-            float, float: Horizontal and Vertical beam stay clear at 'pos'.
+            float: Horizontal and Vertical beam stay clear at 'pos' [m].
         """
-        if section.lower() in ('sb', 'sp'):
-            beta0_h = 1.499
-            beta0_v = 1.435
-            bsc0_h = 3.32
-            bsc0_v = 1.85
+        beta_h = pos**2 / self.betax + self.betax
+        beta_v = pos**2 / self.betay + self.betay
 
-            if delta_prototype_chamber:
-                bsc0_h = 2.85
-
-        elif section.lower() == 'sa':
-            beta0_h = 17.20
-            beta0_v = 3.605
-            bsc0_h = 11.27
-            bsc0_v = 2.92
-
-            if delta_prototype_chamber:
-                bsc0_h = 9.66
-
-        beta_h = pos**2/beta0_h + beta0_h
-        beta_v = pos**2/beta0_v + beta0_v
-
-        bsc_h = bsc0_h*_np.sqrt(beta_h/beta0_h)
-        bsc_v = bsc0_v*_np.sqrt(beta_v/beta0_v)
+        bsc_h = self.bsc0_h * _np.sqrt(beta_h / self.betax)
+        bsc_v = self.bsc0_v * _np.sqrt(beta_v / self.betay)
 
         return bsc_h, bsc_v

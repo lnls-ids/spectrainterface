@@ -1,9 +1,11 @@
 """General tools to use with spectra."""
+
 import numpy as _np
 import matplotlib.pyplot as _plt
 import mathphys.constants as _constants
 from scipy.integrate import cumtrapz
 from scipy.optimize import minimize
+from accelerator import StorageRingParameters
 
 ECHARGE = _constants.elementary_charge
 EMASS = _constants.electron_mass
@@ -180,7 +182,7 @@ class SourceFunctions:
         """
         k = _np.sqrt(8 * PLACK * _np.pi * gamma**2 / (energy * period) - 2)
         return k
-    
+
     @staticmethod
     def get_hybrid_devices():
         """Get a list of all hybrid devices.
@@ -189,13 +191,13 @@ class SourceFunctions:
             list of str: list of all hybrid devices
         """
         hybrids = [
-            'cpmu_pr',
-            'cpmu_prnd',
-            'cpmu_nd',
-            'ivu',
-            'hybrid',
-            'ivu_smco',
-            'hybrid_smco',
+            "cpmu_pr",
+            "cpmu_prnd",
+            "cpmu_nd",
+            "ivu",
+            "hybrid",
+            "ivu_smco",
+            "hybrid_smco",
         ]
         return hybrids
 
@@ -207,10 +209,10 @@ class SourceFunctions:
             list of str: list of all PPM devices
         """
         ppms = [
-            'planar',
-            'apple2',
-            'delta',
-            'delta_prototype',
+            "planar",
+            "apple2",
+            "delta",
+            "delta_prototype",
         ]
         return ppms
 
@@ -222,14 +224,14 @@ class SourceFunctions:
             list of str: list of all planar devices
         """
         planars = [
-            'cpmu_pr',
-            'cpmu_prnd',
-            'cpmu_nd',
-            'ivu',
-            'hybrid',
-            'ivu_smco',
-            'hybrid_smco',
-            'planar',
+            "cpmu_pr",
+            "cpmu_prnd",
+            "cpmu_nd",
+            "ivu",
+            "hybrid",
+            "ivu_smco",
+            "hybrid_smco",
+            "planar",
         ]
         return planars
 
@@ -241,11 +243,11 @@ class SourceFunctions:
             list of str: list of all in-vacuum devices
         """
         ivus = [
-            'ivu',
-            'ivu_smco',
-            'cpmu_nd',
-            'cpmu_pr',
-            'cpmu_prnd',
+            "ivu",
+            "ivu_smco",
+            "cpmu_nd",
+            "cpmu_pr",
+            "cpmu_prnd",
         ]
         return ivus
 
@@ -257,129 +259,11 @@ class SourceFunctions:
             list of str: list of all CPMU devices
         """
         cpmus = [
-            'cpmu_nd',
-            'cpmu_pr',
-            'cpmu_prnd',
+            "cpmu_nd",
+            "cpmu_pr",
+            "cpmu_prnd",
         ]
         return cpmus
-
-    @staticmethod
-    def get_efficiency(device):
-        """Get effective field efficiency. Based on data found on literature.
-
-        Args:
-            device (str): label of device type
-
-        Returns:
-            float: effective field efficiency value
-        """
-        cpmu_efficiency = 0.90
-        other_efficiency = 1.0
-        
-        cpmus = SourceFunctions.get_cpmu_devices()
-
-        if device in cpmus: 
-            efficiency = cpmu_efficiency   
-            
-        else: 
-            efficiency = other_efficiency    
-
-        return efficiency   
-
-    @staticmethod
-    def calc_beam_stay_clear(pos, section, delta_prototype_chamber=False):
-        """Calculate horizontal and vertical beam stay clear at a given position 'pos'. 
-
-        Args:
-            pos (float): position (distance from straight section center) in [m]
-            section (str): label of straight section type
-            delta_prototype_chamber (bool, optional): Check if the delta prototype is being considered. Defaults to False.
-
-        Returns:
-            float, float: Horizontal and Vertical beam stay clear at 'pos'.
-        """
-        if section.lower() in ('sb', 'sp'):
-            beta0_h = 1.50
-            beta0_v = 1.44
-            bsc0_h = 3.32
-            bsc0_v = 1.85
-
-            if delta_prototype_chamber:
-                bsc0_h = 2.85
-
-        elif section.lower() == 'sa':
-            beta0_h = 17.20
-            beta0_v = 3.60
-            bsc0_h = 11.27
-            bsc0_v = 2.92
-
-            if delta_prototype_chamber:
-                bsc0_h = 9.66
-
-        beta_h = pos**2/beta0_h + beta0_h
-        beta_v = pos**2/beta0_v + beta0_v
-
-        bsc_h = bsc0_h*_np.sqrt(beta_h/beta0_h)
-        bsc_v = bsc0_v*_np.sqrt(beta_v/beta0_v)
-
-        return bsc_h, bsc_v
-
-    @staticmethod
-    def calc_min_gap(
-            device, length, polarization, section,
-            dg_out_vacuum=1.0, dg_in_vacuum=0.2,
-            dg_delta_prototype=0.6, delta_gap=0.0):
-        """Calculate minimum gap due to beam stay clear, vacuum chamber and tolerances, given a device type and length.
-
-        Args:
-            device (str): device label
-            length (float): length of the device in [m]
-            polarization (str): light polarization 'hp', 'vp' or 'cp' 
-            section (str): straight section 'sb', 'sp' or 'sa' 
-            dg_out_vacuum (float, optional): Vacuum chamber wall thickness (x2) in [mm]. Defaults to 1.0.
-            dg_in_vacuum (float, optional): tolerances + sheet thickness. Defaults to 0.2.
-            dg_delta_prototype (float, optional): Vacuum chamber wall thickness (x2) in [mm]. Defaults to 0.6.
-            delta_gap (float, optional): Addicional tolerance for the gap. Defaults to 0.0.
-
-        Returns:
-            float: minimum gap in [mm] 
-        """
-        
-        pos = length/2
-
-        if device == 'delta_prototype':
-            delta_prototype_chamber = True
-            pos = pos + 0.1
-        else:
-            delta_prototype_chamber = False
-
-        bsc_h, bsc_v = SourceFunctions.calc_beam_stay_clear(
-            pos, section=section, delta_prototype_chamber=delta_prototype_chamber)
-
-        planar_devices = SourceFunctions.get_planar_devices()
-
-        ivu_devices = SourceFunctions.get_invacuum_devices()
-
-        if device in planar_devices:
-            if polarization.lower() == 'vp':
-                gap0 = 2*bsc_h
-            else:
-                gap0 = 2*bsc_v
-        elif device == 'apple2':
-            gap0 = 2*bsc_v
-        elif device in ('delta', 'delta_prototype'):
-            gap0 = _np.sqrt(2*(bsc_v**2 + bsc_h**2))
-        else:
-            raise Exception('device not found: ', device)
-
-        if device in ivu_devices:
-            gap = gap0 + dg_in_vacuum
-        elif device == 'delta_prototype':
-            gap = gap0 + dg_delta_prototype
-        else:
-            gap = gap0 + dg_out_vacuum
-
-        return gap + delta_gap
 
     @staticmethod
     def beff_function(gap_over_period, br, a, b, c):
@@ -395,154 +279,20 @@ class SourceFunctions:
         Returns:
             float: Effective field B_eff
         """
-        return a*br*_np.exp(b*gap_over_period + c*(gap_over_period**2))
+        return a * br * _np.exp(b * gap_over_period + c * (gap_over_period**2))
 
     @staticmethod
-    def get_br(device):
-        """Get remanent field Br for a given device.
+    def _get_list_of_pol(undulator_type):
+        polarizations = dict()
+        polarizations["apple2"] = ["hp", "vp", "cp"]
+        polarizations["delta"] = ["hp", "vp", "cp"]
+        polarizations["planar"] = ["hp"]
+        polarizations["hybrid"] = ["hp"]
+        polarizations["cpmu_nd"] = ["hp"]
+        polarizations["cpmu_prnd"] = ["hp"]
+        polarizations["cpmu_pr"] = ["hp"]
 
-        Args:
-            device (str): device label
-
-        Returns:
-            float: remanent field Br in [T].
-        """
-        if device in ('planar', 'delta', 'delta_prototype', 'apple2'):
-            br = 1.37
-        elif device in ('hybrid', 'ivu'):
-            br = 1.24
-        elif device in ('hybrid_smco', 'ivu_smco'):
-            br = 1.15
-        elif device == 'cpmu_nd':
-            br = 1.5
-        elif device == 'cpmu_prnd':
-            br = 1.62
-        elif device == 'cpmu_pr':
-            br = 1.67
-        else:
-            raise Exception('device not found: ', device)
-        return br
-
-    @staticmethod
-    def get_beff_coefs(device, polarization):
-        """Get Halbach coefficients for a given device and polarization.
-
-        Args:
-            device (str): Device label.
-            polarization (str): Light polarization 'hp', 'vp' or 'cp'.
-
-        Returns:
-            dict: A dictionary containing the 3 Halbach coefficients.
-        """
-        coeffs = {
-            "planar": {
-                "hp": {"a": 1.732, "b": -3.238, "c": 0.0}},
-            "apple2": {
-                "hp": {"a": 1.732, "b": -3.238, "c": 0.0},
-                "vp": {"a": 1.926, "b": -5.629, "c": 1.448},
-                "cp": {"a": 1.356, "b": -4.875, "c": 0.947},
-                },
-            "delta": {
-                "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
-                "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
-                "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
-                },
-            "hybrid_smco": {
-                "hp": {"a": 2.789, "b": -4.853, "c": 1.550}},
-            "hybrid": {
-                "hp": {"a": 2.552, "b": -4.431, "c": 1.101}},
-            "cpmu_nd": {
-                "hp": {"a": 2.268, "b": -3.895, "c": 0.554}},
-            "cpmu_prnd": {
-                "hp": {"a": 2.132, "b": -3.692, "c": 0.391}},
-            "cpmu_pr": {
-                "hp": {"a": 2.092, "b": -3.655, "c": 0.376}},
-            }
-
-        if device == 'ivu':
-            devdict = coeffs['hybrid']
-        elif device == 'delta_prototype':
-            devdict = coeffs['delta']
-        elif device == 'ivu_smco':
-            devdict = coeffs['hybrid_smco']
-        else:
-            devdict = coeffs[device]
-
-        if device in ('apple2', 'delta', 'delta_prototype'):
-            cdict = devdict[polarization]
-        else:
-            cdict = devdict['hp']
-
-        br = SourceFunctions.get_br(device)
-        cdict['br'] = br
-
-        return cdict
-
-    @staticmethod
-    def get_beff(gap_over_period, device, polarization, efficiency=1.0):
-        """Get peak magnetic field for a given device and gap.
-
-        Args:
-            gap_over_period (float): gap normalized by the undulator period.
-            device (str): Device label.
-            polarization (str): Light polarization 'hp', 'vp' or 'cp'.
-            efficiency (float, optional): Field efficiency. Defaults to 1.0.
-
-        Returns:
-            _type_: _description_
-        """
-        coeffs = SourceFunctions.get_beff_coefs(device=device, polarization=polarization)
-        br = coeffs['br']
-        a = coeffs['a']
-        b = coeffs['b']
-        c = coeffs['c']
-        return efficiency*SourceFunctions.beff_function(
-            gap_over_period=gap_over_period, br=br, a=a, b=b, c=c)
-
-    @staticmethod
-    def get_device_label(device):
-        """Get label string for a given device.
-
-        Args:
-            device (str): Device type.
-
-        Returns:
-            str: Device label.
-        """
-        if device == 'cpmu_pr': 
-            label = 'CPMU (Pr)'    
-
-        if device == 'cpmu_prnd': 
-            label = 'CPMU (Pr,Nd)'    
-
-        elif device == 'cpmu_nd': 
-            label = 'CPMU (Nd)'     
-
-        elif device == 'ivu': 
-            label = 'IVU (Nd)' 
-            
-        elif device == 'hybrid': 
-            label = 'Hybrid (Nd)'    
-                
-        elif device == 'delta': 
-            label = 'Delta'
-
-        elif device == 'delta_prototype': 
-            label = 'Delta-prot.'
-            
-        elif device == 'planar': 
-            label = 'Planar'
-                    
-        elif device == 'apple2': 
-            label = 'Apple-II'
-
-        elif device == 'ivu_smco':
-            label = 'IVU (SmCo)'
-        
-        elif device == 'hybrid_smco':
-            label = 'Hybrid (SmCo)'
-
-        return label 
+        return polarizations[undulator_type]
 
     @staticmethod
     def get_polarization_label(polarization):
@@ -554,14 +304,14 @@ class SourceFunctions:
         Returns:
             str: polarization label
         """
-        if polarization == 'hp':
-            label = 'Horizontal Polarization'
-        
-        elif polarization == 'vp':
-            label = 'Vertical Polarization'
-        
-        elif polarization == 'cp':
-            label = 'Circular Polarization'
+        if polarization == "hp":
+            label = "Horizontal Polarization"
+
+        elif polarization == "vp":
+            label = "Vertical Polarization"
+
+        elif polarization == "cp":
+            label = "Circular Polarization"
 
         return label
 
@@ -576,4 +326,396 @@ class SourceFunctions:
         Returns:
             str: prefix string
         """
-        return 'und_' + device + '_' + polarization
+        return "und_" + device + "_" + polarization
+
+
+class Undulator(SourceFunctions):
+    """Main class for undulators.
+
+    Args:
+        SourceFunctions (SourceFunctions class): S. F. functions
+    """
+
+    def __init__(self):
+        """Class constructor."""
+        self._undulator_type = "planar"
+        self._br = 1.37
+        self._period = 50
+        self._length = 1.0
+        self._efficiency = 1.0
+        self._label = "label"
+        self._polarization = "hp"
+        self._halbach_coef = dict()
+
+    @property
+    def undulator_type(self):
+        """Undulator type.
+
+        Returns:
+            str: Undulator type.
+        """
+        return self._undulator_type
+
+    @property
+    def br(self):
+        """Remanent magnetization.
+
+        Returns:
+            float: Remanent mag [T]
+        """
+        return self._br
+
+    @property
+    def period(self):
+        """Undulator period.
+
+        Returns:
+            float: Period [mm]
+        """
+        return self._period
+
+    @property
+    def length(self):
+        """Undulator length.
+
+        Returns:
+            float: Length [m]
+        """
+        return self._length
+
+    @property
+    def efficiency(self):
+        """Undulator efficiency.
+
+        Returns:
+            float: Efficiency
+        """
+        return self._efficiency
+
+    @property
+    def label(self):
+        """Undulator label.
+
+        Returns:
+            str: Undulator label
+        """
+        return self._label
+
+    @property
+    def polarization(self):
+        """Polarization.
+
+        Returns:
+            str: Undulator polarization
+        """
+        return self._polarization
+
+    @property
+    def halbach_coef(self):
+        """Halbach coefficients.
+
+        Returns:
+            dict: dictionary with halbach coeffs for each polarization.
+        """
+        return self._halbach_coef
+
+    @undulator_type.setter
+    def undulator_type(self, value):
+        self._undulator_type = value
+
+    @br.setter
+    def br(self, value):
+        self._br = value
+
+    @period.setter
+    def period(self, value):
+        self._period = value
+
+    @length.setter
+    def length(self, value):
+        self._length = value
+
+    @efficiency.setter
+    def efficiency(self, value):
+        self._efficiency = value
+
+    @label.setter
+    def label(self, value):
+        self._label = value
+
+    @polarization.setter
+    def polarization(self, value):
+        allowed_pol = self._get_list_of_pol(self.undulator_type)
+        if value in allowed_pol:
+            self._polarization = value
+        else:
+            raise ValueError("Polarization not allowed.")
+
+    @halbach_coef.setter
+    def halbach_coef(self, value):
+        self._halbach_coef = value
+
+    def get_beff(self, gap_over_period):
+        """Get peak magnetic field for a given device and gap.
+
+        Args:
+            gap_over_period (float): gap normalized by the undulator period.
+
+        Returns:
+            _type_: _description_
+        """
+        br = self.br
+        a = self.halbach_coef[self.polarization]["a"]
+        b = self.halbach_coef[self.polarization]["b"]
+        c = self.halbach_coef[self.polarization]["c"]
+        efficiency = self.efficiency
+
+        return efficiency * SourceFunctions.beff_function(
+            gap_over_period=gap_over_period, br=br, a=a, b=b, c=c
+        )
+
+    def calc_min_gap(
+        self, si_parameters=None, section="SB", vc_thickness=0.5, tolerance=0.0
+    ):
+        """Calculate minimum gap of undulator.
+
+        Args:
+        si_parameters (StorageRingParameters, optional): StorageRingParameters
+         object. Defaults to None.
+        section (str, optional): Straight section (SB, SP or SA).
+         Defaults to 'SB'.
+        vc_thickness (float, optional): Vacuum chamber thickness.
+         Defaults to 0.5.
+        tolerance (float, optional): Extra delta in gap. Defaults to 0.0.
+
+        Returns:
+            float: (min gap vertical, min gap horizontal) minimum gap allowed.
+        """
+        pos = self.length / 2
+        section = section.lower()
+
+        if si_parameters is None:
+            acc = StorageRingParameters()
+            acc.set_bsc_with_ivu18()
+            if section == 'sb' or section == 'sp':
+                acc.set_low_beta_section()
+            elif section == 'sa':
+                acc.set_high_beta_section()
+            else:
+                raise ValueError('Section not defined.')
+        else:
+            acc = si_parameters
+
+        bsch, bscv = acc.calc_beam_stay_clear(pos)
+        gaph = 2*bsch + vc_thickness + tolerance
+        gapv = 2*bscv + vc_thickness + tolerance
+
+        return gapv, gaph
+
+
+class Planar(Undulator):
+    """Planar Undulator class.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm]
+            length (float, optional): Undulator length [m]
+        """
+        super().__init__()
+        self._undulator_type = "planar"
+        self._label = "Planar"
+        self._br = 1.37
+        self._polarization = "hp"
+        self._efficiency = 1
+        self._halbach_coef = {"hp": {"a": 1.732, "b": -3.238, "c": 0.0}}
+        self._period = period
+        self._length = length
+
+
+class Apple2(Undulator):
+    """Apple2 Undulator class.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm].
+            length (float, optional): Undulator length [m].
+        """
+        super().__init__()
+        self._undulator_type = "apple2"
+        self._label = "Apple-II"
+        self._br = 1.37
+        self._polarization = "hp"
+        self._efficiency = 1
+        self._halbach_coef = {
+            "hp": {"a": 1.732, "b": -3.238, "c": 0.0},
+            "vp": {"a": 1.926, "b": -5.629, "c": 1.448},
+            "cp": {"a": 1.356, "b": -4.875, "c": 0.947},
+        }
+        self._period = period
+        self._length = length
+
+
+class Delta(Undulator):
+    """Delta Undulator class.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm].
+            length (float, optional): Undulator length [m].
+        """
+        super().__init__()
+        self._undulator_type = "delta"
+        self._label = "Delta"
+        self._br = 1.37
+        self._polarization = "hp"
+        self._efficiency = 1
+        self._halbach_coef = {
+            "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
+            "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
+            "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
+        }
+        self._period = period
+        self._length = length
+
+
+class Hybrid(Undulator):
+    """Hybrid Undulator class.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm]
+            length (float, optional): Undulator length [m]
+        """
+        super().__init__()
+        self._undulator_type = "hybrid"
+        self._label = "Hybrid (Nd)"
+        self._br = 1.24
+        self._polarization = "hp"
+        self._efficiency = 1
+        self._halbach_coef = {"hp": {"a": 2.552, "b": -4.431, "c": 1.101}}
+        self._period = period
+        self._length = length
+
+
+class Hybrid_smco(Undulator):
+    """Hybrid smco Undulator class.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm]
+            length (float, optional): Undulator length [m]
+        """
+        super().__init__()
+        self._undulator_type = "hybrid_smco"
+        self._label = "Hybrid (SmCo)"
+        self._br = 1.24
+        self._polarization = "hp"
+        self._efficiency = 1
+        self._halbach_coef = {"hp": {"a": 2.789, "b": -4.853, "c": 1.550}}
+        self._period = period
+        self._length = length
+
+
+class Cpmu_nd(Undulator):
+    """Cpmu nd Undulator class.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm]
+            length (float, optional): Undulator length [m]
+        """
+        super().__init__()
+        self._undulator_type = "cpmu_nd"
+        self._label = "CPMU (Nd)"
+        self._br = 1.5
+        self._polarization = "hp"
+        self._efficiency = 0.9
+        self._halbach_coef = {"hp": {"a": 2.268, "b": -3.895, "c": 0.554}}
+        self._period = period
+        self._length = length
+
+
+class Cpmu_pr_nd(Undulator):
+    """Cpmu pr nd Undulator class.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm]
+            length (float, optional): Undulator length [m]
+        """
+        super().__init__()
+        self._undulator_type = "cpmu_prnd"
+        self._label = "CPMU (Pr,Nd)"
+        self._br = 1.62
+        self._polarization = "hp"
+        self._efficiency = 0.9
+        self._halbach_coef = {"hp": {"a": 2.132, "b": -3.692, "c": 0.391}}
+        self._period = period
+        self._length = length
+
+
+class Cpmu_pr(Undulator):
+    """Cpmu pr Undulator class.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm]
+            length (float, optional): Undulator length [m]
+        """
+        super().__init__()
+        self._undulator_type = "cpmu_pr"
+        self._label = "CPMU (Pr)"
+        self._br = 1.67
+        self._polarization = "hp"
+        self._efficiency = 0.9
+        self._halbach_coef = {"hp": {"a": 2.092, "b": -3.655, "c": 0.376}}
+        self._period = period
+        self._length = length
