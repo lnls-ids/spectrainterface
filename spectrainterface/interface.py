@@ -1349,7 +1349,7 @@ class Calc(GeneralConfigs, SpectraTools):
         energies = _np.zeros((harm_nr, 2001))
         brilliance = _np.zeros((harm_nr, 2001))
         for i in _np.arange(harm_nr - 1):
-            if i == 0 or flag_pre_processing is False:
+            if flag_pre_processing is False:
                 e_harm = input_energies[i, :]
                 b_harm = input_brilliance[i, :]
                 idx = _np.argsort(e_harm)
@@ -1381,13 +1381,20 @@ class Calc(GeneralConfigs, SpectraTools):
             )
 
             max_e_harm = _np.nanmax(e_harm_interp)
-            min_e_next_harm = _np.min(e_next_harm_interp)
+            min_e_harm = _np.nanmin(e_harm_interp)
+            max_e_next_harm = _np.nanmax(e_next_harm_interp)
+            min_e_next_harm = _np.nanmin(e_next_harm_interp)
 
+            flag_pre_processing = False
             if max_e_harm >= min_e_next_harm:
                 flag_pre_processing = True
+
+                min_abs = _np.max((min_e_harm, min_e_next_harm))
+                max_abs = _np.min((max_e_harm, max_e_next_harm))
                 energy_intersect = _np.linspace(
-                    min_e_next_harm, max_e_harm, 2001
+                    min_abs, max_abs, 2001
                 )
+
                 b_harm_intersect = _np.interp(
                     energy_intersect, e_harm_interp, b_harm_interp
                 )
@@ -1398,6 +1405,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 idcs_bigger = _np.where(
                     b_next_harm_intersect >= b_harm_intersect
                 )
+
                 ecross = energy_intersect[_np.min(idcs_bigger)]
 
                 idx_cut_e1 = _np.nanargmin(
@@ -1406,6 +1414,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 idx_cut_e3 = _np.nanargmin(
                     _np.abs(e_next_harm_interp - ecross + superp_value)
                 )
+
                 e_harm = e_harm_interp[:idx_cut_e1]
                 b_harm = b_harm_interp[:idx_cut_e1]
 
@@ -1598,7 +1607,7 @@ class SpectraInterface:
         for i, undulator in enumerate(self.sources):
             color = colorlist[i]
             for j in _np.arange(self.energies.shape[1]):
-                if j == 0:
+                if j == 1:
                     label = undulator.label
                     _plt.plot(
                         self.energies[i, j, :],
