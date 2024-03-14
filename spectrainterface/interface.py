@@ -11,7 +11,7 @@ import sys
 import time
 import os
 
-#REPOS_PATH = os.path.abspath("./")
+# REPOS_PATH = os.path.abspath("./")
 # REPOS_PATH = __file__
 REPOS_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -1327,6 +1327,119 @@ class Calc(GeneralConfigs, SpectraTools):
                 data[i, :, :] = _np.array(solver.GetDetailData(i)["data"])
         return captions, data, variables
 
+    @staticmethod
+    def process_brilliance_curve(
+        input_energies, input_brilliance, superp_value=250
+    ):
+        """Process brilliance curve.
+
+        Args:
+            input_energies (numpy 2d array): Array with energies and
+             brilliances for each harmonic
+            input_brilliance (numpy 2d array): Array with energies and
+                brilliances for each harmonic
+            superp_value (int, optional): Desired value of energy
+             superposition. Defaults to 250.
+
+        Returns:
+            _type_: _description_
+        """
+        flag_pre_processing = False
+        harm_nr = input_energies.shape[0]
+        energies = _np.zeros((harm_nr, 2001))
+        brilliance = _np.zeros((harm_nr, 2001))
+        for i in _np.arange(harm_nr - 1):
+            if i == 0 or flag_pre_processing is False:
+                e_harm = input_energies[i, :]
+                b_harm = input_brilliance[i, :]
+                idx = _np.argsort(e_harm)
+                e_harm = e_harm[idx]
+                b_harm = b_harm[idx]
+                e_harm_interp = _np.linspace(
+                    _np.min(e_harm), _np.max(e_harm), 2001
+                )
+                b_harm_interp = _np.exp(
+                    _np.interp(e_harm_interp, e_harm, _np.log(b_harm))
+                )
+            else:
+                e_harm_interp = energies[i, :]
+                b_harm_interp = brilliance[i, :]
+
+            e_next_harm = input_energies[i + 1, :]
+            b_next_harm = input_brilliance[i + 1, :]
+            idx = _np.argsort(e_next_harm)
+            e_next_harm = e_next_harm[idx]
+            b_next_harm = b_next_harm[idx]
+
+            e_next_harm_interp = _np.linspace(
+                _np.min(e_next_harm), _np.max(e_next_harm), 2001
+            )
+            b_next_harm_interp = _np.exp(
+                _np.interp(
+                    e_next_harm_interp, e_next_harm, _np.log(b_next_harm)
+                )
+            )
+
+            max_e_harm = _np.nanmax(e_harm_interp)
+            min_e_next_harm = _np.min(e_next_harm_interp)
+
+            if max_e_harm >= min_e_next_harm:
+                flag_pre_processing = True
+                energy_intersect = _np.linspace(
+                    min_e_next_harm, max_e_harm, 2001
+                )
+                b_harm_intersect = _np.interp(
+                    energy_intersect, e_harm_interp, b_harm_interp
+                )
+                b_next_harm_intersect = _np.interp(
+                    energy_intersect, e_next_harm_interp, b_next_harm_interp
+                )
+
+                idcs_bigger = _np.where(
+                    b_next_harm_intersect >= b_harm_intersect
+                )
+                ecross = energy_intersect[_np.min(idcs_bigger)]
+
+                idx_cut_e1 = _np.nanargmin(
+                    _np.abs(e_harm_interp - ecross - superp_value)
+                )
+                idx_cut_e3 = _np.nanargmin(
+                    _np.abs(e_next_harm_interp - ecross + superp_value)
+                )
+                e_harm = e_harm_interp[:idx_cut_e1]
+                b_harm = b_harm_interp[:idx_cut_e1]
+
+                e_next_harm = e_next_harm_interp[idx_cut_e3:]
+                b_next_harm = b_next_harm_interp[idx_cut_e3:]
+
+            e_harm_new = _np.copy(e_harm)
+            b_harm_new = _np.copy(b_harm)
+            e_harm_new.resize(2001)
+            b_harm_new.resize(2001)
+            idx = len(e_harm) - 1
+            e_harm_new[idx:] = _np.full(len(e_harm_new[idx:]), _np.nan)
+            b_harm_new[idx:] = _np.full(len(e_harm_new[idx:]), _np.nan)
+
+            e_next_harm_new = _np.copy(e_next_harm)
+            b_next_harm_new = _np.copy(b_next_harm)
+            e_next_harm_new.resize(2001)
+            b_next_harm_new.resize(2001)
+            idx = len(e_next_harm) - 1
+            e_next_harm_new[idx:] = _np.full(
+                len(e_next_harm_new[idx:]), _np.nan
+            )
+            b_next_harm_new[idx:] = _np.full(
+                len(e_next_harm_new[idx:]), _np.nan
+            )
+
+            energies[i, :] = e_harm_new
+            brilliance[i, :] = b_harm_new
+
+            energies[i + 1, :] = e_next_harm_new
+            brilliance[i + 1, :] = b_next_harm_new
+
+        return energies, brilliance
+
 
 class SpectraInterface:
     """Spectra Interface class."""
@@ -1335,6 +1448,9 @@ class SpectraInterface:
         """Class constructor."""
         self._accelerator = StorageRingParameters()
         self._calc = Calc(self._accelerator)
+        self._sources = None
+        self._energies = None
+        self._brilliances = None
 
     @property
     def accelerator(self):
@@ -1353,3 +1469,167 @@ class SpectraInterface:
             CalcFlux object: Class to calculate flux
         """
         return self._calc
+
+    @property
+    def sources(self):
+        """Sources list.
+
+        Returns:
+            List: List of sources objects
+        """
+        return self._sources
+
+    @property
+    def energies(self):
+        """List of energies for each undulator.
+
+        Returns:
+            list of numpy arrays: Energies for each undulator, for each
+             harmonic.
+        """
+        return self._energies
+
+    @property
+    def brilliances(self):
+        """List of brilliances for each undulator.
+
+        Returns:
+            list of numpy arrays: Brilliances for each undulator, for each
+             harmonic.
+        """
+        return self._brilliances
+
+    @sources.setter
+    def sources(self, value):
+        self._sources = value
+
+    def calc_brilliance_curve(
+        self,
+        harmonic_range=[1, 5],
+        nr_pts_k=15,
+        kmin=0.2,
+    ):
+        """Calc brilliance curve.
+
+        Args:
+            harmonic_range (list, optional): List of desired harmonics.
+             Defaults to [1, 5].
+            nr_pts_k (int, optional): Number of k points. Defaults to 15.
+            kmin (float): Minimum k value. Defaults to 0.2
+
+        Raises:
+            ValueError: Invalid polarization.
+        """
+        undulator_list = self.sources
+        self.calc.output_type = self.calc.CalcConfigs.Output.brilliance
+        self.calc.indep_var = self.calc.CalcConfigs.Variable.k
+        self.calc.method = self.calc.CalcConfigs.Method.wigner
+        self.calc.slice_x = 0
+        self.calc.slice_px = 0
+        self.calc.slice_y = 0
+        self.calc.slice_py = 0
+        self.calc.harmonic_range = harmonic_range
+        self.calc.k_nr_pts = nr_pts_k
+        energies = list()
+        brilliances = list()
+        for i, undulator in enumerate(undulator_list):
+            print(
+                "Calculating curve for undulator {:.0f}/{:.0f}".format(
+                    i + 1, len(undulator_list)
+                )
+            )
+            polarization = undulator.polarization
+            kmax = undulator.calc_max_k(self.accelerator)
+            self.calc.k_range = [kmin, kmax]
+
+            if polarization == "hp":
+                self.calc.source_type = (
+                    self.calc.SourceType.horizontal_undulator
+                )
+            elif polarization == "vp":
+                self.calc.source_type = self.calc.SourceType.vertical_undulator
+            elif polarization == "cp":
+                self.calc.source_type = self.calc.SourceType.elliptic_undulator
+            else:
+                raise ValueError("Invalid polarization.")
+
+            self.calc.period = undulator.period
+            self.calc.by_peak = 1
+            self.calc.id_length = undulator.length
+
+            self.calc.set_config()
+            self.calc.run_calculation()
+
+            energies.append(self.calc.energies)
+            brilliances.append(self.calc.brilliance)
+
+        energies = _np.array(energies)
+        brilliances = _np.array(brilliances)
+        self._energies = energies
+        self._brilliances = brilliances
+
+    def plot_brilliance_curve(self, process_curves=True, superp_value=250):
+        """Plot brilliance curves.
+
+        Args:
+            process_curves (bool, optional): If true energy superposition will
+             be processed. Defaults to True.
+            superp_value (int, optional): Desired value of energy
+             superposition. Defaults to 250.
+        """
+        energies = list()
+        brilliances = list()
+        if process_curves is True:
+            for i, source in enumerate(self.sources):
+                input_energies = self.energies[i, :, :]
+                input_brilliance = self.brilliances[i, :, :]
+                energies_, brilliance = self.calc.process_brilliance_curve(
+                    input_energies, input_brilliance, superp_value=superp_value
+                )
+                energies.append(energies_)
+                brilliances.append(brilliance)
+            energies = _np.array(energies)
+            brilliances = _np.array(brilliances)
+            self._energies = energies
+            self._brilliances = brilliances
+
+        _plt.figure(figsize=(4.5, 3.0))
+        colorlist = ["C0", "C1", "C2", "C3", "C4", "C5"]
+        for i, undulator in enumerate(self.sources):
+            color = colorlist[i]
+            for j in _np.arange(self.energies.shape[1]):
+                if j == 0:
+                    label = undulator.label
+                    _plt.plot(
+                        self.energies[i, j, :],
+                        self.brilliances[i, j, :],
+                        color=color,
+                        linewidth=3,
+                        alpha=0.9,
+                        label=label,
+                    )
+                else:
+                    _plt.plot(
+                        self.energies[i, j, :],
+                        self.brilliances[i, j, :],
+                        color=color,
+                        linewidth=3,
+                        alpha=0.9,
+                    )
+        _plt.minorticks_on()
+        _plt.yscale("log")
+
+        _plt.xlabel("Energy [keV]")
+        _plt.ylabel("Flux [ph/s/0.1%/100mA]")
+        _plt.title("Brilliance curve for horizontal polarization")
+
+        _plt.tick_params(
+            which="both", axis="both", direction="in", top=True, right=True
+        )
+        _plt.grid(which="major", alpha=0.4)
+        _plt.grid(which="minor", alpha=0.2)
+
+        _plt.legend()
+        _plt.tight_layout()
+
+        _plt.show()

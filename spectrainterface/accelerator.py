@@ -23,6 +23,7 @@ class StorageRingParameters:
         self._etay = 0  # [m]
         self._etapx = 0
         self._etapy = 0
+        self._beta_section = 'low'
 
         self._zero_emittance = False
         self._zero_energy_spread = False
@@ -244,6 +245,15 @@ class StorageRingParameters:
         """
         return self._bsc0_v_lowbeta
 
+    @property
+    def beta_section(self):
+        """Beta section.
+
+        Returns:
+            str: Beta section (high or low)
+        """
+        return self._beta_section
+
     @energy.setter
     def energy(self, value):
         self._energy = value
@@ -361,6 +371,7 @@ class StorageRingParameters:
         self.etapy = 0
         self.bsc0_h = self.bsc0_h_lowbeta
         self.bsc0_v = self.bsc0_v_lowbeta
+        self._beta_section = 'low'
 
     def set_high_beta_section(self):
         """Set high beta section."""
@@ -380,6 +391,7 @@ class StorageRingParameters:
         self.etapy = 0
         self.bsc0_h = self.bsc0_h_highbeta
         self.bsc0_v = self.bsc0_v_highbeta
+        self._beta_section = 'high'
 
     def calc_beam_stay_clear(self, pos):
         """Calculate horizontal and vertical BSC at a given position.
