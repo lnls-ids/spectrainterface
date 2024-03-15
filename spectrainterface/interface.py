@@ -122,18 +122,21 @@ class GeneralConfigs(SourceFunctions):
         elliptic_undulator = "ellipticundulator"
         figure8_undulator = "figure8undulator"
         vertical_figure8_undulator = "verticalfigure8undulator"
+        bending_magnet = "bendingmagnet"
+        wiggler = "wiggler"
 
     def __init__(self):
         """Class constructor."""
         self._distance_from_source = 10  # [m]
         self._source_type = self.SourceType.user_defined
         self._field = None
+        self._length = None
         self._bx_peak = None
         self._by_peak = None
         self._period = None
         self._kx = None
         self._ky = None
-        self._id_length = None
+        self._rho = None
 
     @property
     def source_type(self):
@@ -155,6 +158,15 @@ class GeneralConfigs(SourceFunctions):
             [T], and third column constais horizontal field [T].
         """
         return self._field
+
+    @property
+    def length(self):
+        """Length of device.
+
+        Returns:
+            float: Length [m]
+        """
+        return self._length
 
     @property
     def period(self):
@@ -202,13 +214,13 @@ class GeneralConfigs(SourceFunctions):
         return self._kx
 
     @property
-    def id_length(self):
-        """Insertion device's length.
+    def rho(self):
+        """Curvature radius.
 
         Returns:
-            float: Id's length [m]
+            float: Curvature radius [m]
         """
-        return self._id_length
+        return self._rho
 
     @property
     def distance_from_source(self):
@@ -232,11 +244,18 @@ class GeneralConfigs(SourceFunctions):
         else:
             self._field = value
 
+    @length.setter
+    def length(self, value):
+        self._length = value
+
     @period.setter
     def period(self, value):
-        if self.source_type == self.SourceType.user_defined:
+        if (
+            self.source_type == self.SourceType.user_defined
+            or self.source_type == self.SourceType.bending_magnet
+        ):
             raise ValueError(
-                "Period can only be defined if source type is not user_defined."  # noqa: E501
+                "Period can only be defined if source type is not user_defined or is not a bending."  # noqa: E501
             )
         else:
             self._period = value
@@ -343,14 +362,14 @@ class GeneralConfigs(SourceFunctions):
                 if self.period is not None:
                     self._bx_peak = self.bx_peak
 
-    @id_length.setter
-    def id_length(self, value):
-        if self.source_type == self.SourceType.user_defined:
-            raise ValueError(
-                "Id length can only be defined if source type is not user_defined"  # noqa: E501
-            )
+    @rho.setter
+    def rho(self, value):
+        if self.source_type == self.SourceType.bending_magnet:
+            self._rho = value
         else:
-            self._id_length = value
+            raise ValueError(
+                "Curvature radius can only be defined if source is a bending magnet."  # noqa: E501
+            )
 
     @distance_from_source.setter
     def distance_from_source(self, value):
@@ -1076,13 +1095,32 @@ class Calc(GeneralConfigs, SpectraTools):
                     self.ky,
                 ]
 
+        if self.by_peak is not None:
+            if self.source_type == self.SourceType.bending_magnet:
+                input_temp["Light Source"]["B (T)"] = self.by_peak
+                energy = self._accelerator.energy
+                brho = energy * 1e9 * ECHARGE / (ECHARGE * LSPEED)
+                rho = brho / self.by_peak
+                input_temp["Light Source"]["&rho; (m)"] = rho
+
+        if self.rho is not None:
+            if self.source_type == self.SourceType.bending_magnet:
+                input_temp["Light Source"]["&rho; (m)"] = self.rho
+                energy = self._accelerator.energy
+                brho = energy * 1e9 * ECHARGE / (ECHARGE * LSPEED)
+                by = brho / self.rho
+                input_temp["Light Source"]["B (T)"] = by
+
         if self.period is not None:
             input_temp["Light Source"]["&lambda;<sub>u</sub> (mm)"] = (
                 self.period
             )
 
-        if self.id_length is not None:
-            input_temp["Light Source"]["Device Length (m)"] = self.id_length
+        if self.length is not None:
+            if self.source_type == self.SourceType.bending_magnet:
+                input_temp["Light Source"]["BM Length (m)"] = self.length
+            else:
+                input_temp["Light Source"]["Device Length (m)"] = self.length
 
         if self.energy_range is not None:
             input_temp["Configurations"]["Energy Range (eV)"] = (
@@ -1090,9 +1128,19 @@ class Calc(GeneralConfigs, SpectraTools):
             )
 
         if self.energy_step is not None:
-            input_temp["Configurations"]["Energy Pitch (eV)"] = (
-                self.energy_step
-            )
+            if (
+                self.source_type == self.SourceType.bending_magnet
+                or self.source_type == self.SourceType.wiggler
+            ):
+                nr_points = int(
+                    (self.energy_range[1] - self.energy_range[0])
+                    / self.energy_step
+                )
+                input_temp["Configurations"]["Points (Energy)"] = nr_points
+            else:
+                input_temp["Configurations"]["Energy Pitch (eV)"] = (
+                    self.energy_step
+                )
 
         if self.observation_angle is not None:
             if self.output_type == self.CalcConfigs.Output.flux_density:
@@ -1391,9 +1439,7 @@ class Calc(GeneralConfigs, SpectraTools):
 
                 min_abs = _np.max((min_e_harm, min_e_next_harm))
                 max_abs = _np.min((max_e_harm, max_e_next_harm))
-                energy_intersect = _np.linspace(
-                    min_abs, max_abs, 2001
-                )
+                energy_intersect = _np.linspace(min_abs, max_abs, 2001)
 
                 b_harm_intersect = _np.interp(
                     energy_intersect, e_harm_interp, b_harm_interp
@@ -1526,8 +1572,6 @@ class SpectraInterface:
             nr_pts_k (int, optional): Number of k points. Defaults to 15.
             kmin (float): Minimum k value. Defaults to 0.2
 
-        Raises:
-            ValueError: Invalid polarization.
         """
         undulator_list = self.sources
         self.calc.output_type = self.calc.CalcConfigs.Output.brilliance
@@ -1547,24 +1591,27 @@ class SpectraInterface:
                     i + 1, len(undulator_list)
                 )
             )
-            polarization = undulator.polarization
             kmax = undulator.calc_max_k(self.accelerator)
             self.calc.k_range = [kmin, kmax]
 
+            polarization = undulator.polarization
             if polarization == "hp":
                 self.calc.source_type = (
                     self.calc.SourceType.horizontal_undulator
                 )
-            elif polarization == "vp":
-                self.calc.source_type = self.calc.SourceType.vertical_undulator
-            elif polarization == "cp":
-                self.calc.source_type = self.calc.SourceType.elliptic_undulator
+            elif polarization == 'vp':
+                self.calc.source_type = (
+                    self.calc.SourceType.vertical_undulator
+                )
+            elif polarization == 'cp':
+                self.calc.source_type = (
+                    self.calc.SourceType.elliptic_undulator
+                )
             else:
-                raise ValueError("Invalid polarization.")
-
+                return
             self.calc.period = undulator.period
             self.calc.by_peak = 1
-            self.calc.id_length = undulator.length
+            self.calc.length = undulator.source_length
 
             self.calc.set_config()
             self.calc.run_calculation()

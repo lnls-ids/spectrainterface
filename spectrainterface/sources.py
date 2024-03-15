@@ -19,10 +19,10 @@ class Undulator(SourceFunctions):
 
     def __init__(self):
         """Class constructor."""
+        super().__init__()
         self._undulator_type = "planar"
         self._br = 1.37
         self._period = 50
-        self._length = 1.0
         self._efficiency = 1.0
         self._label = "label"
         self._polarization = "hp"
@@ -56,15 +56,6 @@ class Undulator(SourceFunctions):
             float: Period [mm]
         """
         return self._period
-
-    @property
-    def length(self):
-        """Undulator length.
-
-        Returns:
-            float: Length [m]
-        """
-        return self._length
 
     @property
     def efficiency(self):
@@ -132,10 +123,6 @@ class Undulator(SourceFunctions):
     def period(self, value):
         self._period = value
 
-    @length.setter
-    def length(self, value):
-        self._length = value
-
     @efficiency.setter
     def efficiency(self, value):
         self._efficiency = value
@@ -196,7 +183,7 @@ class Undulator(SourceFunctions):
         Returns:
             float: (min gap vertical, min gap horizontal) minimum gap allowed.
         """
-        pos = self.length / 2
+        pos = self.source_length / 2
         section = section.lower()
 
         if si_parameters is None:
@@ -257,7 +244,8 @@ class Planar(Undulator):
         self._efficiency = 1
         self._halbach_coef = {"hp": {"a": 1.732, "b": -3.238, "c": 0.0}}
         self._period = period
-        self._length = length
+        self._source_length = length
+        self._source_type = "linearundulator"
 
 
 class Apple2(Undulator):
@@ -286,7 +274,8 @@ class Apple2(Undulator):
             "cp": {"a": 1.356, "b": -4.875, "c": 0.947},
         }
         self._period = period
-        self._length = length
+        self._source_length = length
+        self._source_type = "ellipticundulator"
 
 
 class Delta(Undulator):
@@ -315,7 +304,8 @@ class Delta(Undulator):
             "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
         }
         self._period = period
-        self._length = length
+        self._source_length = length
+        self._source_type = "ellipticundulator"
 
 
 class Hybrid(Undulator):
@@ -340,7 +330,8 @@ class Hybrid(Undulator):
         self._efficiency = 1
         self._halbach_coef = {"hp": {"a": 2.552, "b": -4.431, "c": 1.101}}
         self._period = period
-        self._length = length
+        self._source_length = length
+        self._source_type = "linearundulator"
 
 
 class Hybrid_smco(Undulator):
@@ -365,7 +356,8 @@ class Hybrid_smco(Undulator):
         self._efficiency = 1
         self._halbach_coef = {"hp": {"a": 2.789, "b": -4.853, "c": 1.550}}
         self._period = period
-        self._length = length
+        self._source_length = length
+        self._source_type = "linearundulator"
 
 
 class Cpmu_nd(Undulator):
@@ -390,7 +382,8 @@ class Cpmu_nd(Undulator):
         self._efficiency = 0.9
         self._halbach_coef = {"hp": {"a": 2.268, "b": -3.895, "c": 0.554}}
         self._period = period
-        self._length = length
+        self._source_length = length
+        self._source_type = "linearundulator"
 
 
 class Cpmu_pr_nd(Undulator):
@@ -415,7 +408,8 @@ class Cpmu_pr_nd(Undulator):
         self._efficiency = 0.9
         self._halbach_coef = {"hp": {"a": 2.132, "b": -3.692, "c": 0.391}}
         self._period = period
-        self._length = length
+        self._source_length = length
+        self._source_type = "linearundulator"
 
 
 class Cpmu_pr(Undulator):
@@ -440,4 +434,5 @@ class Cpmu_pr(Undulator):
         self._efficiency = 0.9
         self._halbach_coef = {"hp": {"a": 2.092, "b": -3.655, "c": 0.376}}
         self._period = period
-        self._length = length
+        self._source_length = length
+        self._source_type = "linearundulator"
