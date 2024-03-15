@@ -874,9 +874,12 @@ class Calc(GeneralConfigs, SpectraTools):
     @slit_acceptance.setter
     def slit_acceptance(self, value):
         if self.output_type != self.CalcConfigs.Output.flux:
-            raise ValueError(
-                "Slit acceptance can only be defined if the output type is flux."  # noqa: E501
-            )
+            if self.source_type == self.SourceType.bending_magnet:
+                self._slit_acceptance = value
+            else:
+                raise ValueError(
+                    "Slit acceptance can only be defined if the output type is flux."  # noqa: E501
+                )
         else:
             self._slit_acceptance = value
 
@@ -1161,6 +1164,10 @@ class Calc(GeneralConfigs, SpectraTools):
                 input_temp["Configurations"][
                     "&Delta;&theta;<sub>x,y</sub> (mrad)"
                 ] = self.slit_acceptance
+            if self.source_type == self.SourceType.bending_magnet:
+                input_temp["Configurations"]["X' Acceptance (mrad)"] = (
+                    self.slit_acceptance
+                )
 
         if self.target_energy is not None:
             input_temp["Configurations"]["Target Energy (eV)"] = (
@@ -1218,6 +1225,10 @@ class Calc(GeneralConfigs, SpectraTools):
 
             if self.observation_angle is None:
                 raise ValueError("Observation angle must be defined.")
+
+            if self.source_type == self.SourceType.bending_magnet:
+                if self.slit_acceptance is None:
+                    raise ValueError("Slit acceptance must be defined.")
 
             if self.output_type == self.CalcConfigs.Output.flux:
                 if self.slit_acceptance is None:
@@ -1559,10 +1570,7 @@ class SpectraInterface:
         self._sources = value
 
     def calc_brilliance_curve(
-        self,
-        harmonic_range=[1, 5],
-        nr_pts_k=15,
-        kmin=0.2,
+        self, harmonic_range=[1, 5], nr_pts_k=15, kmin=0.2, emax=20e3
     ):
         """Calc brilliance curve.
 
@@ -1571,48 +1579,80 @@ class SpectraInterface:
              Defaults to [1, 5].
             nr_pts_k (int, optional): Number of k points. Defaults to 15.
             kmin (float): Minimum k value. Defaults to 0.2
+            emax (flaot): Max value of energy for dipoles and wigglers.
 
         """
-        undulator_list = self.sources
-        self.calc.output_type = self.calc.CalcConfigs.Output.brilliance
-        self.calc.indep_var = self.calc.CalcConfigs.Variable.k
-        self.calc.method = self.calc.CalcConfigs.Method.wigner
-        self.calc.slice_x = 0
-        self.calc.slice_px = 0
-        self.calc.slice_y = 0
-        self.calc.slice_py = 0
-        self.calc.harmonic_range = harmonic_range
-        self.calc.k_nr_pts = nr_pts_k
+        source_list = self.sources
         energies = list()
         brilliances = list()
-        for i, undulator in enumerate(undulator_list):
+        for i, source in enumerate(source_list):
             print(
-                "Calculating curve for undulator {:.0f}/{:.0f}".format(
-                    i + 1, len(undulator_list)
+                "Calculating curve for source {:.0f}/{:.0f}".format(
+                    i + 1, len(source_list)
                 )
             )
-            kmax = undulator.calc_max_k(self.accelerator)
-            self.calc.k_range = [kmin, kmax]
+            if source.source_type != "bendingmagnet":
+                kmax = source.calc_max_k(self.accelerator)
 
-            polarization = undulator.polarization
-            if polarization == "hp":
-                self.calc.source_type = (
-                    self.calc.SourceType.horizontal_undulator
-                )
-            elif polarization == 'vp':
-                self.calc.source_type = (
-                    self.calc.SourceType.vertical_undulator
-                )
-            elif polarization == 'cp':
-                self.calc.source_type = (
-                    self.calc.SourceType.elliptic_undulator
-                )
+                if source.source_type == "wiggler":
+                    b_max = source.undulator_k_to_b(kmax, source.period)
+                    self.calc.source_type = self.calc.SourceType.wiggler
+                    self.calc.method = self.calc.CalcConfigs.Method.far_field
+                    self.calc.indep_var = self.calc.CalcConfigs.Variable.energy
+                    self.calc.output_type = (
+                        self.calc.CalcConfigs.Output.flux_density
+                    )
+                    self.calc.period = source.period
+                    self.calc.by_peak = b_max
+                    self.calc.observation_angle = [0, 0]
+                    self.calc.energy_range = [1, emax]
+                    self.calc.energy_step = 50
+                else:
+                    self.calc.output_type = (
+                        self.calc.CalcConfigs.Output.brilliance
+                    )
+                    self.calc.indep_var = self.calc.CalcConfigs.Variable.k
+                    self.calc.method = self.calc.CalcConfigs.Method.wigner
+                    self.calc.slice_x = 0
+                    self.calc.slice_px = 0
+                    self.calc.slice_y = 0
+                    self.calc.slice_py = 0
+                    self.calc.harmonic_range = harmonic_range
+                    self.calc.k_nr_pts = nr_pts_k
+
+                    polarization = source.polarization
+                    if polarization == "hp":
+                        self.calc.source_type = (
+                            self.calc.SourceType.horizontal_undulator
+                        )
+                    elif polarization == "vp":
+                        self.calc.source_type = (
+                            self.calc.SourceType.vertical_undulator
+                        )
+                    elif polarization == "cp":
+                        self.calc.source_type = (
+                            self.calc.SourceType.elliptic_undulator
+                        )
+                    else:
+                        return
+
+                    self.calc.k_range = [kmin, kmax]
+                    self.calc.period = source.period
+                    self.calc.by_peak = 1
             else:
-                return
-            self.calc.period = undulator.period
-            self.calc.by_peak = 1
-            self.calc.length = undulator.source_length
+                b = source.b_peak
+                self.calc.source_type = self.calc.SourceType.bending_magnet
+                self.calc.method = self.calc.CalcConfigs.Method.far_field
+                self.calc.indep_var = self.calc.CalcConfigs.Variable.energy
+                self.calc.output_type = (
+                    self.calc.CalcConfigs.Output.flux_density
+                )
+                self.calc.by_peak = b
+                self.calc.observation_angle = [0, 0]
+                self.calc.energy_range = [1, emax]
+                self.calc.energy_step = 50
 
+            self.calc.length = source.source_length
             self.calc.set_config()
             self.calc.run_calculation()
 
@@ -1637,11 +1677,28 @@ class SpectraInterface:
         brilliances = list()
         if process_curves is True:
             for i, source in enumerate(self.sources):
-                input_energies = self.energies[i, :, :]
-                input_brilliance = self.brilliances[i, :, :]
-                energies_, brilliance = self.calc.process_brilliance_curve(
-                    input_energies, input_brilliance, superp_value=superp_value
-                )
+                print(source.label)
+                if (
+                    source.source_type != "wiggler"
+                    and source.source_type != "bendingmagnet"
+                ):
+                    input_brilliance = self.brilliances[i, :, :]
+                    input_energies = self.energies[i, :, :]
+                    energies_, brilliance = self.calc.process_brilliance_curve(
+                        input_energies,
+                        input_brilliance,
+                        superp_value=superp_value,
+                    )
+                else:
+                    input_brilliance = self.brilliances
+                    input_energies = self.energies
+                    energies_ = _np.reshape(
+                        input_energies, (1, _np.shape(input_energies)[0])
+                    )
+                    brilliance = _np.reshape(
+                        input_brilliance, (1, _np.shape(input_brilliance)[0])
+                    )
+
                 energies.append(energies_)
                 brilliances.append(brilliance)
             energies = _np.array(energies)
@@ -1651,11 +1708,21 @@ class SpectraInterface:
 
         _plt.figure(figsize=(4.5, 3.0))
         colorlist = ["C0", "C1", "C2", "C3", "C4", "C5"]
-        for i, undulator in enumerate(self.sources):
+        for i, source in enumerate(self.sources):
+            # if (
+            #     source.source_type != "wiggler"
+            #     and source.source_type != "bendingmagnet"
+            #     ):
+            #     self.energies[i, :, :] = _np.reshape(
+            #             input_energies, (1, _np.shape(input_energies)[0])
+            #         )
+            #     brilliance = _np.reshape(
+            #             input_brilliance, (1, _np.shape(input_brilliance)[0])
+            #     )
             color = colorlist[i]
             for j in _np.arange(self.energies.shape[1]):
                 if j == 1:
-                    label = undulator.label
+                    label = source.label
                     _plt.plot(
                         self.energies[i, j, :],
                         self.brilliances[i, j, :],

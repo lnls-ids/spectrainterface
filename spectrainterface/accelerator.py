@@ -393,6 +393,46 @@ class StorageRingParameters:
         self.bsc0_v = self.bsc0_v_highbeta
         self._beta_section = 'high'
 
+    def set_bc_section(self):
+        """Set bc section section."""
+        self.energy = 3
+        self.current = 100
+        self.sigmaz = 2.9
+        self.nat_emittance = 2.5e-10
+        self.coupling_constant = 0.01
+        self.energy_spread = 0.00084
+        self.betax = 0.338
+        self.betay = 5.356
+        self.alphax = 0.003
+        self.alphay = 0
+        self.etax = 0.002
+        self.etay = 0
+        self.etapx = 0
+        self.etapy = 0
+        self.bsc0_h = None
+        self.bsc0_v = None
+        self._beta_section = 'bc'
+
+    def set_b2_section(self):  # It is necessary to update these values.
+        """Set b2 section section."""
+        self.energy = 3
+        self.current = 100
+        self.sigmaz = 2.9
+        self.nat_emittance = 2.5e-10
+        self.coupling_constant = 0.01
+        self.energy_spread = 0.00084
+        self.betax = 1.265
+        self.betay = 25.5
+        self.alphax = 1.94
+        self.alphay = 0
+        self.etax = 0.025
+        self.etay = 0
+        self.etapx = 0
+        self.etapy = 0
+        self.bsc0_h = None
+        self.bsc0_v = None
+        self._beta_section = 'b2'
+
     def calc_beam_stay_clear(self, pos):
         """Calculate horizontal and vertical BSC at a given position.
 

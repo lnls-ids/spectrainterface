@@ -10,6 +10,69 @@ LSPEED = _constants.light_speed
 PLACK = _constants.reduced_planck_constant
 
 
+class BendingMagnet(SourceFunctions):
+    """Main class for bending magnets."""
+
+    def __init__(self):
+        """Class constructor."""
+        super().__init__()
+        self._b_peak = 1
+        self._source_type = "bendingmagnet"
+        self._label = 'label'
+
+    @property
+    def b_peak(self):
+        """Field peak of bending magnet.
+
+        Returns:
+            float: Peak field [T]
+        """
+        return self._b_peak
+
+    @property
+    def label(self):
+        """BM label.
+
+        Returns:
+            str: Undulator label
+        """
+        return self._label
+
+    @b_peak.setter
+    def b_peak(self, value):
+        self._b_peak = value
+
+    @label.setter
+    def label(self, value):
+        self._label = value
+
+
+class BC(BendingMagnet):
+    """BC class.
+
+    Args:
+        BendingMagnet (Bending magnet class): BM class
+    """
+    def __init__(self):
+        """Class constructor."""
+        super().__init__()
+        self._b_peak = 3.2
+        self._label = 'BC'
+
+
+class B2(BendingMagnet):
+    """B2 class.
+
+    Args:
+        BendingMagnet (Bending magnet class): BM class
+    """
+    def __init__(self):
+        """Class constructor."""
+        super().__init__()
+        self._b_peak = 0.5642
+        self._label = 'B2'
+
+
 class Undulator(SourceFunctions):
     """Main class for undulators.
 
@@ -210,16 +273,42 @@ class Undulator(SourceFunctions):
         return gapv, gaph
 
     def calc_max_k(self, si_parameters):
-        """Cala max K achieved by undulator.
+        """Calc max K achieved by undulator.
 
         Args:
             si_parameters (StorageRingParameters): StorageRingParameters
              object.
         """
         gap_minv, _ = self.calc_min_gap(si_parameters)
-        b_max = self.get_beff(gap_minv/self.period)
+        b_max = self.get_beff(gap_minv / self.period)
         k_max = self.undulator_b_to_k(b_max, self.period)
         return k_max
+
+
+class Wiggler(Undulator):
+    """Wiggler Undulator class.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm]
+            length (float, optional): Undulator length [m]
+        """
+        super().__init__()
+        self._undulator_type = "wiggler"
+        self._label = "Wiggler"
+        self._br = 1.37
+        self._polarization = "hp"
+        self._efficiency = 1
+        self._halbach_coef = {"hp": {"a": 1.732, "b": -3.238, "c": 0.0}}
+        self._period = period
+        self._source_length = length
+        self._source_type = "wiggler"
 
 
 class Planar(Undulator):
