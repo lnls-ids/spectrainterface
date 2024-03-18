@@ -30,6 +30,15 @@ class BendingMagnet(SourceFunctions):
         return self._b_peak
 
     @property
+    def source_type(self):
+        """Source type.
+
+        Returns:
+            str: Type of source.
+        """
+        return self._source_type
+
+    @property
     def label(self):
         """BM label.
 

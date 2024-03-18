@@ -1574,7 +1574,13 @@ class SpectraInterface:
         self._sources = value
 
     def calc_brilliance_curve(
-        self, harmonic_range=[1, 5], nr_pts_k=15, kmin=0.2, emax=20e3
+        self,
+        harmonic_range=[1, 5],
+        nr_pts_k=15,
+        kmin=0.2,
+        emax=20e3,
+        x_accep=1,
+        beta_sections=None,
     ):
         """Calc brilliance curve.
 
@@ -1583,7 +1589,10 @@ class SpectraInterface:
              Defaults to [1, 5].
             nr_pts_k (int, optional): Number of k points. Defaults to 15.
             kmin (float): Minimum k value. Defaults to 0.2
-            emax (flaot): Max value of energy for dipoles and wigglers.
+            emax (float): Max value of energy for dipoles and wigglers.
+            x_accep (float): X acceptance for bending magnet radiation.
+            beta_sections (list of string): List of beta sections for each
+             source.
 
         """
         source_list = self.sources
@@ -1649,6 +1658,7 @@ class SpectraInterface:
                 self.calc.source_type = self.calc.SourceType.bending_magnet
                 self.calc.method = self.calc.CalcConfigs.Method.far_field
                 self.calc.indep_var = self.calc.CalcConfigs.Variable.energy
+                self.calc.slit_acceptance = x_accep
                 self.calc.output_type = (
                     self.calc.CalcConfigs.Output.flux_density
                 )
@@ -1658,8 +1668,20 @@ class SpectraInterface:
                 self.calc.energy_step = 50
 
             self.calc.length = source.source_length
+
+            if beta_sections is not None:
+                if beta_sections[i] == "high":
+                    self.accelerator.set_high_beta_section()
+                elif beta_sections[i] == "low":
+                    self.accelerator.set_low_beta_section()
+                elif beta_sections[i] == "b2":
+                    self.accelerator.set_b2_section()
+                elif beta_sections[i] == "bc":
+                    self.accelerator.set_bc_section()
+                else:
+                    raise ValueError("Invalid beta section.")
+
             self.calc.set_config()
-            print(self.calc._input_template)
             self.calc.run_calculation()
 
             energies.append(self.calc.energies)
@@ -1670,7 +1692,9 @@ class SpectraInterface:
         self._energies = energies
         self._brilliances = brilliances
 
-    def plot_brilliance_curve(self, process_curves=True, superp_value=250):
+    def plot_brilliance_curve(
+        self, process_curves=True, superp_value=250, title="Brilliance curves"
+    ):
         """Plot brilliance curves.
 
         Args:
@@ -1678,12 +1702,12 @@ class SpectraInterface:
              be processed. Defaults to True.
             superp_value (int, optional): Desired value of energy
              superposition. Defaults to 250.
+            title (str, optional): Plot title.
         """
         energies = list()
         brilliances = list()
         if process_curves is True:
             for i, source in enumerate(self.sources):
-                print(source.label)
                 if (
                     source.source_type != "wiggler"
                     and source.source_type != "bendingmagnet"
@@ -1722,9 +1746,14 @@ class SpectraInterface:
         colorlist = ["C0", "C1", "C2", "C3", "C4", "C5"]
         for i, source in enumerate(self.sources):
             color = colorlist[i]
+            if source.source_type == 'bendingmagnet':
+                label = source.label
+            else:
+                label = source.label
+                label += ', λ = {:.1f} mm'.format(source.period)
+                label += ', L = {:.1f} m'.format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
-                    label = source.label
                     _plt.plot(
                         self.energies[i][j, :],
                         self.brilliances[i][j, :],
@@ -1745,8 +1774,8 @@ class SpectraInterface:
         _plt.yscale("log")
 
         _plt.xlabel("Energy [keV]")
-        _plt.ylabel("Flux [ph/s/0.1%/100mA]")
-        _plt.title("Brilliance curve for horizontal polarization")
+        _plt.ylabel("Brilliance [ph/s/0.1%/mm²/mrad²/100mA]")
+        _plt.title(title)
 
         _plt.tick_params(
             which="both", axis="both", direction="in", top=True, right=True
