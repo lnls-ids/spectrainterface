@@ -1079,6 +1079,7 @@ class Calc(GeneralConfigs, SpectraTools):
             if (
                 self.source_type == self.SourceType.horizontal_undulator
                 or self.source_type == self.SourceType.helical_undulator
+                or self.source_type == self.SourceType.wiggler
             ):
                 input_temp["Light Source"]["K value"] = self.ky
 
@@ -1105,6 +1106,9 @@ class Calc(GeneralConfigs, SpectraTools):
                 brho = energy * 1e9 * ECHARGE / (ECHARGE * LSPEED)
                 rho = brho / self.by_peak
                 input_temp["Light Source"]["&rho; (m)"] = rho
+
+            elif self.source_type == self.SourceType.wiggler:
+                input_temp["Light Source"]["B (T)"] = self.by_peak
 
         if self.rho is not None:
             if self.source_type == self.SourceType.bending_magnet:
@@ -1604,6 +1608,7 @@ class SpectraInterface:
                     )
                     self.calc.period = source.period
                     self.calc.by_peak = b_max
+                    self.calc.ky = kmax
                     self.calc.observation_angle = [0, 0]
                     self.calc.energy_range = [1, emax]
                     self.calc.energy_step = 50
@@ -1654,6 +1659,7 @@ class SpectraInterface:
 
             self.calc.length = source.source_length
             self.calc.set_config()
+            print(self.calc._input_template)
             self.calc.run_calculation()
 
             energies.append(self.calc.energies)
@@ -1682,21 +1688,27 @@ class SpectraInterface:
                     source.source_type != "wiggler"
                     and source.source_type != "bendingmagnet"
                 ):
-                    input_brilliance = self.brilliances[i, :, :]
-                    input_energies = self.energies[i, :, :]
+                    input_brilliance = self.brilliances[i][:, :]
+                    input_energies = self.energies[i][:, :]
                     energies_, brilliance = self.calc.process_brilliance_curve(
                         input_energies,
                         input_brilliance,
                         superp_value=superp_value,
                     )
                 else:
-                    input_brilliance = self.brilliances
-                    input_energies = self.energies
+                    input_brilliance = self.brilliances[i]
+                    input_energies = self.energies[i]
+                    energies_ = _np.linspace(
+                        _np.min(input_energies), _np.max(input_energies), 2001
+                    )
+                    brilliance = _np.interp(
+                        energies_, input_energies, input_brilliance
+                    )
                     energies_ = _np.reshape(
-                        input_energies, (1, _np.shape(input_energies)[0])
+                        energies_, (1, _np.shape(energies_)[0])
                     )
                     brilliance = _np.reshape(
-                        input_brilliance, (1, _np.shape(input_brilliance)[0])
+                        brilliance, (1, _np.shape(brilliance)[0])
                     )
 
                 energies.append(energies_)
@@ -1709,23 +1721,13 @@ class SpectraInterface:
         _plt.figure(figsize=(4.5, 3.0))
         colorlist = ["C0", "C1", "C2", "C3", "C4", "C5"]
         for i, source in enumerate(self.sources):
-            # if (
-            #     source.source_type != "wiggler"
-            #     and source.source_type != "bendingmagnet"
-            #     ):
-            #     self.energies[i, :, :] = _np.reshape(
-            #             input_energies, (1, _np.shape(input_energies)[0])
-            #         )
-            #     brilliance = _np.reshape(
-            #             input_brilliance, (1, _np.shape(input_brilliance)[0])
-            #     )
             color = colorlist[i]
-            for j in _np.arange(self.energies.shape[1]):
-                if j == 1:
+            for j in _np.arange(self.energies[i].shape[0]):
+                if j == 0:
                     label = source.label
                     _plt.plot(
-                        self.energies[i, j, :],
-                        self.brilliances[i, j, :],
+                        self.energies[i][j, :],
+                        self.brilliances[i][j, :],
                         color=color,
                         linewidth=3,
                         alpha=0.9,
@@ -1733,8 +1735,8 @@ class SpectraInterface:
                     )
                 else:
                     _plt.plot(
-                        self.energies[i, j, :],
-                        self.brilliances[i, j, :],
+                        self.energies[i][j, :],
+                        self.brilliances[i][j, :],
                         color=color,
                         linewidth=3,
                         alpha=0.9,
