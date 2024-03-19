@@ -1,0 +1,49 @@
+{
+  "Accelerator": {
+    "Energy (GeV)": 8,
+    "Current (mA)": 100,
+    "&sigma;<sub>z</sub> (mm)": 3.9,
+    "Nat. Emittance (m.rad)": 2.4e-9,
+    "Coupling Constant": 0.002,
+    "Energy Spread": 0.0011,
+    "&beta;<sub>x,y</sub> (m)": [31.2,5],
+    "&alpha;<sub>x,y</sub>": [0,0],
+    "&eta;<sub>x,y</sub> (m)": [0.146,0],
+    "&eta;'<sub>x,y</sub>": [0,0],
+    "Type": "Storage Ring",
+    "Options": {
+      "Zero Emittance": false
+    }
+  },
+  "Light Source": {
+    "B (T)": 0.33467954834861074,
+    "&lambda;<sub>u</sub> (mm)": 32,
+    "Device Length (m)": 4.564,
+    "K value": 1,
+    "Type": "Wiggler",
+    "Options": {
+      "Field Structure": "Antisymmetric",
+      "End Correction Magnet": true
+    }
+  },
+  "Configurations": {
+    "Distance from the Source (m)": 30,
+    "Energy Range (eV)": [5000,50000],
+    "Points (Energy)": 101,
+    "Position x,y (mm)": [0,0],
+    "Type": "Far Field & Ideal Condition::Energy Dependence::Angular Flux Density",
+    "Options": {
+      "Filtering": "None",
+      "Define Obs. Point in": "Position",
+      "Energy Step": "Linear",
+      "Accuracy": "Default"
+    }
+  },
+  "Output File": {
+    "Format": "JSON",
+    "Folder": "/home/gabriel/spectra/spectra11/tests_GUI",
+    "Prefix": "power_density",
+    "Serial Number": 47,
+    "Comment": ""
+  }
+}

@@ -11,7 +11,7 @@ import sys
 import time
 import os
 
-#REPOS_PATH = os.path.abspath("./")
+# REPOS_PATH = os.path.abspath("./")
 # REPOS_PATH = __file__
 REPOS_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -122,18 +122,21 @@ class GeneralConfigs(SourceFunctions):
         elliptic_undulator = "ellipticundulator"
         figure8_undulator = "figure8undulator"
         vertical_figure8_undulator = "verticalfigure8undulator"
+        bending_magnet = "bendingmagnet"
+        wiggler = "wiggler"
 
     def __init__(self):
         """Class constructor."""
         self._distance_from_source = 10  # [m]
         self._source_type = self.SourceType.user_defined
         self._field = None
+        self._length = None
         self._bx_peak = None
         self._by_peak = None
         self._period = None
         self._kx = None
         self._ky = None
-        self._id_length = None
+        self._rho = None
 
     @property
     def source_type(self):
@@ -155,6 +158,15 @@ class GeneralConfigs(SourceFunctions):
             [T], and third column constais horizontal field [T].
         """
         return self._field
+
+    @property
+    def length(self):
+        """Length of device.
+
+        Returns:
+            float: Length [m]
+        """
+        return self._length
 
     @property
     def period(self):
@@ -202,13 +214,13 @@ class GeneralConfigs(SourceFunctions):
         return self._kx
 
     @property
-    def id_length(self):
-        """Insertion device's length.
+    def rho(self):
+        """Curvature radius.
 
         Returns:
-            float: Id's length [m]
+            float: Curvature radius [m]
         """
-        return self._id_length
+        return self._rho
 
     @property
     def distance_from_source(self):
@@ -232,11 +244,18 @@ class GeneralConfigs(SourceFunctions):
         else:
             self._field = value
 
+    @length.setter
+    def length(self, value):
+        self._length = value
+
     @period.setter
     def period(self, value):
-        if self.source_type == self.SourceType.user_defined:
+        if (
+            self.source_type == self.SourceType.user_defined
+            or self.source_type == self.SourceType.bending_magnet
+        ):
             raise ValueError(
-                "Period can only be defined if source type is not user_defined."  # noqa: E501
+                "Period can only be defined if source type is not user_defined or is not a bending."  # noqa: E501
             )
         else:
             self._period = value
@@ -343,14 +362,14 @@ class GeneralConfigs(SourceFunctions):
                 if self.period is not None:
                     self._bx_peak = self.bx_peak
 
-    @id_length.setter
-    def id_length(self, value):
-        if self.source_type == self.SourceType.user_defined:
-            raise ValueError(
-                "Id length can only be defined if source type is not user_defined"  # noqa: E501
-            )
+    @rho.setter
+    def rho(self, value):
+        if self.source_type == self.SourceType.bending_magnet:
+            self._rho = value
         else:
-            self._id_length = value
+            raise ValueError(
+                "Curvature radius can only be defined if source is a bending magnet."  # noqa: E501
+            )
 
     @distance_from_source.setter
     def distance_from_source(self, value):
@@ -855,9 +874,12 @@ class Calc(GeneralConfigs, SpectraTools):
     @slit_acceptance.setter
     def slit_acceptance(self, value):
         if self.output_type != self.CalcConfigs.Output.flux:
-            raise ValueError(
-                "Slit acceptance can only be defined if the output type is flux."  # noqa: E501
-            )
+            if self.source_type == self.SourceType.bending_magnet:
+                self._slit_acceptance = value
+            else:
+                raise ValueError(
+                    "Slit acceptance can only be defined if the output type is flux."  # noqa: E501
+                )
         else:
             self._slit_acceptance = value
 
@@ -1057,6 +1079,7 @@ class Calc(GeneralConfigs, SpectraTools):
             if (
                 self.source_type == self.SourceType.horizontal_undulator
                 or self.source_type == self.SourceType.helical_undulator
+                or self.source_type == self.SourceType.wiggler
             ):
                 input_temp["Light Source"]["K value"] = self.ky
 
@@ -1076,13 +1099,35 @@ class Calc(GeneralConfigs, SpectraTools):
                     self.ky,
                 ]
 
+        if self.by_peak is not None:
+            if self.source_type == self.SourceType.bending_magnet:
+                input_temp["Light Source"]["B (T)"] = self.by_peak
+                energy = self._accelerator.energy
+                brho = energy * 1e9 * ECHARGE / (ECHARGE * LSPEED)
+                rho = brho / self.by_peak
+                input_temp["Light Source"]["&rho; (m)"] = rho
+
+            elif self.source_type == self.SourceType.wiggler:
+                input_temp["Light Source"]["B (T)"] = self.by_peak
+
+        if self.rho is not None:
+            if self.source_type == self.SourceType.bending_magnet:
+                input_temp["Light Source"]["&rho; (m)"] = self.rho
+                energy = self._accelerator.energy
+                brho = energy * 1e9 * ECHARGE / (ECHARGE * LSPEED)
+                by = brho / self.rho
+                input_temp["Light Source"]["B (T)"] = by
+
         if self.period is not None:
             input_temp["Light Source"]["&lambda;<sub>u</sub> (mm)"] = (
                 self.period
             )
 
-        if self.id_length is not None:
-            input_temp["Light Source"]["Device Length (m)"] = self.id_length
+        if self.length is not None:
+            if self.source_type == self.SourceType.bending_magnet:
+                input_temp["Light Source"]["BM Length (m)"] = self.length
+            else:
+                input_temp["Light Source"]["Device Length (m)"] = self.length
 
         if self.energy_range is not None:
             input_temp["Configurations"]["Energy Range (eV)"] = (
@@ -1090,9 +1135,19 @@ class Calc(GeneralConfigs, SpectraTools):
             )
 
         if self.energy_step is not None:
-            input_temp["Configurations"]["Energy Pitch (eV)"] = (
-                self.energy_step
-            )
+            if (
+                self.source_type == self.SourceType.bending_magnet
+                or self.source_type == self.SourceType.wiggler
+            ):
+                nr_points = int(
+                    (self.energy_range[1] - self.energy_range[0])
+                    / self.energy_step
+                )
+                input_temp["Configurations"]["Points (Energy)"] = nr_points
+            else:
+                input_temp["Configurations"]["Energy Pitch (eV)"] = (
+                    self.energy_step
+                )
 
         if self.observation_angle is not None:
             if self.output_type == self.CalcConfigs.Output.flux_density:
@@ -1113,6 +1168,10 @@ class Calc(GeneralConfigs, SpectraTools):
                 input_temp["Configurations"][
                     "&Delta;&theta;<sub>x,y</sub> (mrad)"
                 ] = self.slit_acceptance
+            if self.source_type == self.SourceType.bending_magnet:
+                input_temp["Configurations"]["X' Acceptance (mrad)"] = (
+                    self.slit_acceptance
+                )
 
         if self.target_energy is not None:
             input_temp["Configurations"]["Target Energy (eV)"] = (
@@ -1170,6 +1229,10 @@ class Calc(GeneralConfigs, SpectraTools):
 
             if self.observation_angle is None:
                 raise ValueError("Observation angle must be defined.")
+
+            if self.source_type == self.SourceType.bending_magnet:
+                if self.slit_acceptance is None:
+                    raise ValueError("Slit acceptance must be defined.")
 
             if self.output_type == self.CalcConfigs.Output.flux:
                 if self.slit_acceptance is None:
@@ -1327,6 +1390,126 @@ class Calc(GeneralConfigs, SpectraTools):
                 data[i, :, :] = _np.array(solver.GetDetailData(i)["data"])
         return captions, data, variables
 
+    @staticmethod
+    def process_brilliance_curve(
+        input_energies, input_brilliance, superp_value=250
+    ):
+        """Process brilliance curve.
+
+        Args:
+            input_energies (numpy 2d array): Array with energies and
+             brilliances for each harmonic
+            input_brilliance (numpy 2d array): Array with energies and
+                brilliances for each harmonic
+            superp_value (int, optional): Desired value of energy
+             superposition. Defaults to 250.
+
+        Returns:
+            _type_: _description_
+        """
+        flag_pre_processing = False
+        harm_nr = input_energies.shape[0]
+        energies = _np.zeros((harm_nr, 2001))
+        brilliance = _np.zeros((harm_nr, 2001))
+        for i in _np.arange(harm_nr - 1):
+            if flag_pre_processing is False:
+                e_harm = input_energies[i, :]
+                b_harm = input_brilliance[i, :]
+                idx = _np.argsort(e_harm)
+                e_harm = e_harm[idx]
+                b_harm = b_harm[idx]
+                e_harm_interp = _np.linspace(
+                    _np.min(e_harm), _np.max(e_harm), 2001
+                )
+                b_harm_interp = _np.exp(
+                    _np.interp(e_harm_interp, e_harm, _np.log(b_harm))
+                )
+            else:
+                e_harm_interp = energies[i, :]
+                b_harm_interp = brilliance[i, :]
+
+            e_next_harm = input_energies[i + 1, :]
+            b_next_harm = input_brilliance[i + 1, :]
+            idx = _np.argsort(e_next_harm)
+            e_next_harm = e_next_harm[idx]
+            b_next_harm = b_next_harm[idx]
+
+            e_next_harm_interp = _np.linspace(
+                _np.min(e_next_harm), _np.max(e_next_harm), 2001
+            )
+            b_next_harm_interp = _np.exp(
+                _np.interp(
+                    e_next_harm_interp, e_next_harm, _np.log(b_next_harm)
+                )
+            )
+
+            max_e_harm = _np.nanmax(e_harm_interp)
+            min_e_harm = _np.nanmin(e_harm_interp)
+            max_e_next_harm = _np.nanmax(e_next_harm_interp)
+            min_e_next_harm = _np.nanmin(e_next_harm_interp)
+
+            flag_pre_processing = False
+            if max_e_harm >= min_e_next_harm:
+                flag_pre_processing = True
+
+                min_abs = _np.max((min_e_harm, min_e_next_harm))
+                max_abs = _np.min((max_e_harm, max_e_next_harm))
+                energy_intersect = _np.linspace(min_abs, max_abs, 2001)
+
+                b_harm_intersect = _np.interp(
+                    energy_intersect, e_harm_interp, b_harm_interp
+                )
+                b_next_harm_intersect = _np.interp(
+                    energy_intersect, e_next_harm_interp, b_next_harm_interp
+                )
+
+                idcs_bigger = _np.where(
+                    b_next_harm_intersect >= b_harm_intersect
+                )
+
+                ecross = energy_intersect[_np.min(idcs_bigger)]
+
+                idx_cut_e1 = _np.nanargmin(
+                    _np.abs(e_harm_interp - ecross - superp_value)
+                )
+                idx_cut_e3 = _np.nanargmin(
+                    _np.abs(e_next_harm_interp - ecross + superp_value)
+                )
+
+                e_harm = e_harm_interp[:idx_cut_e1]
+                b_harm = b_harm_interp[:idx_cut_e1]
+
+                e_next_harm = e_next_harm_interp[idx_cut_e3:]
+                b_next_harm = b_next_harm_interp[idx_cut_e3:]
+
+            e_harm_new = _np.copy(e_harm)
+            b_harm_new = _np.copy(b_harm)
+            e_harm_new.resize(2001)
+            b_harm_new.resize(2001)
+            idx = len(e_harm) - 1
+            e_harm_new[idx:] = _np.full(len(e_harm_new[idx:]), _np.nan)
+            b_harm_new[idx:] = _np.full(len(e_harm_new[idx:]), _np.nan)
+
+            e_next_harm_new = _np.copy(e_next_harm)
+            b_next_harm_new = _np.copy(b_next_harm)
+            e_next_harm_new.resize(2001)
+            b_next_harm_new.resize(2001)
+            idx = len(e_next_harm) - 1
+            e_next_harm_new[idx:] = _np.full(
+                len(e_next_harm_new[idx:]), _np.nan
+            )
+            b_next_harm_new[idx:] = _np.full(
+                len(e_next_harm_new[idx:]), _np.nan
+            )
+
+            energies[i, :] = e_harm_new
+            brilliance[i, :] = b_harm_new
+
+            energies[i + 1, :] = e_next_harm_new
+            brilliance[i + 1, :] = b_next_harm_new
+
+        return energies, brilliance
+
 
 class SpectraInterface:
     """Spectra Interface class."""
@@ -1335,6 +1518,9 @@ class SpectraInterface:
         """Class constructor."""
         self._accelerator = StorageRingParameters()
         self._calc = Calc(self._accelerator)
+        self._sources = None
+        self._energies = None
+        self._brilliances = None
 
     @property
     def accelerator(self):
@@ -1353,3 +1539,251 @@ class SpectraInterface:
             CalcFlux object: Class to calculate flux
         """
         return self._calc
+
+    @property
+    def sources(self):
+        """Sources list.
+
+        Returns:
+            List: List of sources objects
+        """
+        return self._sources
+
+    @property
+    def energies(self):
+        """List of energies for each undulator.
+
+        Returns:
+            list of numpy arrays: Energies for each undulator, for each
+             harmonic.
+        """
+        return self._energies
+
+    @property
+    def brilliances(self):
+        """List of brilliances for each undulator.
+
+        Returns:
+            list of numpy arrays: Brilliances for each undulator, for each
+             harmonic.
+        """
+        return self._brilliances
+
+    @sources.setter
+    def sources(self, value):
+        self._sources = value
+
+    def calc_brilliance_curve(
+        self,
+        harmonic_range=[1, 5],
+        nr_pts_k=15,
+        kmin=0.2,
+        emax=20e3,
+        x_accep=1,
+        beta_sections=None,
+    ):
+        """Calc brilliance curve.
+
+        Args:
+            harmonic_range (list, optional): List of desired harmonics.
+             Defaults to [1, 5].
+            nr_pts_k (int, optional): Number of k points. Defaults to 15.
+            kmin (float): Minimum k value. Defaults to 0.2
+            emax (float): Max value of energy for dipoles and wigglers.
+            x_accep (float): X acceptance for bending magnet radiation.
+            beta_sections (list of string): List of beta sections for each
+             source.
+
+        """
+        source_list = self.sources
+        energies = list()
+        brilliances = list()
+        for i, source in enumerate(source_list):
+            print(
+                "Calculating curve for source {:.0f}/{:.0f}".format(
+                    i + 1, len(source_list)
+                )
+            )
+            if source.source_type != "bendingmagnet":
+                kmax = source.calc_max_k(self.accelerator)
+
+                if source.source_type == "wiggler":
+                    b_max = source.undulator_k_to_b(kmax, source.period)
+                    self.calc.source_type = self.calc.SourceType.wiggler
+                    self.calc.method = self.calc.CalcConfigs.Method.far_field
+                    self.calc.indep_var = self.calc.CalcConfigs.Variable.energy
+                    self.calc.output_type = (
+                        self.calc.CalcConfigs.Output.flux_density
+                    )
+                    self.calc.period = source.period
+                    self.calc.by_peak = b_max
+                    self.calc.ky = kmax
+                    self.calc.observation_angle = [0, 0]
+                    self.calc.energy_range = [1, emax]
+                    self.calc.energy_step = 50
+                else:
+                    self.calc.output_type = (
+                        self.calc.CalcConfigs.Output.brilliance
+                    )
+                    self.calc.indep_var = self.calc.CalcConfigs.Variable.k
+                    self.calc.method = self.calc.CalcConfigs.Method.wigner
+                    self.calc.slice_x = 0
+                    self.calc.slice_px = 0
+                    self.calc.slice_y = 0
+                    self.calc.slice_py = 0
+                    self.calc.harmonic_range = harmonic_range
+                    self.calc.k_nr_pts = nr_pts_k
+
+                    polarization = source.polarization
+                    if polarization == "hp":
+                        self.calc.source_type = (
+                            self.calc.SourceType.horizontal_undulator
+                        )
+                    elif polarization == "vp":
+                        self.calc.source_type = (
+                            self.calc.SourceType.vertical_undulator
+                        )
+                    elif polarization == "cp":
+                        self.calc.source_type = (
+                            self.calc.SourceType.elliptic_undulator
+                        )
+                    else:
+                        return
+
+                    self.calc.k_range = [kmin, kmax]
+                    self.calc.period = source.period
+                    self.calc.by_peak = 1
+            else:
+                b = source.b_peak
+                self.calc.source_type = self.calc.SourceType.bending_magnet
+                self.calc.method = self.calc.CalcConfigs.Method.far_field
+                self.calc.indep_var = self.calc.CalcConfigs.Variable.energy
+                self.calc.slit_acceptance = x_accep
+                self.calc.output_type = (
+                    self.calc.CalcConfigs.Output.flux_density
+                )
+                self.calc.by_peak = b
+                self.calc.observation_angle = [0, 0]
+                self.calc.energy_range = [1, emax]
+                self.calc.energy_step = 50
+
+            self.calc.length = source.source_length
+
+            if beta_sections is not None:
+                if beta_sections[i] == "high":
+                    self.accelerator.set_high_beta_section()
+                elif beta_sections[i] == "low":
+                    self.accelerator.set_low_beta_section()
+                elif beta_sections[i] == "b2":
+                    self.accelerator.set_b2_section()
+                elif beta_sections[i] == "bc":
+                    self.accelerator.set_bc_section()
+                else:
+                    raise ValueError("Invalid beta section.")
+
+            self.calc.set_config()
+            self.calc.run_calculation()
+
+            energies.append(self.calc.energies)
+            brilliances.append(self.calc.brilliance)
+
+        energies = _np.array(energies)
+        brilliances = _np.array(brilliances)
+        self._energies = energies
+        self._brilliances = brilliances
+
+    def plot_brilliance_curve(
+        self, process_curves=True, superp_value=250, title="Brilliance curves"
+    ):
+        """Plot brilliance curves.
+
+        Args:
+            process_curves (bool, optional): If true energy superposition will
+             be processed. Defaults to True.
+            superp_value (int, optional): Desired value of energy
+             superposition. Defaults to 250.
+            title (str, optional): Plot title.
+        """
+        energies = list()
+        brilliances = list()
+        if process_curves is True:
+            for i, source in enumerate(self.sources):
+                if (
+                    source.source_type != "wiggler"
+                    and source.source_type != "bendingmagnet"
+                ):
+                    input_brilliance = self.brilliances[i][:, :]
+                    input_energies = self.energies[i][:, :]
+                    energies_, brilliance = self.calc.process_brilliance_curve(
+                        input_energies,
+                        input_brilliance,
+                        superp_value=superp_value,
+                    )
+                else:
+                    input_brilliance = self.brilliances[i]
+                    input_energies = self.energies[i]
+                    energies_ = _np.linspace(
+                        _np.min(input_energies), _np.max(input_energies), 2001
+                    )
+                    brilliance = _np.interp(
+                        energies_, input_energies, input_brilliance
+                    )
+                    energies_ = _np.reshape(
+                        energies_, (1, _np.shape(energies_)[0])
+                    )
+                    brilliance = _np.reshape(
+                        brilliance, (1, _np.shape(brilliance)[0])
+                    )
+
+                energies.append(energies_)
+                brilliances.append(brilliance)
+            energies = _np.array(energies)
+            brilliances = _np.array(brilliances)
+            self._energies = energies
+            self._brilliances = brilliances
+
+        _plt.figure(figsize=(4.5, 3.0))
+        colorlist = ["C0", "C1", "C2", "C3", "C4", "C5"]
+        for i, source in enumerate(self.sources):
+            color = colorlist[i]
+            if source.source_type == 'bendingmagnet':
+                label = source.label
+            else:
+                label = source.label
+                label += ', λ = {:.1f} mm'.format(source.period)
+                label += ', L = {:.1f} m'.format(source.source_length)
+            for j in _np.arange(self.energies[i].shape[0]):
+                if j == 0:
+                    _plt.plot(
+                        self.energies[i][j, :],
+                        self.brilliances[i][j, :],
+                        color=color,
+                        linewidth=3,
+                        alpha=0.9,
+                        label=label,
+                    )
+                else:
+                    _plt.plot(
+                        self.energies[i][j, :],
+                        self.brilliances[i][j, :],
+                        color=color,
+                        linewidth=3,
+                        alpha=0.9,
+                    )
+        _plt.minorticks_on()
+        _plt.yscale("log")
+
+        _plt.xlabel("Energy [keV]")
+        _plt.ylabel("Brilliance [ph/s/0.1%/mm²/mrad²/100mA]")
+        _plt.title(title)
+
+        _plt.tick_params(
+            which="both", axis="both", direction="in", top=True, right=True
+        )
+        _plt.grid(which="major", alpha=0.4)
+        _plt.grid(which="minor", alpha=0.2)
+
+        _plt.legend()
+        _plt.tight_layout()
+
+        _plt.show()
