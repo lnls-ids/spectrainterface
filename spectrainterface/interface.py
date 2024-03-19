@@ -1649,7 +1649,10 @@ class SpectraInterface:
                 )
             )
             if source.source_type != "bendingmagnet":
-                kmax = source.calc_max_k(self.accelerator)
+                if source.gap == 0:
+                    kmax = source.calc_max_k(self.accelerator)
+                else:
+                    kmax = source.get_k()
 
                 if source.source_type == "wiggler":
                     b_max = source.undulator_k_to_b(kmax, source.period)
@@ -1746,6 +1749,25 @@ class SpectraInterface:
         slit_acceptance=[0, 0.04],
         beta_sections=None,
     ):
+        """Calc flux curves.
+
+        Args:
+            energy_range (list, optional): Energy range for wigglers and
+             bending magnets. Defaults to [1, 5].
+            harmonic_range (list, optional): List of desired harmonics.
+             Defaults to [1, 5].
+            nr_pts_k (int, optional): Number of k points. Defaults to 15.
+            kmin (float): Minimum k value. Defaults to 0.2
+            slit_shape (str, optional): Circular or rectangular.
+             Defaults to "circslit".
+            slit_acceptance (list, optional): Slit acceptance.
+             Defaults to [0, 0.04].
+            beta_sections (list of string): List of beta sections for each
+             source.
+
+        Raises:
+            ValueError: _description_
+        """
         source_list = self.sources
         energies = list()
         fluxes = list()
@@ -1779,6 +1801,7 @@ class SpectraInterface:
                     self.calc.slit_shape = slit_shape
                     self.calc.harmonic_range = harmonic_range
                     self.calc.k_nr_pts = nr_pts_k
+                    self.calc.slit_acceptance = slit_acceptance
 
                     polarization = source.polarization
                     if polarization == "hp":

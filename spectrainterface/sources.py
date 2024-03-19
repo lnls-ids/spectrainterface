@@ -1,6 +1,7 @@
 """Undulator tools to use with spectra."""
 
 import mathphys.constants as _constants
+import numpy as _np
 from spectrainterface.tools import SourceFunctions
 from spectrainterface.accelerator import StorageRingParameters
 
@@ -18,7 +19,7 @@ class BendingMagnet(SourceFunctions):
         super().__init__()
         self._b_peak = 1
         self._source_type = "bendingmagnet"
-        self._label = 'label'
+        self._label = "label"
 
     @property
     def b_peak(self):
@@ -62,11 +63,12 @@ class BC(BendingMagnet):
     Args:
         BendingMagnet (Bending magnet class): BM class
     """
+
     def __init__(self):
         """Class constructor."""
         super().__init__()
         self._b_peak = 3.2
-        self._label = 'BC'
+        self._label = "BC"
 
 
 class B2(BendingMagnet):
@@ -75,11 +77,12 @@ class B2(BendingMagnet):
     Args:
         BendingMagnet (Bending magnet class): BM class
     """
+
     def __init__(self):
         """Class constructor."""
         super().__init__()
         self._b_peak = 0.5642
-        self._label = 'B2'
+        self._label = "B2"
 
 
 class Undulator(SourceFunctions):
@@ -93,6 +96,7 @@ class Undulator(SourceFunctions):
         """Class constructor."""
         super().__init__()
         self._undulator_type = "planar"
+        self._gap = 0
         self._br = 1.37
         self._period = 50
         self._efficiency = 1.0
@@ -110,6 +114,15 @@ class Undulator(SourceFunctions):
             str: Undulator type.
         """
         return self._undulator_type
+
+    @property
+    def gap(self):
+        """Undulator gap [mm].
+
+        Returns:
+            float: Gap [mm]
+        """
+        return self._gap
 
     @property
     def br(self):
@@ -186,6 +199,13 @@ class Undulator(SourceFunctions):
     @undulator_type.setter
     def undulator_type(self, value):
         self._undulator_type = value
+
+    @gap.setter
+    def gap(self, value):
+        if value < 0:
+            raise ValueError("Gap must be positive.")
+        else:
+            self._gap = value
 
     @br.setter
     def br(self, value):
@@ -281,6 +301,64 @@ class Undulator(SourceFunctions):
 
         return gapv, gaph
 
+    def calc_max_length(
+        self,
+        si_parameters=None,
+        section="SB",
+        vc_thickness=None,
+        tolerance=None,
+    ):
+        """Calc max length for given gap.
+
+        Args:
+        si_parameters (StorageRingParameters, optional): StorageRingParameters
+         object. Defaults to None.
+        section (str, optional): Straight section (SB, SP or SA).
+         Defaults to 'SB'.
+        vc_thickness (float, optional): Vacuum chamber thickness.
+         Defaults to None.
+        tolerance (float, optional): Extra delta in gap. Defaults to None.
+
+        Raises:
+            ValueError: Section not defined
+
+        Returns:
+            float: (max length conventional undulator, max length vertical
+             undulator).
+        """
+        pos = self.source_length / 2
+        pos = _np.linspace(0, 3.5, 2001)
+        section = section.lower()
+
+        if si_parameters is None:
+            acc = StorageRingParameters()
+            acc.set_bsc_with_ivu18()
+            if section == "sb" or section == "sp":
+                acc.set_low_beta_section()
+            elif section == "sa":
+                acc.set_high_beta_section()
+            else:
+                raise ValueError("Section not defined.")
+        else:
+            acc = si_parameters
+
+        if vc_thickness is None:
+            vc_thickness = self.vc_thickness
+        if tolerance is None:
+            tolerance = self.id_vc_tolerance
+
+        bsch, bscv = acc.calc_beam_stay_clear(pos)
+        gaph = 2 * bsch + vc_thickness + tolerance
+        gapv = 2 * bscv + vc_thickness + tolerance
+
+        idxv = _np.argmin(_np.abs(self.gap - gapv))
+        idxh = _np.argmin(_np.abs(self.gap - gaph))
+
+        length_verticalid = 2 * pos[idxh]
+        length_conventional = 2 * pos[idxv]
+
+        return length_conventional, length_verticalid
+
     def calc_max_k(self, si_parameters):
         """Calc max K achieved by undulator.
 
@@ -292,6 +370,16 @@ class Undulator(SourceFunctions):
         b_max = self.get_beff(gap_minv / self.period)
         k_max = self.undulator_b_to_k(b_max, self.period)
         return k_max
+
+    def get_k(self):
+        """Get K for configured gap.
+
+        Returns:
+            float: K value
+        """
+        beff = self.get_beff(self.gap / self.period)
+        k = self.undulator_b_to_k(beff, self.period)
+        return k
 
 
 class Wiggler(Undulator):
