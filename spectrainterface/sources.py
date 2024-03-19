@@ -104,7 +104,7 @@ class Undulator(SourceFunctions):
         self._polarization = "hp"
         self._halbach_coef = dict()
         self._vc_thickness = 0.5
-        self._id_vc_tolerance = 0.1
+        self._vc_tolerance = 0.1
 
     @property
     def undulator_type(self):
@@ -188,13 +188,13 @@ class Undulator(SourceFunctions):
         return self._vc_thickness
 
     @property
-    def id_vc_tolerance(self):
+    def vc_tolerance(self):
         """Tolerance space between undulator and vacuum chamber.
 
         Returns:
             float: Tolarance between id and vacuum chamber
         """
-        return self._id_vc_tolerance
+        return self._vc_tolerance
 
     @undulator_type.setter
     def undulator_type(self, value):
@@ -235,6 +235,14 @@ class Undulator(SourceFunctions):
     def halbach_coef(self, value):
         self._halbach_coef = value
 
+    @vc_thickness.setter
+    def vc_thickness(self, value):
+        self._vc_thickness = value
+
+    @vc_tolerance.setter
+    def vc_tolerance(self, value):
+        self._vc_tolerance = value
+
     def get_beff(self, gap_over_period):
         """Get peak magnetic field for a given device and gap.
 
@@ -259,7 +267,7 @@ class Undulator(SourceFunctions):
         si_parameters=None,
         section="SB",
         vc_thickness=None,
-        tolerance=None,
+        vc_tolerance=None,
     ):
         """Calculate minimum gap of undulator.
 
@@ -292,12 +300,12 @@ class Undulator(SourceFunctions):
 
         if vc_thickness is None:
             vc_thickness = self.vc_thickness
-        if tolerance is None:
-            tolerance = self.id_vc_tolerance
+        if vc_tolerance is None:
+            vc_tolerance = self.vc_tolerance
 
         bsch, bscv = acc.calc_beam_stay_clear(pos)
-        gaph = 2 * bsch + vc_thickness + tolerance
-        gapv = 2 * bscv + vc_thickness + tolerance
+        gaph = 2 * bsch + vc_thickness + vc_tolerance
+        gapv = 2 * bscv + vc_thickness + vc_tolerance
 
         return gapv, gaph
 
@@ -345,7 +353,7 @@ class Undulator(SourceFunctions):
         if vc_thickness is None:
             vc_thickness = self.vc_thickness
         if tolerance is None:
-            tolerance = self.id_vc_tolerance
+            tolerance = self.vc_tolerance
 
         bsch, bscv = acc.calc_beam_stay_clear(pos)
         gaph = 2 * bsch + vc_thickness + tolerance

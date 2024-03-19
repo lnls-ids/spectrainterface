@@ -1924,7 +1924,7 @@ class SpectraInterface:
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
-                        self.energies[i][j, :],
+                        1e-3*self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
                         linewidth=3,
@@ -1933,7 +1933,7 @@ class SpectraInterface:
                     )
                 else:
                     _plt.plot(
-                        self.energies[i][j, :],
+                        1e-3*self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
                         linewidth=3,
@@ -2016,7 +2016,7 @@ class SpectraInterface:
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
-                        self.energies[i][j, :],
+                        1e-3*self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
                         linewidth=3,
@@ -2025,7 +2025,7 @@ class SpectraInterface:
                     )
                 else:
                     _plt.plot(
-                        self.energies[i][j, :],
+                        1e-3*self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
                         linewidth=3,
