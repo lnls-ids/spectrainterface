@@ -1862,7 +1862,7 @@ class SpectraInterface:
         self._fluxes = fluxes
 
     def plot_brilliance_curve(
-        self, process_curves=True, superp_value=250, title="Brilliance curves", scale = ["linear", "log"]
+        self, process_curves=True, superp_value=250, title="Brilliance curves", xscale = "linear", yscale = "log"
     ):
         """Plot brilliance curves.
 
@@ -1872,8 +1872,10 @@ class SpectraInterface:
             superp_value (int, optional): Desired value of energy
              superposition. Defaults to 250.
             title (str, optional): Plot title.
-            scale [(str, optional), (str, optional)]: Plot scale axis 
-             scale. Defalts ['linear', 'log']
+            xscale (str, optional): xscale axis 
+             xscale. Defalts to 'linear'.
+            yscale (str, optional): yscale axis 
+             yscale. Defalts to 'log'.
         """
         energies = list()
         brilliances = list()
@@ -1942,8 +1944,8 @@ class SpectraInterface:
                         alpha=0.9,
                     )
         _plt.minorticks_on()
-        _plt.yscale(scale[0])
-        _plt.xscale(scale[0])
+        _plt.yscale(yscale)
+        _plt.xscale(xscale)
 
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Brilliance [ph/s/0.1%/mm²/mrad²/100mA]")
@@ -1961,7 +1963,7 @@ class SpectraInterface:
         _plt.show()
 
     def plot_flux_curve(
-        self, process_curves=True, superp_value=250, title="Flux curves", scale = ['linear', 'log']
+        self, process_curves=True, superp_value=250, title="Flux curves", xscale = 'linear', yscale = 'log'
     ):
         """Plot flux curves.
 
@@ -1971,8 +1973,10 @@ class SpectraInterface:
             superp_value (int, optional): Desired value of energy
              superposition. Defaults to 250.
             title (str, optional): Plot title.
-            scale [(str, optional), (str, optional)]: Plot scale axis 
-             scale. Defalts ['linear', 'log']
+            xscale (str, optional): xscale axis 
+             xscale. Defalts to 'linear'.
+            yscale (str, optional): yscale axis 
+             yscale. Defalts to 'log'.
         """
         energies = list()
         fluxes = list()
@@ -2037,8 +2041,8 @@ class SpectraInterface:
                         alpha=0.9,
                     )
         _plt.minorticks_on()
-        _plt.yscale(scale[1])
-        _plt.xscale(scale[0])
+        _plt.yscale(yscale)
+        _plt.xscale(xscale)
 
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Flux [ph/s/0.1%/100mA]")
