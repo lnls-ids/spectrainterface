@@ -1950,7 +1950,7 @@ class SpectraInterface:
         if xlim:
             _plt.xlim(xlim[0], xlim[1])
         if ylim:
-            _plt.xlim(xlim[0], xlim[1])
+            _plt.ylim(ylim[0], ylim[1])
 
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Brilliance [ph/s/0.1%/mm²/mrad²/100mA]")
@@ -2052,7 +2052,7 @@ class SpectraInterface:
         if xlim:
             _plt.xlim(xlim[0], xlim[1])
         if ylim:
-            _plt.xlim(xlim[0], xlim[1])
+            _plt.ylim(ylim[0], ylim[1])
 
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Flux [ph/s/0.1%/100mA]")
