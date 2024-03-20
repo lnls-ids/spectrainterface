@@ -1862,7 +1862,7 @@ class SpectraInterface:
         self._fluxes = fluxes
 
     def plot_brilliance_curve(
-        self, process_curves=True, superp_value=250, title="Brilliance curves"
+        self, process_curves=True, superp_value=250, title="Brilliance curves", xscale = "linear", yscale = "log", xlim = [], ylim = [], linewidth = 1
     ):
         """Plot brilliance curves.
 
@@ -1872,6 +1872,10 @@ class SpectraInterface:
             superp_value (int, optional): Desired value of energy
              superposition. Defaults to 250.
             title (str, optional): Plot title.
+            xscale (str, optional): xscale axis 
+             xscale. Defalts to 'linear'.
+            yscale (str, optional): yscale axis 
+             yscale. Defalts to 'log'.
         """
         energies = list()
         brilliances = list()
@@ -1927,7 +1931,7 @@ class SpectraInterface:
                         1e-3*self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
-                        linewidth=3,
+                        linewidth=linewidth,
                         alpha=0.9,
                         label=label,
                     )
@@ -1936,11 +1940,17 @@ class SpectraInterface:
                         1e-3*self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
-                        linewidth=3,
+                        linewidth=linewidth,
                         alpha=0.9,
                     )
         _plt.minorticks_on()
-        _plt.yscale("log")
+        _plt.yscale(yscale)
+        _plt.xscale(xscale)
+        
+        if xlim:
+            _plt.xlim(xlim[0], xlim[1])
+        if ylim:
+            _plt.ylim(ylim[0], ylim[1])
 
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Brilliance [ph/s/0.1%/mm²/mrad²/100mA]")
@@ -1958,7 +1968,7 @@ class SpectraInterface:
         _plt.show()
 
     def plot_flux_curve(
-        self, process_curves=True, superp_value=250, title="Flux curves"
+        self, process_curves=True, superp_value=250, title="Flux curves", xscale = 'linear', yscale = 'log', xlim = [], ylim = [], linewidth = 1
     ):
         """Plot flux curves.
 
@@ -1968,6 +1978,10 @@ class SpectraInterface:
             superp_value (int, optional): Desired value of energy
              superposition. Defaults to 250.
             title (str, optional): Plot title.
+            xscale (str, optional): xscale axis 
+             xscale. Defalts to 'linear'.
+            yscale (str, optional): yscale axis 
+             yscale. Defalts to 'log'.
         """
         energies = list()
         fluxes = list()
@@ -2019,7 +2033,7 @@ class SpectraInterface:
                         1e-3*self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
-                        linewidth=3,
+                        linewidth=linewidth,
                         alpha=0.9,
                         label=label,
                     )
@@ -2028,11 +2042,17 @@ class SpectraInterface:
                         1e-3*self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
-                        linewidth=3,
+                        linewidth=linewidth,
                         alpha=0.9,
                     )
         _plt.minorticks_on()
-        _plt.yscale("log")
+        _plt.yscale(yscale)
+        _plt.xscale(xscale)
+
+        if xlim:
+            _plt.xlim(xlim[0], xlim[1])
+        if ylim:
+            _plt.ylim(ylim[0], ylim[1])
 
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Flux [ph/s/0.1%/100mA]")
