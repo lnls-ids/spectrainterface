@@ -1862,7 +1862,7 @@ class SpectraInterface:
         self._fluxes = fluxes
 
     def plot_brilliance_curve(
-        self, process_curves=True, superp_value=250, title="Brilliance curves", xscale = "linear", yscale = "log", xlim = [], ylim = [], linewidth = 1, names = []
+        self, process_curves=True, superp_value=250, title="Brilliance curves", xscale = "linear", yscale = "log", xlim = [], ylim = [], linewidth = 1
     ):
         """Plot brilliance curves.
 
@@ -1920,9 +1920,9 @@ class SpectraInterface:
         for i, source in enumerate(self.sources):
             color = colorlist[i]
             if source.source_type == "bendingmagnet":
-                label = source.label if not names or len(names) != len(self.sources) else names[i]
+                label = source.label
             else:
-                label = source.label if not names or len(names) != len(self.sources) else names[i]
+                label = source.label
                 label += ", λ = {:.1f} mm".format(source.period)
                 label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
@@ -1968,7 +1968,7 @@ class SpectraInterface:
         _plt.show()
 
     def plot_flux_curve(
-        self, process_curves=True, superp_value=250, title="Flux curves", xscale = 'linear', yscale = 'log', xlim = [], ylim = [], linewidth = 1, names = []
+        self, process_curves=True, superp_value=250, title="Flux curves", xscale = 'linear', yscale = 'log', xlim = [], ylim = [], linewidth = 1
     ):
         """Plot flux curves.
 
@@ -2022,9 +2022,9 @@ class SpectraInterface:
         for i, source in enumerate(self.sources):
             color = colorlist[i]
             if source.source_type == "bendingmagnet":
-                label = source.label if not names or len(names) != len(self.sources) else names[i]
+                label = source.label
             else:
-                label = source.label if not names or len(names) != len(self.sources) else names[i]
+                label = source.label
                 label += ", λ = {:.1f} mm".format(source.period)
                 label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
