@@ -1862,7 +1862,7 @@ class SpectraInterface:
         self._fluxes = fluxes
 
     def plot_brilliance_curve(
-        self, process_curves=True, superp_value=250, title="Brilliance curves", xscale = "linear", yscale = "log"
+        self, process_curves=True, superp_value=250, title="Brilliance curves", xscale = "linear", yscale = "log", xlim = [], ylim = [], linewidth = 1, names = []
     ):
         """Plot brilliance curves.
 
@@ -1920,9 +1920,9 @@ class SpectraInterface:
         for i, source in enumerate(self.sources):
             color = colorlist[i]
             if source.source_type == "bendingmagnet":
-                label = source.label
+                label = source.label if not names or len(names) != len(self.sources) else names[i]
             else:
-                label = source.label
+                label = source.label if not names or len(names) != len(self.sources) else names[i]
                 label += ", λ = {:.1f} mm".format(source.period)
                 label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
@@ -1931,7 +1931,7 @@ class SpectraInterface:
                         1e-3*self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
-                        linewidth=3,
+                        linewidth=linewidth,
                         alpha=0.9,
                         label=label,
                     )
@@ -1940,12 +1940,17 @@ class SpectraInterface:
                         1e-3*self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
-                        linewidth=3,
+                        linewidth=linewidth,
                         alpha=0.9,
                     )
         _plt.minorticks_on()
         _plt.yscale(yscale)
         _plt.xscale(xscale)
+        
+        if xlim:
+            _plt.xlim(xlim[0], xlim[1])
+        if ylim:
+            _plt.xlim(xlim[0], xlim[1])
 
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Brilliance [ph/s/0.1%/mm²/mrad²/100mA]")
@@ -1963,7 +1968,7 @@ class SpectraInterface:
         _plt.show()
 
     def plot_flux_curve(
-        self, process_curves=True, superp_value=250, title="Flux curves", xscale = 'linear', yscale = 'log'
+        self, process_curves=True, superp_value=250, title="Flux curves", xscale = 'linear', yscale = 'log', xlim = [], ylim = [], linewidth = 1, names = []
     ):
         """Plot flux curves.
 
@@ -2017,9 +2022,9 @@ class SpectraInterface:
         for i, source in enumerate(self.sources):
             color = colorlist[i]
             if source.source_type == "bendingmagnet":
-                label = source.label
+                label = source.label if not names or len(names) != len(self.sources) else names[i]
             else:
-                label = source.label
+                label = source.label if not names or len(names) != len(self.sources) else names[i]
                 label += ", λ = {:.1f} mm".format(source.period)
                 label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
@@ -2028,7 +2033,7 @@ class SpectraInterface:
                         1e-3*self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
-                        linewidth=3,
+                        linewidth=linewidth,
                         alpha=0.9,
                         label=label,
                     )
@@ -2037,12 +2042,17 @@ class SpectraInterface:
                         1e-3*self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
-                        linewidth=3,
+                        linewidth=linewidth,
                         alpha=0.9,
                     )
         _plt.minorticks_on()
         _plt.yscale(yscale)
         _plt.xscale(xscale)
+
+        if xlim:
+            _plt.xlim(xlim[0], xlim[1])
+        if ylim:
+            _plt.xlim(xlim[0], xlim[1])
 
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Flux [ph/s/0.1%/100mA]")
