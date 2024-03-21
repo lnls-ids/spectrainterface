@@ -1686,20 +1686,24 @@ class SpectraInterface:
                         self.calc.source_type = (
                             self.calc.SourceType.horizontal_undulator
                         )
+                        self.calc.by_peak = 1
                     elif polarization == "vp":
                         self.calc.source_type = (
                             self.calc.SourceType.vertical_undulator
                         )
+                        self.calc.bx_peak = 1
                     elif polarization == "cp":
                         self.calc.source_type = (
                             self.calc.SourceType.elliptic_undulator
                         )
+                        self.calc.by_peak = 1
+                        self.calc.bx_peak = 1
                     else:
                         return
 
                     self.calc.k_range = [kmin, kmax]
                     self.calc.period = source.period
-                    self.calc.by_peak = 1
+
             else:
                 b = source.b_peak
                 self.calc.source_type = self.calc.SourceType.bending_magnet
@@ -1778,8 +1782,10 @@ class SpectraInterface:
                 )
             )
             if source.source_type != "bendingmagnet":
-                kmax = source.calc_max_k(self.accelerator)
-
+                if source.gap == 0:
+                    kmax = source.calc_max_k(self.accelerator)
+                else:
+                    kmax = source.get_k()
                 if source.source_type == "wiggler":
                     b_max = source.undulator_k_to_b(kmax, source.period)
                     self.calc.source_type = self.calc.SourceType.wiggler
@@ -1808,20 +1814,24 @@ class SpectraInterface:
                         self.calc.source_type = (
                             self.calc.SourceType.horizontal_undulator
                         )
+                        self.calc.by_peak = 1
                     elif polarization == "vp":
                         self.calc.source_type = (
                             self.calc.SourceType.vertical_undulator
                         )
+                        self.calc.bx_peak = 1
                     elif polarization == "cp":
                         self.calc.source_type = (
                             self.calc.SourceType.elliptic_undulator
                         )
+                        self.calc.by_peak = 1
+                        self.calc.bx_peak = 1
                     else:
                         return
 
                     self.calc.k_range = [kmin, kmax]
                     self.calc.period = source.period
-                    self.calc.by_peak = 1
+
             else:
                 b = source.b_peak
                 self.calc.source_type = self.calc.SourceType.bending_magnet
@@ -1850,6 +1860,7 @@ class SpectraInterface:
                     raise ValueError("Invalid beta section.")
 
             self.calc.set_config()
+            print(self.calc._input_template)
             self.calc.run_calculation()
 
             energies.append(self.calc.energies)

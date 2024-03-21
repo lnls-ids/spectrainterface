@@ -522,7 +522,10 @@ class Hybrid(Undulator):
         self._br = 1.24
         self._polarization = "hp"
         self._efficiency = 1
-        self._halbach_coef = {"hp": {"a": 2.552, "b": -4.431, "c": 1.101}}
+        self._halbach_coef = {
+            "hp": {"a": 2.552, "b": -4.431, "c": 1.101},
+            "vp": {"a": 2.552, "b": -4.431, "c": 1.101},
+        }
         self._period = period
         self._source_length = length
         self._source_type = "linearundulator"
@@ -630,3 +633,15 @@ class Cpmu_pr(Undulator):
         self._period = period
         self._source_length = length
         self._source_type = "linearundulator"
+
+
+class Vpu(Hybrid):
+    """Vpu class."""
+
+    def __init__(self, period=29, length=1.5):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._polarization = "vp"
+        self._source_type = "verticalundulator"
+        self._label = "Vpu"
+        self._gap = 9.7
