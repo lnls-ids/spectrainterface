@@ -488,6 +488,8 @@ class UE44(Apple2):
              length. Defalts to 3.4 m.
         """
         super().__init__(period, length)
+        self._label = 'UE44'
+        self._gap = 11.4
         self._br = 1.14
 
 
