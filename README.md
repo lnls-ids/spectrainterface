@@ -25,4 +25,4 @@ Jefferson Vieira
 
 ## Acknowledgements
 
-We thank Takashi Tanaka (RIKEN Spring-8) for making SPECTRA free to use. 
+We thank Takashi Tanaka (RIKEN Spring-8) for making SPECTRA free to use. We thank Luana Vilela for her many contributions to this project.
