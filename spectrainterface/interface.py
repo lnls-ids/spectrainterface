@@ -1880,7 +1880,7 @@ class SpectraInterface:
         yscale="log",
         xlim=[],
         ylim=[],
-        linewidth=1,
+        linewidth=3,
     ):
         """Plot brilliance curves.
 
@@ -1994,7 +1994,7 @@ class SpectraInterface:
         yscale="log",
         xlim=[],
         ylim=[],
-        linewidth=1,
+        linewidth=3,
     ):
         """Plot flux curves.
 
