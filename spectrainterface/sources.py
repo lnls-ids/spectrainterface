@@ -81,9 +81,21 @@ class B2(BendingMagnet):
     def __init__(self):
         """Class constructor."""
         super().__init__()
-        self._b_peak = 0.5642
+        self._b_peak = 0.5665
         self._label = "B2"
 
+class B1(BendingMagnet):
+    """B1 class.
+
+    Args:
+        BendingMagnet (Bending magnet class): BM class
+    """
+
+    def __init__(self):
+        """Class constructor."""
+        super().__init__()
+        self._b_peak = 0.5642
+        self._label = "B1"
 
 class Undulator(SourceFunctions):
     """Main class for undulators.
