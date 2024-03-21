@@ -18,7 +18,9 @@ To install `spectrainterface` in development mode, go to this repository path an
 ## Authors:
 
 Gabriel Rezende da Ascenção
+
 Sergio Lordano
+
 Jefferson Vieira
 
 ## Acknowledgements
