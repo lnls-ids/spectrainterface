@@ -471,6 +471,15 @@ class Apple2(Undulator):
         self._source_length = length
         self._source_type = "ellipticundulator"
 
+class Ue44(Apple2):
+    """Ue44  class"""
+    def __init__(self, period=44, length=3.4):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._label = 'Ue44'
+        self._gap = 11.4
+        self._br = 1.14
+
 
 class Delta(Undulator):
     """Delta Undulator class.
