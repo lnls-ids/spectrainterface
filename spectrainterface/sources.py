@@ -442,6 +442,14 @@ class Planar(Undulator):
         self._source_type = "linearundulator"
 
 
+class Apu58(Planar):
+    """Apu58 class."""
+    def __init__(self, period=58, length=1):
+        super().__init__(period, length)
+        self._label = 'Apu58'
+        self._gap = 15.8
+        self._br = 1.34
+
 class Apple2(Undulator):
     """Apple2 Undulator class.
 
