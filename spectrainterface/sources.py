@@ -481,7 +481,7 @@ class Ue44(Apple2):
         self._br = 1.14
 
 class Epu50(Apple2):
-    """Epu50 uvx class."""
+    """Epu50 class."""
     def __init__(self, period=50, length=3):
         """Class constructor."""
         super().__init__(period, length)
