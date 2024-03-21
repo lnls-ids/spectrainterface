@@ -442,7 +442,33 @@ class Planar(Undulator):
         self._source_type = "linearundulator"
 
 
-class Apple2(Undulator):
+class Elliptic(Undulator):
+    """Class for undulators that allow elliptic polarizations.
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+    def __init__(self):
+        """Class consteuctor."""
+        super().__init__()
+        self._fields_ratio = 1
+        self._source_type = "ellipticundulator"
+
+    @property
+    def fields_ratio(self):
+        """Ratio By_peak / Bx_peak.
+
+        Returns:
+            float: Ratio of peak fields.
+        """
+        return self._fields_ratio
+
+    @fields_ratio.setter
+    def fields_ratio(self, value):
+        self._fields_ratio = value
+
+
+class Apple2(Elliptic):
     """Apple2 Undulator class.
 
     Args:
@@ -471,17 +497,8 @@ class Apple2(Undulator):
         self._source_length = length
         self._source_type = "ellipticundulator"
 
-class Ue44(Apple2):
-    """Ue44  class"""
-    def __init__(self, period=44, length=3.4):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._label = 'Ue44'
-        self._gap = 11.4
-        self._br = 1.14
 
-
-class Delta(Undulator):
+class Delta(Elliptic):
     """Delta Undulator class.
 
     Args:
@@ -642,6 +659,16 @@ class Cpmu_pr(Undulator):
         self._period = period
         self._source_length = length
         self._source_type = "linearundulator"
+
+
+class Ue44(Apple2):
+    """Ue44  class."""
+    def __init__(self, period=44, length=3.4):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._label = 'UE44'
+        self._gap = 11.4
+        self._br = 1.14
 
 
 class Vpu(Hybrid):

@@ -1696,8 +1696,8 @@ class SpectraInterface:
                         self.calc.source_type = (
                             self.calc.SourceType.elliptic_undulator
                         )
-                        self.calc.by_peak = 1
                         self.calc.bx_peak = 1
+                        self.calc.by_peak = source.fields_ratio
                     else:
                         return
 
@@ -1824,8 +1824,8 @@ class SpectraInterface:
                         self.calc.source_type = (
                             self.calc.SourceType.elliptic_undulator
                         )
-                        self.calc.by_peak = 1
                         self.calc.bx_peak = 1
+                        self.calc.by_peak = source.fields_ratio
                     else:
                         return
 
