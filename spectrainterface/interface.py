@@ -1860,7 +1860,6 @@ class SpectraInterface:
                     raise ValueError("Invalid beta section.")
 
             self.calc.set_config()
-            print(self.calc._input_template)
             self.calc.run_calculation()
 
             energies.append(self.calc.energies)
@@ -1873,7 +1872,15 @@ class SpectraInterface:
         self._fluxes = fluxes
 
     def plot_brilliance_curve(
-        self, process_curves=True, superp_value=250, title="Brilliance curves", xscale = "linear", yscale = "log", xlim = [], ylim = [], linewidth = 1
+        self,
+        process_curves=True,
+        superp_value=250,
+        title="Brilliance curves",
+        xscale="linear",
+        yscale="log",
+        xlim=[],
+        ylim=[],
+        linewidth=1,
     ):
         """Plot brilliance curves.
 
@@ -1883,9 +1890,9 @@ class SpectraInterface:
             superp_value (int, optional): Desired value of energy
              superposition. Defaults to 250.
             title (str, optional): Plot title.
-            xscale (str, optional): xscale axis 
+            xscale (str, optional): xscale axis
              xscale. Defalts to 'linear'.
-            yscale (str, optional): yscale axis 
+            yscale (str, optional): yscale axis
              yscale. Defalts to 'log'.
         """
         energies = list()
@@ -1939,7 +1946,7 @@ class SpectraInterface:
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
-                        1e-3*self.energies[i][j, :],
+                        1e-3 * self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
                         linewidth=linewidth,
@@ -1948,7 +1955,7 @@ class SpectraInterface:
                     )
                 else:
                     _plt.plot(
-                        1e-3*self.energies[i][j, :],
+                        1e-3 * self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
                         linewidth=linewidth,
@@ -1957,7 +1964,7 @@ class SpectraInterface:
         _plt.minorticks_on()
         _plt.yscale(yscale)
         _plt.xscale(xscale)
-        
+
         if xlim:
             _plt.xlim(xlim[0], xlim[1])
         if ylim:
@@ -1979,7 +1986,15 @@ class SpectraInterface:
         _plt.show()
 
     def plot_flux_curve(
-        self, process_curves=True, superp_value=250, title="Flux curves", xscale = 'linear', yscale = 'log', xlim = [], ylim = [], linewidth = 1
+        self,
+        process_curves=True,
+        superp_value=250,
+        title="Flux curves",
+        xscale="linear",
+        yscale="log",
+        xlim=[],
+        ylim=[],
+        linewidth=1,
     ):
         """Plot flux curves.
 
@@ -1989,9 +2004,9 @@ class SpectraInterface:
             superp_value (int, optional): Desired value of energy
              superposition. Defaults to 250.
             title (str, optional): Plot title.
-            xscale (str, optional): xscale axis 
+            xscale (str, optional): xscale axis
              xscale. Defalts to 'linear'.
-            yscale (str, optional): yscale axis 
+            yscale (str, optional): yscale axis
              yscale. Defalts to 'log'.
         """
         energies = list()
@@ -2041,7 +2056,7 @@ class SpectraInterface:
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
-                        1e-3*self.energies[i][j, :],
+                        1e-3 * self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
                         linewidth=linewidth,
@@ -2050,7 +2065,7 @@ class SpectraInterface:
                     )
                 else:
                     _plt.plot(
-                        1e-3*self.energies[i][j, :],
+                        1e-3 * self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
                         linewidth=linewidth,
