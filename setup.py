@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="spectrainterface",
-    version="0.1.0",
+    version="0.2.1",
     author="Gabriel Rezende da Ascencao",
     author_email="gabriel.ascencao@lnls.br",
     description="Python interface for SPECTRA",
@@ -14,7 +14,8 @@ setuptools.setup(
     url="https://github.com/lnls-ids/spectrainterface",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    install_requires=[],
+    install_requires=[
+        'mathphys>=2.9'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
