@@ -1686,20 +1686,24 @@ class SpectraInterface:
                         self.calc.source_type = (
                             self.calc.SourceType.horizontal_undulator
                         )
+                        self.calc.by_peak = 1
                     elif polarization == "vp":
                         self.calc.source_type = (
                             self.calc.SourceType.vertical_undulator
                         )
+                        self.calc.bx_peak = 1
                     elif polarization == "cp":
                         self.calc.source_type = (
                             self.calc.SourceType.elliptic_undulator
                         )
+                        self.calc.bx_peak = 1
+                        self.calc.by_peak = source.fields_ratio
                     else:
                         return
 
                     self.calc.k_range = [kmin, kmax]
                     self.calc.period = source.period
-                    self.calc.by_peak = 1
+
             else:
                 b = source.b_peak
                 self.calc.source_type = self.calc.SourceType.bending_magnet
@@ -1746,7 +1750,7 @@ class SpectraInterface:
         nr_pts_k=15,
         kmin=0.2,
         slit_shape="circslit",
-        slit_acceptance=[0, 0.04],
+        slit_acceptances=[[0, 0.04]],
         beta_sections=None,
     ):
         """Calc flux curves.
@@ -1771,6 +1775,12 @@ class SpectraInterface:
         source_list = self.sources
         energies = list()
         fluxes = list()
+        slit_acceptances = _np.array(slit_acceptances)
+        if slit_acceptances.shape[0] == 1:
+            slit_acceptances = _np.full(
+                (len(source_list), 2), slit_acceptances[0]
+            )
+        slit_acceptances = slit_acceptances.tolist()
         for i, source in enumerate(source_list):
             print(
                 "Calculating curve for source {:.0f}/{:.0f}".format(
@@ -1778,8 +1788,10 @@ class SpectraInterface:
                 )
             )
             if source.source_type != "bendingmagnet":
-                kmax = source.calc_max_k(self.accelerator)
-
+                if source.gap == 0:
+                    kmax = source.calc_max_k(self.accelerator)
+                else:
+                    kmax = source.get_k()
                 if source.source_type == "wiggler":
                     b_max = source.undulator_k_to_b(kmax, source.period)
                     self.calc.source_type = self.calc.SourceType.wiggler
@@ -1791,7 +1803,7 @@ class SpectraInterface:
                     self.calc.by_peak = b_max
                     self.calc.ky = kmax
                     self.calc.observation_angle = [0, 0]
-                    self.calc.slit_acceptance = slit_acceptance
+                    self.calc.slit_acceptance = slit_acceptances[i]
                     self.calc.energy_range = energy_range
                     self.calc.energy_step = 1
                 else:
@@ -1801,27 +1813,31 @@ class SpectraInterface:
                     self.calc.slit_shape = slit_shape
                     self.calc.harmonic_range = harmonic_range
                     self.calc.k_nr_pts = nr_pts_k
-                    self.calc.slit_acceptance = slit_acceptance
+                    self.calc.slit_acceptance = slit_acceptances[i]
 
                     polarization = source.polarization
                     if polarization == "hp":
                         self.calc.source_type = (
                             self.calc.SourceType.horizontal_undulator
                         )
+                        self.calc.by_peak = 1
                     elif polarization == "vp":
                         self.calc.source_type = (
                             self.calc.SourceType.vertical_undulator
                         )
+                        self.calc.bx_peak = 1
                     elif polarization == "cp":
                         self.calc.source_type = (
                             self.calc.SourceType.elliptic_undulator
                         )
+                        self.calc.bx_peak = 1
+                        self.calc.by_peak = source.fields_ratio
                     else:
                         return
 
                     self.calc.k_range = [kmin, kmax]
                     self.calc.period = source.period
-                    self.calc.by_peak = 1
+
             else:
                 b = source.b_peak
                 self.calc.source_type = self.calc.SourceType.bending_magnet
@@ -1830,7 +1846,7 @@ class SpectraInterface:
                 self.calc.output_type = self.calc.CalcConfigs.Output.flux
                 self.calc.slit_shape = slit_shape
                 self.calc.observation_angle = [0, 0]
-                self.calc.slit_acceptance = slit_acceptance
+                self.calc.slit_acceptance = slit_acceptances[i]
                 self.calc.energy_range = energy_range
                 self.calc.energy_step = 1
                 self.calc.by_peak = b
@@ -1862,7 +1878,15 @@ class SpectraInterface:
         self._fluxes = fluxes
 
     def plot_brilliance_curve(
-        self, process_curves=True, superp_value=250, title="Brilliance curves", xscale = "linear", yscale = "log", xlim = [], ylim = [], linewidth = 1
+        self,
+        process_curves=True,
+        superp_value=250,
+        title="Brilliance curves",
+        xscale="linear",
+        yscale="log",
+        xlim=[],
+        ylim=[],
+        linewidth=3,
     ):
         """Plot brilliance curves.
 
@@ -1872,9 +1896,9 @@ class SpectraInterface:
             superp_value (int, optional): Desired value of energy
              superposition. Defaults to 250.
             title (str, optional): Plot title.
-            xscale (str, optional): xscale axis 
+            xscale (str, optional): xscale axis
              xscale. Defalts to 'linear'.
-            yscale (str, optional): yscale axis 
+            yscale (str, optional): yscale axis
              yscale. Defalts to 'log'.
         """
         energies = list()
@@ -1887,11 +1911,34 @@ class SpectraInterface:
                 ):
                     input_brilliance = self.brilliances[i][:, :]
                     input_energies = self.energies[i][:, :]
-                    energies_, brilliance = self.calc.process_brilliance_curve(
-                        input_energies,
-                        input_brilliance,
-                        superp_value=superp_value,
-                    )
+                    if input_energies.shape[0] > 1:
+                        energies_, brilliance = (
+                            self.calc.process_brilliance_curve(
+                                input_energies,
+                                input_brilliance,
+                                superp_value=superp_value,
+                            )
+                        )
+                    else:
+                        input_brilliance_b = input_brilliance[0]
+                        input_energies_b = input_energies[0]
+                        idx = _np.argsort(input_energies_b)
+                        input_energies_b = input_energies_b[idx]
+                        input_brilliance_b = input_brilliance_b[idx]
+                        energies_ = _np.linspace(
+                            _np.min(input_energies_b),
+                            _np.max(input_energies_b),
+                            2001,
+                        )
+                        brilliance = _np.interp(
+                            energies_, input_energies_b, input_brilliance_b
+                        )
+                        energies_ = _np.reshape(
+                            energies_, (1, _np.shape(energies_)[0])
+                        )
+                        brilliance = _np.reshape(
+                            brilliance, (1, _np.shape(brilliance)[0])
+                        )
                 else:
                     input_brilliance = self.brilliances[i]
                     input_energies = self.energies[i]
@@ -1928,7 +1975,7 @@ class SpectraInterface:
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
-                        1e-3*self.energies[i][j, :],
+                        1e-3 * self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
                         linewidth=linewidth,
@@ -1937,7 +1984,7 @@ class SpectraInterface:
                     )
                 else:
                     _plt.plot(
-                        1e-3*self.energies[i][j, :],
+                        1e-3 * self.energies[i][j, :],
                         self.brilliances[i][j, :],
                         color=color,
                         linewidth=linewidth,
@@ -1946,7 +1993,7 @@ class SpectraInterface:
         _plt.minorticks_on()
         _plt.yscale(yscale)
         _plt.xscale(xscale)
-        
+
         if xlim:
             _plt.xlim(xlim[0], xlim[1])
         if ylim:
@@ -1968,7 +2015,15 @@ class SpectraInterface:
         _plt.show()
 
     def plot_flux_curve(
-        self, process_curves=True, superp_value=250, title="Flux curves", xscale = 'linear', yscale = 'log', xlim = [], ylim = [], linewidth = 1
+        self,
+        process_curves=True,
+        superp_value=250,
+        title="Flux curves",
+        xscale="linear",
+        yscale="log",
+        xlim=[],
+        ylim=[],
+        linewidth=3,
     ):
         """Plot flux curves.
 
@@ -1978,9 +2033,9 @@ class SpectraInterface:
             superp_value (int, optional): Desired value of energy
              superposition. Defaults to 250.
             title (str, optional): Plot title.
-            xscale (str, optional): xscale axis 
+            xscale (str, optional): xscale axis
              xscale. Defalts to 'linear'.
-            yscale (str, optional): yscale axis 
+            yscale (str, optional): yscale axis
              yscale. Defalts to 'log'.
         """
         energies = list()
@@ -1993,11 +2048,30 @@ class SpectraInterface:
                 ):
                     input_flux = self.fluxes[i][:, :]
                     input_energies = self.energies[i][:, :]
-                    energies_, flux = self.calc.process_brilliance_curve(
-                        input_energies,
-                        input_flux,
-                        superp_value=superp_value,
-                    )
+                    if input_energies.shape[0] > 1:
+                        energies_, flux = self.calc.process_brilliance_curve(
+                            input_energies,
+                            input_flux,
+                            superp_value=superp_value,
+                        )
+                    else:
+                        input_flux_b = input_flux[0]
+                        input_energies_b = input_energies[0]
+                        idx = _np.argsort(input_energies_b)
+                        input_energies_b = input_energies_b[idx]
+                        input_flux_b = input_flux_b[idx]
+                        energies_ = _np.linspace(
+                            _np.min(input_energies_b),
+                            _np.max(input_energies_b),
+                            2001,
+                        )
+                        flux = _np.interp(
+                            energies_, input_energies_b, input_flux_b
+                        )
+                        energies_ = _np.reshape(
+                            energies_, (1, _np.shape(energies_)[0])
+                        )
+                        flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
                 else:
                     input_flux = self.fluxes[i]
                     input_energies = self.energies[i]
@@ -2030,7 +2104,7 @@ class SpectraInterface:
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
-                        1e-3*self.energies[i][j, :],
+                        1e-3 * self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
                         linewidth=linewidth,
@@ -2039,7 +2113,7 @@ class SpectraInterface:
                     )
                 else:
                     _plt.plot(
-                        1e-3*self.energies[i][j, :],
+                        1e-3 * self.energies[i][j, :],
                         self.fluxes[i][j, :],
                         color=color,
                         linewidth=linewidth,

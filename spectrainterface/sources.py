@@ -84,6 +84,7 @@ class B2(BendingMagnet):
         self._b_peak = 0.5665
         self._label = "B2"
 
+
 class B1(BendingMagnet):
     """B1 class.
 
@@ -96,6 +97,7 @@ class B1(BendingMagnet):
         super().__init__()
         self._b_peak = 0.5642
         self._label = "B1"
+
 
 class Undulator(SourceFunctions):
     """Main class for undulators.
@@ -454,15 +456,33 @@ class Planar(Undulator):
         self._source_type = "linearundulator"
 
 
-class Apu58(Planar):
-    """Apu58 class."""
-    def __init__(self, period=58, length=1):
-        super().__init__(period, length)
-        self._label = 'Apu58'
-        self._gap = 15.8
-        self._br = 1.34
+class Elliptic(Undulator):
+    """Class for undulators that allow elliptic polarizations.
 
-class Apple2(Undulator):
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+    def __init__(self):
+        """Class consteuctor."""
+        super().__init__()
+        self._fields_ratio = 1
+        self._source_type = "ellipticundulator"
+
+    @property
+    def fields_ratio(self):
+        """Ratio By_peak / Bx_peak.
+
+        Returns:
+            float: Ratio of peak fields.
+        """
+        return self._fields_ratio
+
+    @fields_ratio.setter
+    def fields_ratio(self, value):
+        self._fields_ratio = value
+
+
+class Apple2(Elliptic):
     """Apple2 Undulator class.
 
     Args:
@@ -491,36 +511,8 @@ class Apple2(Undulator):
         self._source_length = length
         self._source_type = "ellipticundulator"
 
-class Ue44(Apple2):
-    """Ue44  class."""
-    def __init__(self, period=44, length=3.4):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._label = 'Ue44'
-        self._gap = 11.4
-        self._br = 1.14
 
-class Epu50(Apple2):
-    """Epu50 class."""
-    def __init__(self, period=50, length=3):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._label = 'Epu50'
-        self._br = 1.24
-        self._gap = 10.3
-        
-
-class Epu50_uvx(Apple2):
-    """Epu50 uvx class."""
-    def __init__(self, period=50, length=2.7):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._label = 'Epu50 (UVX)'
-        self._br = 1.135
-        self._gap = 22
-        
-
-class Delta(Undulator):
+class Delta(Elliptic):
     """Delta Undulator class.
 
     Args:
@@ -570,7 +562,10 @@ class Hybrid(Undulator):
         self._br = 1.24
         self._polarization = "hp"
         self._efficiency = 1
-        self._halbach_coef = {"hp": {"a": 2.552, "b": -4.431, "c": 1.101}}
+        self._halbach_coef = {
+            "hp": {"a": 2.552, "b": -4.431, "c": 1.101},
+            "vp": {"a": 2.552, "b": -4.431, "c": 1.101},
+        }
         self._period = period
         self._source_length = length
         self._source_type = "linearundulator"
@@ -678,3 +673,55 @@ class Cpmu_pr(Undulator):
         self._period = period
         self._source_length = length
         self._source_type = "linearundulator"
+
+
+class Ue44(Apple2):
+    """Ue44  class."""
+    def __init__(self, period=44, length=3.4):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._label = 'UE44'
+        self._gap = 11.4
+        self._br = 1.14
+
+
+class Vpu(Hybrid):
+    """Vpu class."""
+
+    def __init__(self, period=29, length=1.5):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._polarization = "vp"
+        self._source_type = "verticalundulator"
+        self._label = "Vpu"
+        self._gap = 9.7
+
+
+class Apu58(Planar):
+    """Apu58 class."""
+    def __init__(self, period=58, length=1):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._label = 'Apu58'
+        self._gap = 15.8
+        self._br = 1.34
+
+
+class Epu50(Apple2):
+    """Epu50 class."""
+    def __init__(self, period=50, length=3):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._label = 'Epu50'
+        self._br = 1.24
+        self._gap = 10.3
+
+
+class Epu50_uvx(Apple2):
+    """Epu50 uvx class."""
+    def __init__(self, period=50, length=2.7):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._label = 'Epu50 (UVX)'
+        self._br = 1.135
+        self._gap = 22
