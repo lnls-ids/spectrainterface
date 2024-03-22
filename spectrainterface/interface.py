@@ -1750,7 +1750,7 @@ class SpectraInterface:
         nr_pts_k=15,
         kmin=0.2,
         slit_shape="circslit",
-        slit_acceptance=[0, 0.04],
+        slit_acceptances=[[0, 0.04]],
         beta_sections=None,
     ):
         """Calc flux curves.
@@ -1775,6 +1775,12 @@ class SpectraInterface:
         source_list = self.sources
         energies = list()
         fluxes = list()
+        slit_acceptances = _np.array(slit_acceptances)
+        if slit_acceptances.shape[0] == 1:
+            slit_acceptances = _np.full(
+                (len(source_list), 2), slit_acceptances[0]
+            )
+        slit_acceptances = slit_acceptances.tolist()
         for i, source in enumerate(source_list):
             print(
                 "Calculating curve for source {:.0f}/{:.0f}".format(
@@ -1797,7 +1803,7 @@ class SpectraInterface:
                     self.calc.by_peak = b_max
                     self.calc.ky = kmax
                     self.calc.observation_angle = [0, 0]
-                    self.calc.slit_acceptance = slit_acceptance
+                    self.calc.slit_acceptance = slit_acceptances[i]
                     self.calc.energy_range = energy_range
                     self.calc.energy_step = 1
                 else:
@@ -1807,7 +1813,7 @@ class SpectraInterface:
                     self.calc.slit_shape = slit_shape
                     self.calc.harmonic_range = harmonic_range
                     self.calc.k_nr_pts = nr_pts_k
-                    self.calc.slit_acceptance = slit_acceptance
+                    self.calc.slit_acceptance = slit_acceptances[i]
 
                     polarization = source.polarization
                     if polarization == "hp":
@@ -1840,7 +1846,7 @@ class SpectraInterface:
                 self.calc.output_type = self.calc.CalcConfigs.Output.flux
                 self.calc.slit_shape = slit_shape
                 self.calc.observation_angle = [0, 0]
-                self.calc.slit_acceptance = slit_acceptance
+                self.calc.slit_acceptance = slit_acceptances[i]
                 self.calc.energy_range = energy_range
                 self.calc.energy_step = 1
                 self.calc.by_peak = b
@@ -1905,11 +1911,34 @@ class SpectraInterface:
                 ):
                     input_brilliance = self.brilliances[i][:, :]
                     input_energies = self.energies[i][:, :]
-                    energies_, brilliance = self.calc.process_brilliance_curve(
-                        input_energies,
-                        input_brilliance,
-                        superp_value=superp_value,
-                    )
+                    if input_energies.shape[0] > 1:
+                        energies_, brilliance = (
+                            self.calc.process_brilliance_curve(
+                                input_energies,
+                                input_brilliance,
+                                superp_value=superp_value,
+                            )
+                        )
+                    else:
+                        input_brilliance_b = input_brilliance[0]
+                        input_energies_b = input_energies[0]
+                        idx = _np.argsort(input_energies_b)
+                        input_energies_b = input_energies_b[idx]
+                        input_brilliance_b = input_brilliance_b[idx]
+                        energies_ = _np.linspace(
+                            _np.min(input_energies_b),
+                            _np.max(input_energies_b),
+                            2001,
+                        )
+                        brilliance = _np.interp(
+                            energies_, input_energies_b, input_brilliance_b
+                        )
+                        energies_ = _np.reshape(
+                            energies_, (1, _np.shape(energies_)[0])
+                        )
+                        brilliance = _np.reshape(
+                            brilliance, (1, _np.shape(brilliance)[0])
+                        )
                 else:
                     input_brilliance = self.brilliances[i]
                     input_energies = self.energies[i]
@@ -2019,11 +2048,30 @@ class SpectraInterface:
                 ):
                     input_flux = self.fluxes[i][:, :]
                     input_energies = self.energies[i][:, :]
-                    energies_, flux = self.calc.process_brilliance_curve(
-                        input_energies,
-                        input_flux,
-                        superp_value=superp_value,
-                    )
+                    if input_energies.shape[0] > 1:
+                        energies_, flux = self.calc.process_brilliance_curve(
+                            input_energies,
+                            input_flux,
+                            superp_value=superp_value,
+                        )
+                    else:
+                        input_flux_b = input_flux[0]
+                        input_energies_b = input_energies[0]
+                        idx = _np.argsort(input_energies_b)
+                        input_energies_b = input_energies_b[idx]
+                        input_flux_b = input_flux_b[idx]
+                        energies_ = _np.linspace(
+                            _np.min(input_energies_b),
+                            _np.max(input_energies_b),
+                            2001,
+                        )
+                        flux = _np.interp(
+                            energies_, input_energies_b, input_flux_b
+                        )
+                        energies_ = _np.reshape(
+                            energies_, (1, _np.shape(energies_)[0])
+                        )
+                        flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
                 else:
                     input_flux = self.fluxes[i]
                     input_energies = self.energies[i]
