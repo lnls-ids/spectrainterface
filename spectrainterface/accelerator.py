@@ -7,8 +7,12 @@ import matplotlib.pyplot as _plt
 class StorageRingParameters:
     """Class with storage ring parameters for radiation calculations."""
 
-    def __init__(self):
-        """Class constructor."""
+    def __init__(self, beta_section='low'):
+        """Class constructor.
+
+        Args:
+            beta_section (str, optional): Beta section. Defaults to 'low'.
+        """
         self._energy = 3  # [GeV]
         self._current = 100  # [mA]
         self._sigmaz = 2.9  # [mm]
@@ -34,9 +38,14 @@ class StorageRingParameters:
         self._bsc0_v = 0
 
         self._bsc0_h_lowbeta = 3.4529
-        self._bsc0_v_lowbeta = 1.8627
+        self._bsc0_v_lowbeta = 1.6818
         self._bsc0_h_highbeta = 11.6952
-        self._bsc0_v_highbeta = 2.9524
+        self._bsc0_v_highbeta = 2.6658
+
+        if beta_section == 'low':
+            self.set_low_beta_section()
+        elif beta_section == 'high':
+            self.set_high_beta_section()
 
     @property
     def energy(self):

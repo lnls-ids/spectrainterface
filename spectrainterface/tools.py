@@ -292,7 +292,7 @@ class SourceFunctions:
         polarizations["apple2"] = ["hp", "vp", "cp"]
         polarizations["delta"] = ["hp", "vp", "cp"]
         polarizations["planar"] = ["hp"]
-        polarizations["hybrid"] = ["hp"]
+        polarizations["hybrid"] = ["hp", "vp"]
         polarizations["cpmu_nd"] = ["hp"]
         polarizations["cpmu_prnd"] = ["hp"]
         polarizations["cpmu_pr"] = ["hp"]
