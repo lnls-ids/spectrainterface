@@ -422,6 +422,26 @@ class StorageRingParameters:
         self.bsc0_v = None
         self._beta_section = 'bc'
 
+    def set_b1_section(self):
+        """Set b1 section section."""
+        self.energy = 3
+        self.current = 100
+        self.sigmaz = 2.9
+        self.nat_emittance = 2.5e-10
+        self.coupling_constant = 0.01
+        self.energy_spread = 0.00084
+        self.betax = 1.660
+        self.betay = 26.820
+        self.alphax = 2.908
+        self.alphay = -6.564
+        self.etax = 0.122e-3
+        self.etay = 0
+        self.etapx = 3.211e-3
+        self.etapy = 0
+        self.bsc0_h = None
+        self.bsc0_v = None
+        self._beta_section = 'b1'
+
     def set_b2_section(self):  # It is necessary to update these values.
         """Set b2 section section."""
         self.energy = 3
