@@ -1740,8 +1740,8 @@ class SpectraInterface:
             energies.append(self.calc.energies)
             brilliances.append(self.calc.brilliance)
 
-        energies = _np.array(energies)
-        brilliances = _np.array(brilliances)
+        energies = _np.array(energies, dtype=object)
+        brilliances = _np.array(brilliances, dtype=object)
         self._energies = energies
         self._brilliances = brilliances
 
@@ -1875,8 +1875,8 @@ class SpectraInterface:
             energies.append(self.calc.energies)
             fluxes.append(self.calc.flux)
 
-        energies = _np.array(energies)
-        fluxes = _np.array(fluxes)
+        energies = _np.array(energies, dtype=object)
+        fluxes = _np.array(fluxes, dtype=object)
 
         self._energies = energies
         self._fluxes = fluxes
@@ -1961,8 +1961,8 @@ class SpectraInterface:
 
                 energies.append(energies_)
                 brilliances.append(brilliance)
-            energies = _np.array(energies)
-            brilliances = _np.array(brilliances)
+            energies = _np.array(energies, dtype=object)
+            brilliances = _np.array(brilliances, dtype=object)
             self._energies = energies
             self._brilliances = brilliances
 
@@ -2090,8 +2090,8 @@ class SpectraInterface:
 
                 energies.append(energies_)
                 fluxes.append(flux)
-            energies = _np.array(energies)
-            fluxes = _np.array(fluxes)
+            energies = _np.array(energies, dtype=object)
+            fluxes = _np.array(fluxes, dtype=object)
             self._energies = energies
             self._fluxes = fluxes
 
