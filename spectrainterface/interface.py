@@ -1729,6 +1729,8 @@ class SpectraInterface:
                     self.accelerator.set_b2_section()
                 elif beta_sections[i] == "bc":
                     self.accelerator.set_bc_section()
+                elif beta_sections[i] == "b1":
+                    self.accelerator.set_b1_section()
                 else:
                     raise ValueError("Invalid beta section.")
 
@@ -1862,6 +1864,8 @@ class SpectraInterface:
                     self.accelerator.set_b2_section()
                 elif beta_sections[i] == "bc":
                     self.accelerator.set_bc_section()
+                elif beta_sections[i] == "b1":
+                    self.accelerator.set_b1_section()
                 else:
                     raise ValueError("Invalid beta section.")
 
