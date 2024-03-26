@@ -453,6 +453,7 @@ class StorageRingParameters:
         self.nat_emittance = 2.5e-10
         self.coupling_constant = 0.01
         self.energy_spread = 0.00084
+        self.gamma = 5870.8535507
         self.betax = 1.660
         self.betay = 26.820
         self.alphax = 2.908
