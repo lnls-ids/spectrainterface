@@ -1362,7 +1362,7 @@ class Calc(GeneralConfigs, SpectraTools):
         Returns:
             numpy 2d array: brilliance of flux with phase errors
         """
-        fname = "files/phase_errors.txt"
+        fname = REPOS_PATH + "/files/phase_errors.txt"
         h, ph_err1, ph_err2 = _np.genfromtxt(fname, unpack=True, skip_header=1)
         harm0 = self.harmonic_range[0]
         harmf = self.harmonic_range[-1]
@@ -1607,6 +1607,7 @@ class SpectraInterface:
         source_list = self.sources
         energies = list()
         brilliances = list()
+        flag_bend = False
         for i, source in enumerate(source_list):
             print(
                 "Calculating curve for source {:.0f}/{:.0f}".format(
@@ -1620,6 +1621,7 @@ class SpectraInterface:
                     kmax = source.get_k()
 
                 if source.source_type == "wiggler":
+                    flag_bend = True
                     b_max = source.undulator_k_to_b(kmax, source.period)
                     self.calc.source_type = self.calc.SourceType.wiggler
                     self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1670,6 +1672,7 @@ class SpectraInterface:
                     self.calc.period = source.period
 
             else:
+                flag_bend = True
                 b = source.b_peak
                 self.calc.source_type = self.calc.SourceType.bending_magnet
                 self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1705,8 +1708,12 @@ class SpectraInterface:
             energies.append(self.calc.energies)
             brilliances.append(self.calc.brilliance)
 
-        energies = _np.array(energies, dtype=object)
-        brilliances = _np.array(brilliances, dtype=object)
+        if flag_bend:
+            energies = _np.array(energies, dtype=object)
+            brilliances = _np.array(brilliances, dtype=object)
+        else:
+            energies = _np.array(energies)
+            brilliances = _np.array(brilliances)
         self._energies = energies
         self._brilliances = brilliances
 
@@ -1748,6 +1755,7 @@ class SpectraInterface:
                 (len(source_list), 2), slit_acceptances[0]
             )
         slit_acceptances = slit_acceptances.tolist()
+        flag_bend = False
         for i, source in enumerate(source_list):
             print(
                 "Calculating curve for source {:.0f}/{:.0f}".format(
@@ -1760,6 +1768,7 @@ class SpectraInterface:
                 else:
                     kmax = source.get_k()
                 if source.source_type == "wiggler":
+                    flag_bend = True
                     b_max = source.undulator_k_to_b(kmax, source.period)
                     self.calc.source_type = self.calc.SourceType.wiggler
                     self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1806,6 +1815,7 @@ class SpectraInterface:
                     self.calc.period = source.period
 
             else:
+                flag_bend = True
                 b = source.b_peak
                 self.calc.source_type = self.calc.SourceType.bending_magnet
                 self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1840,8 +1850,12 @@ class SpectraInterface:
             energies.append(self.calc.energies)
             fluxes.append(self.calc.flux)
 
-        energies = _np.array(energies, dtype=object)
-        fluxes = _np.array(fluxes, dtype=object)
+        if flag_bend:
+            energies = _np.array(energies, dtype=object)
+            fluxes = _np.array(fluxes, dtype=object)
+        else:
+            energies = _np.array(energies)
+            fluxes = _np.array(fluxes)
 
         self._energies = energies
         self._fluxes = fluxes
