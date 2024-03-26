@@ -8,7 +8,7 @@ from spectrainterface.accelerator import StorageRingParameters
 ECHARGE = _constants.elementary_charge
 EMASS = _constants.electron_mass
 LSPEED = _constants.light_speed
-PLACK = _constants.reduced_planck_constant
+PLANCK = _constants.reduced_planck_constant
 
 
 class BendingMagnet(SourceFunctions):
