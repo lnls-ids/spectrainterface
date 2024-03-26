@@ -2,6 +2,10 @@
 
 import numpy as _np
 import matplotlib.pyplot as _plt
+import mathphys.constants as _constants
+
+ECHARGE = _constants.elementary_charge
+EREST = _constants.electron_rest_energy
 
 
 class StorageRingParameters:
@@ -19,6 +23,7 @@ class StorageRingParameters:
         self._nat_emittance = 2.5e-10  # [m rad]
         self._coupling_constant = 0.01
         self._energy_spread = 0.00084
+        self._gamma = self._energy / (1e-9 * EREST / ECHARGE)
         self._betax = 1.499  # [m]
         self._betay = 1.435  # [m]
         self._alphax = 0
@@ -100,6 +105,15 @@ class StorageRingParameters:
             float: Energy spread
         """
         return self._energy_spread
+
+    @property
+    def gamma(self):
+        """Particle Lorentz factor.
+
+        Returns:
+            float: Gamma
+        """
+        return self._gamma
 
     @property
     def betax(self):
@@ -266,6 +280,7 @@ class StorageRingParameters:
     @energy.setter
     def energy(self, value):
         self._energy = value
+        self._gamma = self._energy / (1e-9 * EREST / ECHARGE)
 
     @current.setter
     def current(self, value):
@@ -286,6 +301,11 @@ class StorageRingParameters:
     @energy_spread.setter
     def energy_spread(self, value):
         self._energy_spread = value
+
+    @gamma.setter
+    def gamma(self, value):
+        self._gamma = value
+        self._energy = self._gamma * (1e-9 * EREST / ECHARGE)
 
     @betax.setter
     def betax(self, value):
@@ -370,6 +390,7 @@ class StorageRingParameters:
         self.nat_emittance = 2.5e-10
         self.coupling_constant = 0.01
         self.energy_spread = 0.00084
+        self.gamma = 5870.8535507
         self.betax = 1.499
         self.betay = 1.435
         self.alphax = 0
@@ -390,6 +411,7 @@ class StorageRingParameters:
         self.nat_emittance = 2.5e-10
         self.coupling_constant = 0.01
         self.energy_spread = 0.00084
+        self.gamma = 5870.8535507
         self.betax = 17.20
         self.betay = 3.605
         self.alphax = 0
@@ -410,6 +432,7 @@ class StorageRingParameters:
         self.nat_emittance = 2.5e-10
         self.coupling_constant = 0.01
         self.energy_spread = 0.00084
+        self.gamma = 5870.8535507
         self.betax = 0.338
         self.betay = 5.356
         self.alphax = 0.003
@@ -430,6 +453,7 @@ class StorageRingParameters:
         self.nat_emittance = 2.5e-10
         self.coupling_constant = 0.01
         self.energy_spread = 0.00084
+        self.gamma = 5870.8535507
         self.betax = 1.660
         self.betay = 26.820
         self.alphax = 2.908
@@ -450,6 +474,7 @@ class StorageRingParameters:
         self.nat_emittance = 2.5e-10
         self.coupling_constant = 0.01
         self.energy_spread = 0.00084
+        self.gamma = 5870.8535507
         self.betax = 1.265
         self.betay = 25.5
         self.alphax = 1.94
