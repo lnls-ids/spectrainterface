@@ -443,11 +443,7 @@ class Calc(GeneralConfigs, SpectraTools):
         self._slice_py = None
 
         #  Phase error
-        self._add_phase_error = None
-        self._random_seed = None
-        self._rms_peak_field_var = None
-        self._rms_phase_error = None
-        self._rms_traj_error = None
+        self._add_phase_errors = False
 
         # Output
         self._output_captions = None
@@ -682,49 +678,13 @@ class Calc(GeneralConfigs, SpectraTools):
         return self._output_variables
 
     @property
-    def add_phase_error(self):
+    def add_phase_errors(self):
         """Add phase error.
 
         Returns:
             bool: If true user can set phase errors.
         """
-        return self._add_phase_error
-
-    @property
-    def random_seed(self):
-        """Random phase error seed.
-
-        Returns:
-            float: Seed for generation of phase errors.
-        """
-        return self._random_seed
-
-    @property
-    def rms_peak_field_var(self):
-        """RMS of the peak field variation.
-
-        Returns:
-            float: RMS of peak field variation.
-        """
-        return self._rms_peak_field_var
-
-    @property
-    def rms_phase_error(self):
-        """RMS of phase error.
-
-        Returns:
-            float: RMS of phase error.
-        """
-        return self._rms_phase_error
-
-    @property
-    def rms_trajectory_error(self):
-        """RMS of trajectory error.
-
-        Returns:
-            list of float: RMS of trajectory error [x, y].
-        """
-        return self._rms_traj_error
+        return self._add_phase_errors
 
     @property
     def flux(self):
@@ -1000,50 +960,14 @@ class Calc(GeneralConfigs, SpectraTools):
         else:
             self._slice_py = value
 
-    @add_phase_error.setter
-    def add_phase_error(self, value):
-        if self.method != self.CalcConfigs.Method.near_field:
+    @add_phase_errors.setter
+    def add_phase_errors(self, value):
+        if type(value) is not bool:
             raise ValueError(
-                "Phase error can only be defined if the method of calculation is near field"  # noqa: E501
+                "Add phase error must be a boolean"  # noqa: E501
             )
         else:
-            self._add_phase_error = value
-
-    @random_seed.setter
-    def random_seed(self, value):
-        if self.add_phase_error is not True:
-            raise ValueError(
-                "Phase error's parameters can only be defined if add_phase_error is True"  # noqa: E501
-            )
-        else:
-            self._random_seed = value
-
-    @rms_peak_field_var.setter
-    def rms_peak_field_var(self, value):
-        if self.add_phase_error is not True:
-            raise ValueError(
-                "Phase error's parameters can only be defined if add_phase_error is True"  # noqa: E501
-            )
-        else:
-            self._rms_peak_field_var = value
-
-    @rms_phase_error.setter
-    def rms_phase_error(self, value):
-        if self.add_phase_error is not True:
-            raise ValueError(
-                "Phase error's parameters can only be defined if add_phase_error is True"  # noqa: E501
-            )
-        else:
-            self._rms_phase_error = value
-
-    @rms_trajectory_error.setter
-    def rms_trajectory_error(self, value):
-        if self.add_phase_error is not True:
-            raise ValueError(
-                "Phase error's parameters can only be defined if add_phase_error is True"  # noqa: E501
-            )
-        else:
-            self._rms_traj_error = value
+            self._add_phase_errors = value
 
     def set_config(self):  # noqa: C901
         """Set calc config."""
@@ -1349,6 +1273,10 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._k = data[:, 0, :]
                     self._brilliance = data[:, 1, :]
                     self._energies = variables[:, :]
+                    if self.add_phase_errors is True:
+                        self._brilliance = self.apply_phase_errors(
+                            self._brilliance
+                        )
 
                 else:
                     self._kx = data[:, 0, :]
@@ -1365,6 +1293,8 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._k = data[:, 1, :]
                     self._flux = data[:, 2, :]
                     self._energies = variables[:, :]
+                    if self.add_phase_errors is True:
+                        self._flux = self.apply_phase_errors(self._flux)
                 else:
                     self._kx = data[:, 1, :]
                     self._ky = data[:, 2, :]
@@ -1422,6 +1352,26 @@ class Calc(GeneralConfigs, SpectraTools):
                 )
                 data[i, :, :] = _np.array(solver.GetDetailData(i)["data"])
         return captions, data, variables
+
+    def apply_phase_errors(self, values):
+        """Add phase errors.
+
+        Args:
+            values (numpy 2d array): It can be brilliance of flux
+
+        Returns:
+            numpy 2d array: brilliance of flux with phase errors
+        """
+        fname = REPOS_PATH + "/files/phase_errors.txt"
+        h, ph_err1, ph_err2 = _np.genfromtxt(fname, unpack=True, skip_header=1)
+        harm0 = self.harmonic_range[0]
+        harmf = self.harmonic_range[-1]
+        idcs = _np.arange(harm0 - 1, harmf, 2)
+        ph = ph_err2[idcs]
+        ph_full = _np.tile(ph, values.shape[1]).reshape(
+            values.shape, order="F"
+        )
+        return values * ph_full
 
     @staticmethod
     def process_brilliance_curve(
@@ -1555,6 +1505,7 @@ class SpectraInterface:
         self._energies = None
         self._brilliances = None
         self._fluxes = None
+        self._add_phase_errors = False
 
     @property
     def accelerator(self):
@@ -1613,6 +1564,20 @@ class SpectraInterface:
         """
         return self._fluxes
 
+    @property
+    def add_phase_errors(self):
+        """Add phase errors.
+
+        Returns:
+            bool: If True phase errors will be added.
+        """
+        return self._add_phase_errors
+
+    @add_phase_errors.setter
+    def add_phase_errors(self, value):
+        self._add_phase_errors = value
+        self.calc.add_phase_errors = value
+
     @sources.setter
     def sources(self, value):
         self._sources = value
@@ -1642,6 +1607,7 @@ class SpectraInterface:
         source_list = self.sources
         energies = list()
         brilliances = list()
+        flag_bend = False
         for i, source in enumerate(source_list):
             print(
                 "Calculating curve for source {:.0f}/{:.0f}".format(
@@ -1655,6 +1621,7 @@ class SpectraInterface:
                     kmax = source.get_k()
 
                 if source.source_type == "wiggler":
+                    flag_bend = True
                     b_max = source.undulator_k_to_b(kmax, source.period)
                     self.calc.source_type = self.calc.SourceType.wiggler
                     self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1705,6 +1672,7 @@ class SpectraInterface:
                     self.calc.period = source.period
 
             else:
+                flag_bend = True
                 b = source.b_peak
                 self.calc.source_type = self.calc.SourceType.bending_magnet
                 self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1740,8 +1708,12 @@ class SpectraInterface:
             energies.append(self.calc.energies)
             brilliances.append(self.calc.brilliance)
 
-        energies = _np.array(energies, dtype=object)
-        brilliances = _np.array(brilliances, dtype=object)
+        if flag_bend:
+            energies = _np.array(energies, dtype=object)
+            brilliances = _np.array(brilliances, dtype=object)
+        else:
+            energies = _np.array(energies)
+            brilliances = _np.array(brilliances)
         self._energies = energies
         self._brilliances = brilliances
 
@@ -1783,6 +1755,7 @@ class SpectraInterface:
                 (len(source_list), 2), slit_acceptances[0]
             )
         slit_acceptances = slit_acceptances.tolist()
+        flag_bend = False
         for i, source in enumerate(source_list):
             print(
                 "Calculating curve for source {:.0f}/{:.0f}".format(
@@ -1795,6 +1768,7 @@ class SpectraInterface:
                 else:
                     kmax = source.get_k()
                 if source.source_type == "wiggler":
+                    flag_bend = True
                     b_max = source.undulator_k_to_b(kmax, source.period)
                     self.calc.source_type = self.calc.SourceType.wiggler
                     self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1841,6 +1815,7 @@ class SpectraInterface:
                     self.calc.period = source.period
 
             else:
+                flag_bend = True
                 b = source.b_peak
                 self.calc.source_type = self.calc.SourceType.bending_magnet
                 self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1875,8 +1850,12 @@ class SpectraInterface:
             energies.append(self.calc.energies)
             fluxes.append(self.calc.flux)
 
-        energies = _np.array(energies, dtype=object)
-        fluxes = _np.array(fluxes, dtype=object)
+        if flag_bend:
+            energies = _np.array(energies, dtype=object)
+            fluxes = _np.array(fluxes, dtype=object)
+        else:
+            energies = _np.array(energies)
+            fluxes = _np.array(fluxes)
 
         self._energies = energies
         self._fluxes = fluxes
