@@ -105,6 +105,9 @@ class SpectraTools:
         input_template["Accelerator"]["Options"]["Zero Energy Spread"] = (
             accelerator.zero_energy_spread
         )
+        input_template["Accelerator"]["Options"]["Injection Condition"] = (
+            "Align at Center"
+        )
 
         return input_template
 
