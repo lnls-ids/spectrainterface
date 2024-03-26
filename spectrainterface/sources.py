@@ -8,7 +8,7 @@ from spectrainterface.accelerator import StorageRingParameters
 ECHARGE = _constants.elementary_charge
 EMASS = _constants.electron_mass
 LSPEED = _constants.light_speed
-PLACK = _constants.reduced_planck_constant
+PLANCK = _constants.reduced_planck_constant
 
 
 class BendingMagnet(SourceFunctions):
@@ -402,6 +402,52 @@ class Undulator(SourceFunctions):
         beff = self.get_beff(self.gap / self.period)
         k = self.undulator_b_to_k(beff, self.period)
         return k
+
+    def find_adjusted_br(self, gap=0, b_max=[0, 0, 0]):
+        """Get adjust br with values of b max.
+
+        Args:
+            gap (float): physical min gap of undulator
+             If not defined. Default to the minimum BSC will be get for the
+              undulator.
+            b_max (float list): B Max to polarization hp:
+                b_max[0], vp: b_max[1], cp: b_max[2].
+
+        Returns:
+            float: br value
+        """
+        b_max = {'hp': b_max[0], 'vp': b_max[1], 'cp': b_max[2]}
+
+        br0 = self._br
+        gap0 = self._gap
+        polarization0 = self._polarization
+
+        if gap0 == 0:
+            self._gap, *_ = self.calc_min_gap() if gap == 0 else (gap, 0)
+
+        brs = _np.linspace(0, 2*self._br, 5001)
+        bpeak = _np.ones(len(brs))
+
+        br2 = 1
+        n = 0
+
+        allowed_pol = self._get_list_of_pol(self.undulator_type)
+        for j in b_max:
+            if b_max[j] != 0 and (j in allowed_pol):
+                self._polarization = j
+                for i, br in enumerate(brs):
+                    self._br = br
+                    bpeak[i] = self.get_beff(self._gap/self._period)
+
+                idx = _np.argmin(_np.abs(bpeak - b_max[j]))
+                br2 *= brs[idx]
+                n += 1
+
+        self._br = br0
+        self._gap = gap0
+        self._polarization = polarization0
+
+        return br2**(1/n) if br2 != 1 else br0
 
 
 class Wiggler(Undulator):
