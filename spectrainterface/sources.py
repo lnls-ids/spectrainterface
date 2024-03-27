@@ -149,6 +149,7 @@ class Undulator(SourceFunctions):
         self._halbach_coef = dict()
         self._vc_thickness = 0.5
         self._vc_tolerance = 0.1
+        self._add_phase_errors = False
 
     @property
     def undulator_type(self):
@@ -240,6 +241,15 @@ class Undulator(SourceFunctions):
         """
         return self._vc_tolerance
 
+    @property
+    def add_phase_errors(self):
+        """Add phase errors.
+
+        Returns:
+            bool: If true, phase errors will be added
+        """
+        return self._add_phase_errors
+
     @undulator_type.setter
     def undulator_type(self, value):
         self._undulator_type = value
@@ -286,6 +296,15 @@ class Undulator(SourceFunctions):
     @vc_tolerance.setter
     def vc_tolerance(self, value):
         self._vc_tolerance = value
+
+    @add_phase_errors.setter
+    def add_phase_errors(self, value):
+        if type(value) is not bool:
+            raise ValueError(
+                "Add phase error must be a boolean"  # noqa: E501
+            )
+        else:
+            self._add_phase_errors = value
 
     def get_beff(self, gap_over_period):
         """Get peak magnetic field for a given device and gap.

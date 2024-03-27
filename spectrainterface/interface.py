@@ -54,7 +54,7 @@ class SpectraTools:
         return solver
 
     @staticmethod
-    def _set_accelerator_config(accelerator, input_template):
+    def _set_accelerator_config(accelerator, input_template, flag_bend):
         input_template["Accelerator"]["Energy (GeV)"] = accelerator.energy
         input_template["Accelerator"]["Current (mA)"] = accelerator.current
 
@@ -105,9 +105,14 @@ class SpectraTools:
         input_template["Accelerator"]["Options"]["Zero Energy Spread"] = (
             accelerator.zero_energy_spread
         )
-        input_template["Accelerator"]["Options"]["Injection Condition"] = (
-            "Align at Center"
-        )
+        if flag_bend:
+            input_template["Accelerator"]["Options"]["Injection Condition"] = (
+                "Align at Center"
+            )
+        else:
+            input_template["Accelerator"]["Options"]["Injection Condition"] = (
+                "Align at Entrance"
+            )
 
         return input_template
 
@@ -991,13 +996,16 @@ class Calc(GeneralConfigs, SpectraTools):
 
         file = open(config_name)
         input_temp = json.load(file)
-        input_temp = self._set_accelerator_config(
-            self._accelerator, input_temp
-        )
 
+        flag_bend = False
         if self.source_type == self.SourceType.bending_magnet:
             del input_temp["Accelerator"]["Options"]["Zero Energy Spread"]
             del input_temp["Accelerator"]["Options"]["Injection Condition"]
+            flag_bend = True
+
+        input_temp = self._set_accelerator_config(
+            self._accelerator, input_temp, flag_bend
+        )
 
         if self.field is not None:
             data = _np.zeros((3, len(self.field[:, 0])))
@@ -1508,7 +1516,6 @@ class SpectraInterface:
         self._energies = None
         self._brilliances = None
         self._fluxes = None
-        self._add_phase_errors = False
 
     @property
     def accelerator(self):
@@ -1566,20 +1573,6 @@ class SpectraInterface:
              harmonic.
         """
         return self._fluxes
-
-    @property
-    def add_phase_errors(self):
-        """Add phase errors.
-
-        Returns:
-            bool: If True phase errors will be added.
-        """
-        return self._add_phase_errors
-
-    @add_phase_errors.setter
-    def add_phase_errors(self, value):
-        self._add_phase_errors = value
-        self.calc.add_phase_errors = value
 
     @sources.setter
     def sources(self, value):
@@ -1642,6 +1635,7 @@ class SpectraInterface:
                     self.calc.output_type = (
                         self.calc.CalcConfigs.Output.brilliance
                     )
+                    self.calc.add_phase_errors = source.add_phase_errors
                     self.calc.indep_var = self.calc.CalcConfigs.Variable.k
                     self.calc.method = self.calc.CalcConfigs.Method.wigner
                     self.calc.slice_x = 0
@@ -1786,6 +1780,7 @@ class SpectraInterface:
                     self.calc.energy_range = energy_range
                     self.calc.energy_step = 1
                 else:
+                    self.calc.add_phase_errors = source.add_phase_errors
                     self.calc.output_type = self.calc.CalcConfigs.Output.flux
                     self.calc.indep_var = self.calc.CalcConfigs.Variable.k
                     self.calc.method = self.calc.CalcConfigs.Method.far_field
