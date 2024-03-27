@@ -4,7 +4,9 @@ import mathphys.constants as _constants
 import numpy as _np
 from spectrainterface.tools import SourceFunctions
 from spectrainterface.accelerator import StorageRingParameters
+import os
 
+REPOS_PATH = os.path.dirname(os.path.abspath(__file__))
 ECHARGE = _constants.elementary_charge
 EMASS = _constants.electron_mass
 LSPEED = _constants.light_speed
@@ -20,6 +22,7 @@ class BendingMagnet(SourceFunctions):
         self._b_peak = 1
         self._source_type = "bendingmagnet"
         self._label = "label"
+        self._meas_fname = None
 
     @property
     def b_peak(self):
@@ -48,6 +51,15 @@ class BendingMagnet(SourceFunctions):
         """
         return self._label
 
+    @property
+    def meas_fname(self):
+        """Measured field file.
+
+        Returns:
+            str: Filename with field measurements.
+        """
+        return self._meas_fname
+
     @b_peak.setter
     def b_peak(self, value):
         self._b_peak = value
@@ -55,6 +67,21 @@ class BendingMagnet(SourceFunctions):
     @label.setter
     def label(self, value):
         self._label = value
+
+    def get_meas_field(self):
+        """Get measured field.
+
+        Returns:
+            numpy array: First column contains longitudinal spatial
+            coordinate (z) [mm], second column contais vertical field
+            [T], and third column constais horizontal field [T].
+        """
+        z, bx, by = _np.genfromtxt(self.meas_fname, unpack=True, skip_header=1)
+        field = _np.zeros((len(z), 3))
+        field[:, 0] = z
+        field[:, 1] = bx
+        field[:, 2] = by
+        return field
 
 
 class BC(BendingMagnet):
@@ -69,6 +96,7 @@ class BC(BendingMagnet):
         super().__init__()
         self._b_peak = 3.2
         self._label = "BC"
+        self._meas_fname = REPOS_PATH + "/files/field_bc.txt"
 
 
 class B2(BendingMagnet):
@@ -83,6 +111,7 @@ class B2(BendingMagnet):
         super().__init__()
         self._b_peak = 0.5665
         self._label = "B2"
+        self._meas_fname = REPOS_PATH + "/files/field_b2.txt"
 
 
 class B1(BendingMagnet):
@@ -97,6 +126,7 @@ class B1(BendingMagnet):
         super().__init__()
         self._b_peak = 0.5642
         self._label = "B1"
+        self._meas_fname = REPOS_PATH + "/files/field_b1.txt"
 
 
 class Undulator(SourceFunctions):
@@ -416,7 +446,7 @@ class Undulator(SourceFunctions):
         Returns:
             float: br value
         """
-        b_max = {'hp': b_max[0], 'vp': b_max[1], 'cp': b_max[2]}
+        b_max = {"hp": b_max[0], "vp": b_max[1], "cp": b_max[2]}
 
         br0 = self._br
         gap0 = self._gap
@@ -425,7 +455,7 @@ class Undulator(SourceFunctions):
         if gap0 == 0:
             self._gap, *_ = self.calc_min_gap() if gap == 0 else (gap, 0)
 
-        brs = _np.linspace(0, 2*self._br, 5001)
+        brs = _np.linspace(0, 2 * self._br, 5001)
         bpeak = _np.ones(len(brs))
 
         br2 = 1
@@ -437,7 +467,7 @@ class Undulator(SourceFunctions):
                 self._polarization = j
                 for i, br in enumerate(brs):
                     self._br = br
-                    bpeak[i] = self.get_beff(self._gap/self._period)
+                    bpeak[i] = self.get_beff(self._gap / self._period)
 
                 idx = _np.argmin(_np.abs(bpeak - b_max[j]))
                 br2 *= brs[idx]
@@ -447,7 +477,7 @@ class Undulator(SourceFunctions):
         self._gap = gap0
         self._polarization = polarization0
 
-        return br2**(1/n) if br2 != 1 else br0
+        return br2 ** (1 / n) if br2 != 1 else br0
 
 
 class Wiggler(Undulator):
@@ -508,6 +538,7 @@ class Elliptic(Undulator):
     Args:
         Undulator (Undulator class): Undulator class
     """
+
     def __init__(self):
         """Class consteuctor."""
         super().__init__()
@@ -723,10 +754,11 @@ class Cpmu_pr(Undulator):
 
 class Ue44(Apple2):
     """Ue44  class."""
+
     def __init__(self, period=44, length=3.4):
         """Class constructor."""
         super().__init__(period, length)
-        self._label = 'UE44'
+        self._label = "UE44"
         self._gap = 11.4
         self._br = 1.14
 
@@ -745,29 +777,32 @@ class Vpu(Hybrid):
 
 class Apu58(Planar):
     """Apu58 class."""
+
     def __init__(self, period=58, length=1):
         """Class constructor."""
         super().__init__(period, length)
-        self._label = 'Apu58'
+        self._label = "Apu58"
         self._gap = 15.8
         self._br = 1.34
 
 
 class Epu50(Apple2):
     """Epu50 class."""
+
     def __init__(self, period=50, length=3):
         """Class constructor."""
         super().__init__(period, length)
-        self._label = 'Epu50'
+        self._label = "Epu50"
         self._br = 1.24
         self._gap = 10.3
 
 
 class Epu50_uvx(Apple2):
     """Epu50 uvx class."""
+
     def __init__(self, period=50, length=2.7):
         """Class constructor."""
         super().__init__(period, length)
-        self._label = 'Epu50 (UVX)'
+        self._label = "Epu50 (UVX)"
         self._br = 1.135
         self._gap = 22
