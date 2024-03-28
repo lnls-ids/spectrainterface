@@ -150,6 +150,7 @@ class Undulator(SourceFunctions):
         self._vc_thickness = 0.5
         self._vc_tolerance = 0.1
         self._add_phase_errors = False
+        self._use_rec_params = True
 
     @property
     def undulator_type(self):
@@ -250,6 +251,15 @@ class Undulator(SourceFunctions):
         """
         return self._add_phase_errors
 
+    @property
+    def use_recovery_params(self):
+        """Use recovery parameters to calc phase error.
+
+        Returns:
+            bool: If true, rec params will be used
+        """
+        return self._use_rec_params
+
     @undulator_type.setter
     def undulator_type(self, value):
         self._undulator_type = value
@@ -305,6 +315,15 @@ class Undulator(SourceFunctions):
             )
         else:
             self._add_phase_errors = value
+
+    @use_recovery_params.setter
+    def use_recovery_params(self, value):
+        if type(value) is not bool:
+            raise ValueError(
+                "Use recovery params must be a boolean"  # noqa: E501
+            )
+        else:
+            self._use_rec_params = value
 
     def get_beff(self, gap_over_period):
         """Get peak magnetic field for a given device and gap.

@@ -452,6 +452,7 @@ class Calc(GeneralConfigs, SpectraTools):
 
         #  Phase error
         self._add_phase_errors = False
+        self._user_recovery_params = True
 
         # Output
         self._output_captions = None
@@ -998,14 +999,15 @@ class Calc(GeneralConfigs, SpectraTools):
         input_temp = json.load(file)
 
         flag_bend = False
-        if self.source_type == self.SourceType.bending_magnet:
-            del input_temp["Accelerator"]["Options"]["Zero Energy Spread"]
-            del input_temp["Accelerator"]["Options"]["Injection Condition"]
-            flag_bend = True
 
         input_temp = self._set_accelerator_config(
             self._accelerator, input_temp, flag_bend
         )
+
+        if self.source_type == self.SourceType.bending_magnet:
+            del input_temp["Accelerator"]["Options"]["Zero Energy Spread"]
+            del input_temp["Accelerator"]["Options"]["Injection Condition"]
+            flag_bend = True
 
         if self.field is not None:
             data = _np.zeros((3, len(self.field[:, 0])))
@@ -1227,7 +1229,7 @@ class Calc(GeneralConfigs, SpectraTools):
         """Run calculation."""
         self.verify_valid_parameters()
         solver = self._run_solver(self._input_template)
-        # return solver
+        self._solver = solver
         captions, data, variables = self.extractdata(solver)
         self._output_captions = captions
         self._output_data = data
@@ -1286,7 +1288,7 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._energies = variables[:, :]
                     if self.add_phase_errors is True:
                         self._brilliance = self.apply_phase_errors(
-                            self._brilliance
+                            self._brilliance, self._use_recovery_params
                         )
 
                 else:
@@ -1305,7 +1307,9 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._flux = data[:, 2, :]
                     self._energies = variables[:, :]
                     if self.add_phase_errors is True:
-                        self._flux = self.apply_phase_errors(self._flux)
+                        self._flux = self.apply_phase_errors(
+                            self._flux, self._use_recovery_params
+                        )
                 else:
                     self._kx = data[:, 1, :]
                     self._ky = data[:, 2, :]
@@ -1364,21 +1368,28 @@ class Calc(GeneralConfigs, SpectraTools):
                 data[i, :, :] = _np.array(solver.GetDetailData(i)["data"])
         return captions, data, variables
 
-    def apply_phase_errors(self, values):
+    def apply_phase_errors(self, values, rec_param=True):
         """Add phase errors.
 
         Args:
             values (numpy 2d array): It can be brilliance of flux
+            rec_param (bool, optional): Use recovery params. Defaults to True.
 
         Returns:
             numpy 2d array: brilliance of flux with phase errors
         """
-        fname = REPOS_PATH + "/files/phase_errors.txt"
-        h, ph_err1, ph_err2 = _np.genfromtxt(fname, unpack=True, skip_header=1)
+        fname = REPOS_PATH + "/files/phase_errors_fit.txt"
+        data = _np.genfromtxt(fname, unpack=True, skip_header=1)
+        h = data[:, 0]
+        ph_err1 = data[:, 1]
+        ph_err2 = data[:, 2]
         harm0 = self.harmonic_range[0]
         harmf = self.harmonic_range[-1]
-        idcs = _np.arange(harm0 - 1, harmf, 2)
-        ph = ph_err2[idcs]
+        idcs = (_np.arange(harm0 - 1, harmf, 2),)
+        if rec_param:
+            ph = ph_err2[idcs]
+        else:
+            ph = ph_err1[idcs]
         ph_full = _np.tile(ph, values.shape[1]).reshape(
             values.shape, order="F"
         )
@@ -1636,6 +1647,9 @@ class SpectraInterface:
                         self.calc.CalcConfigs.Output.brilliance
                     )
                     self.calc.add_phase_errors = source.add_phase_errors
+                    self.calc._use_recovery_params = (
+                        source.use_recovery_params
+                    )
                     self.calc.indep_var = self.calc.CalcConfigs.Variable.k
                     self.calc.method = self.calc.CalcConfigs.Method.wigner
                     self.calc.slice_x = 0
@@ -1781,6 +1795,9 @@ class SpectraInterface:
                     self.calc.energy_step = 1
                 else:
                     self.calc.add_phase_errors = source.add_phase_errors
+                    self.calc._use_recovery_params = (
+                        source.use_recovery_params
+                    )
                     self.calc.output_type = self.calc.CalcConfigs.Output.flux
                     self.calc.indep_var = self.calc.CalcConfigs.Variable.k
                     self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1868,6 +1885,10 @@ class SpectraInterface:
         xlim=[],
         ylim=[],
         linewidth=3,
+        savefig=False,
+        figsize=(4.5, 3.0),
+        figname="brill.png",
+        dpi=300,
     ):
         """Plot brilliance curves.
 
@@ -1943,7 +1964,7 @@ class SpectraInterface:
             self._energies = energies
             self._brilliances = brilliances
 
-        _plt.figure(figsize=(4.5, 3.0))
+        _plt.figure(figsize=figsize)
         colorlist = ["C0", "C1", "C2", "C3", "C4", "C5"]
         for i, source in enumerate(self.sources):
             color = colorlist[i]
@@ -1993,7 +2014,10 @@ class SpectraInterface:
         _plt.legend()
         _plt.tight_layout()
 
-        _plt.show()
+        if savefig:
+            _plt.savefig(figname, dpi=dpi)
+        else:
+            _plt.show()
 
     def plot_flux_curve(
         self,
@@ -2005,6 +2029,10 @@ class SpectraInterface:
         xlim=[],
         ylim=[],
         linewidth=3,
+        savefig=False,
+        figsize=(4.5, 3.0),
+        figname="flux.png",
+        dpi=300,
     ):
         """Plot flux curves.
 
@@ -2072,7 +2100,7 @@ class SpectraInterface:
             self._energies = energies
             self._fluxes = fluxes
 
-        _plt.figure(figsize=(4.5, 3.0))
+        _plt.figure(figsize=figsize)
         colorlist = ["C0", "C1", "C2", "C3", "C4", "C5"]
         for i, source in enumerate(self.sources):
             color = colorlist[i]
@@ -2122,4 +2150,7 @@ class SpectraInterface:
         _plt.legend()
         _plt.tight_layout()
 
-        _plt.show()
+        if savefig:
+            _plt.savefig(figname, dpi=dpi)
+        else:
+            _plt.show()
