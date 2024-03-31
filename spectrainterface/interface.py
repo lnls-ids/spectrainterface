@@ -1527,6 +1527,8 @@ class SpectraInterface:
         self._energies = None
         self._brilliances = None
         self._fluxes = None
+        self._flag_brill_processed = False
+        self._flag_flux_processed = False
 
     @property
     def accelerator(self):
@@ -1903,9 +1905,12 @@ class SpectraInterface:
             yscale (str, optional): yscale axis
              yscale. Defalts to 'log'.
         """
+        if self._flag_brill_processed:
+            process_curves = False
         energies = list()
         brilliances = list()
         if process_curves is True:
+            self._flag_brill_processed = True
             for i, source in enumerate(self.sources):
                 if (
                     source.source_type != "wiggler"
@@ -1942,8 +1947,8 @@ class SpectraInterface:
                             brilliance, (1, _np.shape(brilliance)[0])
                         )
                 else:
-                    input_brilliance = self.brilliances[i]
-                    input_energies = self.energies[i]
+                    input_brilliance = _np.array(self.brilliances[i], dtype=float)
+                    input_energies = _np.array(self.energies[i], dtype=float)
                     energies_ = _np.linspace(
                         _np.min(input_energies), _np.max(input_energies), 2001
                     )
@@ -2047,9 +2052,12 @@ class SpectraInterface:
             yscale (str, optional): yscale axis
              yscale. Defalts to 'log'.
         """
+        if self._flag_flux_processed:
+            process_curves = False
         energies = list()
         fluxes = list()
         if process_curves is True:
+            self._flag_flux_processed = True
             for i, source in enumerate(self.sources):
                 if (
                     source.source_type != "wiggler"
@@ -2082,8 +2090,8 @@ class SpectraInterface:
                         )
                         flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
                 else:
-                    input_flux = self.fluxes[i]
-                    input_energies = self.energies[i]
+                    input_flux = _np.array(self.fluxes[i], dtype=float)
+                    input_energies = _np.array(self.energies[i], dtype=float)
                     energies_ = _np.linspace(
                         _np.min(input_energies), _np.max(input_energies), 2001
                     )
