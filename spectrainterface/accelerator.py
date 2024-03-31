@@ -51,6 +51,8 @@ class StorageRingParameters:
             self.set_low_beta_section()
         elif beta_section == 'high':
             self.set_high_beta_section()
+        
+        self.set_bsc_with_ivu18()
 
     @property
     def energy(self):
@@ -441,8 +443,6 @@ class StorageRingParameters:
         self.etay = 0
         self.etapx = 0
         self.etapy = 0
-        self.bsc0_h = None
-        self.bsc0_v = None
         self._beta_section = 'bc'
 
     def set_b1_section(self):
@@ -462,8 +462,6 @@ class StorageRingParameters:
         self.etay = 0
         self.etapx = 3.211e-3
         self.etapy = 0
-        self.bsc0_h = None
-        self.bsc0_v = None
         self._beta_section = 'b1'
 
     def set_b2_section(self):  # It is necessary to update these values.
@@ -483,8 +481,6 @@ class StorageRingParameters:
         self.etay = 0
         self.etapx = 0
         self.etapy = 0
-        self.bsc0_h = None
-        self.bsc0_v = None
         self._beta_section = 'b2'
 
     def calc_beam_stay_clear(self, pos):
