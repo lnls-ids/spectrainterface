@@ -1889,6 +1889,7 @@ class SpectraInterface:
         figsize=(4.5, 3.0),
         figname="brill.png",
         dpi=300,
+        legend_fs=10,
     ):
         """Plot brilliance curves.
 
@@ -2011,7 +2012,7 @@ class SpectraInterface:
         _plt.grid(which="major", alpha=0.4)
         _plt.grid(which="minor", alpha=0.2)
 
-        _plt.legend()
+        _plt.legend(fontsize=legend_fs)
         _plt.tight_layout()
 
         if savefig:
@@ -2033,6 +2034,7 @@ class SpectraInterface:
         figsize=(4.5, 3.0),
         figname="flux.png",
         dpi=300,
+        legend_fs=10,
     ):
         """Plot flux curves.
 
@@ -2147,7 +2149,7 @@ class SpectraInterface:
         _plt.grid(which="major", alpha=0.4)
         _plt.grid(which="minor", alpha=0.2)
 
-        _plt.legend()
+        _plt.legend(fontsize=legend_fs)
         _plt.tight_layout()
 
         if savefig:
