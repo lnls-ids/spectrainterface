@@ -1613,6 +1613,7 @@ class SpectraInterface:
              source.
 
         """
+        self._flag_brill_processed = False
         source_list = self.sources
         energies = list()
         brilliances = list()
@@ -1759,6 +1760,7 @@ class SpectraInterface:
         Raises:
             ValueError: _description_
         """
+        self._flag_flux_processed = False
         source_list = self.sources
         energies = list()
         fluxes = list()
