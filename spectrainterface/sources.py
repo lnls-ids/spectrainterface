@@ -656,6 +656,52 @@ class Delta(Elliptic):
         self._source_length = length
         self._source_type = "ellipticundulator"
 
+    def calc_min_gap(
+        self,
+        si_parameters=None,
+        section="SB",
+        vc_thickness=None,
+        vc_tolerance=None,
+    ):
+        """Calculate minimum gap of undulator.
+
+        Args:
+        si_parameters (StorageRingParameters, optional): StorageRingParameters
+         object. Defaults to None.
+        section (str, optional): Straight section (SB, SP or SA).
+         Defaults to 'SB'.
+        vc_thickness (float, optional): Vacuum chamber thickness.
+         Defaults to None.
+        vc_tolerance (float, optional): Extra delta in gap. Defaults to None.
+
+        Returns:
+            float: (min gap vertical, min gap horizontal) minimum gap allowed.
+        """
+        pos = self.source_length / 2
+        section = section.lower()
+
+        if si_parameters is None:
+            acc = StorageRingParameters()
+            acc.set_bsc_with_ivu18()
+            if section == "sb" or section == "sp":
+                acc.set_low_beta_section()
+            elif section == "sa":
+                acc.set_high_beta_section()
+            else:
+                raise ValueError("Section not defined.")
+        else:
+            acc = si_parameters
+
+        if vc_thickness is None:
+            vc_thickness = self.vc_thickness
+        if vc_tolerance is None:
+            vc_tolerance = self.vc_tolerance
+
+        bsch, bscv = acc.calc_beam_stay_clear(pos)
+        gap = _np.sqrt(2*(bsch**2 + bscv**2))
+        gap = gap + vc_thickness + vc_tolerance
+
+        return gap, gap
 
 class Hybrid(Undulator):
     """Hybrid Undulator class.
