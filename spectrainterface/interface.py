@@ -1614,7 +1614,7 @@ class SpectraInterface:
 
         """
         self._flag_brill_processed = False
-        self.calc.slit_shape = ""
+        self.calc._slit_shape = ""
         source_list = self.sources
         energies = list()
         brilliances = list()
