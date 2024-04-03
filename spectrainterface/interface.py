@@ -2003,7 +2003,7 @@ class SpectraInterface:
                         linewidth=linewidth,
                         alpha=0.9,
                     )
-        _plt.minorticks_on()
+        
         _plt.yscale(yscale)
         _plt.xscale(xscale)
 
@@ -2016,6 +2016,7 @@ class SpectraInterface:
         _plt.ylabel("Brilliance [ph/s/0.1%/mm²/mrad²/100mA]")
         _plt.title(title)
 
+        _plt.minorticks_on()
         _plt.tick_params(
             which="both", axis="both", direction="in", top=True, right=True
         )
@@ -2145,7 +2146,7 @@ class SpectraInterface:
                         linewidth=linewidth,
                         alpha=0.9,
                     )
-        _plt.minorticks_on()
+        
         _plt.yscale(yscale)
         _plt.xscale(xscale)
 
@@ -2158,6 +2159,7 @@ class SpectraInterface:
         _plt.ylabel("Flux [ph/s/0.1%/100mA]")
         _plt.title(title)
 
+        _plt.minorticks_on()
         _plt.tick_params(
             which="both", axis="both", direction="in", top=True, right=True
         )
