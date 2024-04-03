@@ -1895,6 +1895,7 @@ class SpectraInterface:
         figname="brill.png",
         dpi=300,
         legend_fs=10,
+        legend_properties=True,
     ):
         """Plot brilliance curves.
 
@@ -1981,8 +1982,9 @@ class SpectraInterface:
                 label = source.label
             else:
                 label = source.label
-                label += ", λ = {:.1f} mm".format(source.period)
-                label += ", L = {:.1f} m".format(source.source_length)
+                if(legend_properties):
+                    label += ", λ = {:.1f} mm".format(source.period)
+                    label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
@@ -2043,6 +2045,7 @@ class SpectraInterface:
         figname="flux.png",
         dpi=300,
         legend_fs=10,
+        legend_properties=True,
     ):
         """Plot flux curves.
 
@@ -2121,8 +2124,9 @@ class SpectraInterface:
                 label = source.label
             else:
                 label = source.label
-                label += ", λ = {:.1f} mm".format(source.period)
-                label += ", L = {:.1f} m".format(source.source_length)
+                if(legend_properties):
+                    label += ", λ = {:.1f} mm".format(source.period)
+                    label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
