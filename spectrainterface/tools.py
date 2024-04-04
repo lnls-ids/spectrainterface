@@ -379,7 +379,7 @@ class SourceFunctions:
 
         hc = PLANCK * 2 * PI * LSPEED / ECHARGE
 
-        x = 2 * PI * harmonic * und_length / und_period * 1e-3 * energy_spread
+        x = 2 * PI * harmonic * und_length / (und_period * 1e-3) * energy_spread
         a1 = _np.sqrt(2 * PI) * x * erf(_np.sqrt(2) * x)
         Qax = _np.sqrt(2 * x**2 / (-1 + _np.exp(-2 * x**2) + a1))
         div_sigma = _np.sqrt(
@@ -396,3 +396,49 @@ class SourceFunctions:
         )
 
         return size_sigma, div_sigma
+    
+    @staticmethod
+    def get_min_or_max_k(period, photon_energy, k_extreme, what_harmonic='max', si_energy=3.0):
+        """Get max or min K-value and harmonic number for a given energy.
+
+        Args:
+            period (float): Undulator period in [mm].
+            photon_energy (float): Photon energy in [eV].
+            k_extreme (float): Max. or Min. K-value
+            what_harmonic (str, optional): Either 'min', 'max' or 'first'. Defaults to 'max'.
+            si_energy (float, optional): Storage ring energy in [GeV]. Defaults to 3.0.
+
+        Returns:
+            int, float, float: harmonic number, K-value, B (field) in [T].
+        """
+        
+        gamma = si_energy*1e9 * ECHARGE / (EMASS * LSPEED**2)
+        n = [2*i+1 for i in range(50)]
+        harmonic = _np.nan 
+        k = _np.nan
+        for h_n in n:
+            K2 = (8*h_n*PI*(PLANCK/ECHARGE)*LSPEED*(gamma**2)/(period*1e-3)/photon_energy-2)
+            if K2 > 0:
+                if what_harmonic == 'max':            
+                    if K2**0.5 < k_extreme:
+                        harmonic = h_n
+                        k = K2**0.5
+                    else:                 
+                        break
+                elif what_harmonic == 'min':
+                    if K2**0.5 > k_extreme:
+                        harmonic = h_n
+                        k = K2**0.5
+                        break
+                elif what_harmonic == 'first':
+                    harmonic = h_n
+                    k = K2**0.5
+                    break
+
+        if _np.isnan(k):
+            B = _np.nan
+            harmonic = _np.nan
+        else:
+            B = 2*PI*EMASS*LSPEED*k/(ECHARGE*period*1e-3)
+                        
+        return harmonic, k, B
