@@ -43,15 +43,15 @@ class StorageRingParameters:
         self._bsc0_v = 0
 
         self._bsc0_h_lowbeta = 3.4529
-        self._bsc0_v_lowbeta = 1.6818
+        self._bsc0_v_lowbeta = 1.5588
         self._bsc0_h_highbeta = 11.6952
-        self._bsc0_v_highbeta = 2.6658
+        self._bsc0_v_highbeta = 2.4706
 
         if beta_section == 'low':
             self.set_low_beta_section()
         elif beta_section == 'high':
             self.set_high_beta_section()
-        
+
         self.set_bsc_with_ivu18()
 
     @property
@@ -380,9 +380,9 @@ class StorageRingParameters:
     def set_bsc_with_ivu18(self):
         """Set BSC with IVU18."""
         self._bsc0_h_lowbeta = 3.4529
-        self._bsc0_v_lowbeta = 1.6818
+        self._bsc0_v_lowbeta = 1.5588
         self._bsc0_h_highbeta = 11.6952
-        self._bsc0_v_highbeta = 2.6658
+        self._bsc0_v_highbeta = 2.4706
 
     def set_low_beta_section(self):
         """Set low beta section."""

@@ -1895,6 +1895,7 @@ class SpectraInterface:
         figname="brill.png",
         dpi=300,
         legend_fs=10,
+        legend_properties=True,
     ):
         """Plot brilliance curves.
 
@@ -1981,8 +1982,9 @@ class SpectraInterface:
                 label = source.label
             else:
                 label = source.label
-                label += ", λ = {:.1f} mm".format(source.period)
-                label += ", L = {:.1f} m".format(source.source_length)
+                if(legend_properties):
+                    label += ", λ = {:.1f} mm".format(source.period)
+                    label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
@@ -2001,7 +2003,7 @@ class SpectraInterface:
                         linewidth=linewidth,
                         alpha=0.9,
                     )
-        _plt.minorticks_on()
+        
         _plt.yscale(yscale)
         _plt.xscale(xscale)
 
@@ -2014,6 +2016,7 @@ class SpectraInterface:
         _plt.ylabel("Brilliance [ph/s/0.1%/mm²/mrad²/100mA]")
         _plt.title(title)
 
+        _plt.minorticks_on()
         _plt.tick_params(
             which="both", axis="both", direction="in", top=True, right=True
         )
@@ -2043,6 +2046,7 @@ class SpectraInterface:
         figname="flux.png",
         dpi=300,
         legend_fs=10,
+        legend_properties=True,
     ):
         """Plot flux curves.
 
@@ -2121,8 +2125,9 @@ class SpectraInterface:
                 label = source.label
             else:
                 label = source.label
-                label += ", λ = {:.1f} mm".format(source.period)
-                label += ", L = {:.1f} m".format(source.source_length)
+                if(legend_properties):
+                    label += ", λ = {:.1f} mm".format(source.period)
+                    label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
                 if j == 0:
                     _plt.plot(
@@ -2141,7 +2146,7 @@ class SpectraInterface:
                         linewidth=linewidth,
                         alpha=0.9,
                     )
-        _plt.minorticks_on()
+        
         _plt.yscale(yscale)
         _plt.xscale(xscale)
 
@@ -2154,6 +2159,7 @@ class SpectraInterface:
         _plt.ylabel("Flux [ph/s/0.1%/100mA]")
         _plt.title(title)
 
+        _plt.minorticks_on()
         _plt.tick_params(
             which="both", axis="both", direction="in", top=True, right=True
         )
