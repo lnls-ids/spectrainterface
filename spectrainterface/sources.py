@@ -525,7 +525,6 @@ class Undulator(SourceFunctions):
         Args:
             gamma (float): Lorentz fator 
             gap (float): light source gap [mm]
-            length (float): source length [m]
             current (float): electron beam current [mA]
         Returns:
             float: Total power of source light [kW]
