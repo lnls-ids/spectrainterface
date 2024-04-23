@@ -11,6 +11,8 @@ ECHARGE = _constants.elementary_charge
 EMASS = _constants.electron_mass
 LSPEED = _constants.light_speed
 PLANCK = _constants.reduced_planck_constant
+PI = _np.pi
+VACUUM_PERMITTICITY = _constants.vacuum_permitticity
 
 
 class BendingMagnet(SourceFunctions):
@@ -516,7 +518,27 @@ class Undulator(SourceFunctions):
         self._polarization = polarization0
 
         return br2 ** (1 / n) if br2 != 1 else br0
+    
+    def calc_total_power(self, gamma, gap, current=100):
+        """Calculate total power from an source light.
 
+        Args:
+            gamma (float): Lorentz fator 
+            gap (float): light source gap [mm]
+            length (float): source length [m]
+            current (float): electron beam current [mA]
+        Returns:
+            float: Total power of source light [kW]
+        """
+        b = self.get_beff(gap/self._period)
+        
+        b = _np.sqrt(2*b**2) if self._polarization == 'cp' else b
+        
+        const = ( (ECHARGE**4) * (gamma**2)) / (12 * PI * VACUUM_PERMITTICITY * (EMASS**2) * (LSPEED**2))
+
+        total_power = const * (b**2) * self._source_length * (current*1e-3) / (1e3 * ECHARGE)
+        
+        return total_power 
 
 class Wiggler(Undulator):
     """Wiggler Undulator class.
