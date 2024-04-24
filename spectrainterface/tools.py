@@ -13,6 +13,7 @@ EMASS = _constants.electron_mass
 LSPEED = _constants.light_speed
 PLANCK = _constants.reduced_planck_constant
 PI = _np.pi
+VACUUM_PERMITTICITY = _constants.vacuum_permitticity
 
 
 class SourceFunctions:
@@ -442,3 +443,40 @@ class SourceFunctions:
             B = 2*PI*EMASS*LSPEED*k/(ECHARGE*period*1e-3)
                         
         return harmonic, k, B
+    
+    @staticmethod
+    def calc_total_power(gamma, field_profile, current):
+        """Calculate total power from an source light.
+
+        Args:
+            gamma (float): lorentz factor
+            field_profile (numpy matrix float):
+                First column contains longitudinal spatial coordinate (z) [m] (end position of each segment);
+                Second column contais vertical field [T];
+                Third column constais horizontal field [T].
+            current (float): current of beam [mA]
+        Ref:
+            James A. Clarke. The science and technology of undulators and wigglers. (2004), 47-48.
+        Returns:
+            float: Total power of source light [kW]
+        """
+
+        s_f = field_profile[:,0]
+        by = field_profile[:,1]
+        bx = field_profile[:,2]
+
+        s_i = _np.delete(_np.append([0], s_f), -1)
+        b = _np.sqrt(by**2 + bx**2)
+
+        ds = s_f - s_i
+        
+        energy = gamma * (EMASS * LSPEED**2) / ECHARGE
+        b_rho = (energy * ECHARGE)  / (LSPEED * ECHARGE)
+        const = 1e-3*(ECHARGE * gamma**4)/(6 * PI * VACUUM_PERMITTICITY)
+
+        iradius = b/b_rho
+
+        darg_integral = iradius**2 * ds
+        integral = _np.sum(darg_integral)
+
+        return const*integral * (current * 1e-3)
