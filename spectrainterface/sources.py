@@ -84,6 +84,22 @@ class BendingMagnet(SourceFunctions):
         field[:, 1] = bx
         field[:, 2] = by
         return field
+    
+    def calc_total_power(self, gamma, acceptance=0.230, current=100):
+        """Calculate total power from bending magnet.
+
+        Args:
+            gamma (float): Lorentz fator 
+            acceptance (float): slit acceptance [mrad]
+            current (float): electron beam current [mA]
+        Returns:
+            float: Total power of source light [kW]
+        """
+        const = ((ECHARGE**3) * (gamma**3)) / (6 * PI * VACUUM_PERMITTICITY * EMASS * LSPEED)
+        
+        total_power = const * self._b_peak * (acceptance*1e-3) * (current * 1e-3) / (1e3 * ECHARGE)
+        
+        return total_power
 
 
 class BC(BendingMagnet):
