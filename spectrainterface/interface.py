@@ -1018,8 +1018,8 @@ class Calc(GeneralConfigs, SpectraTools):
         if self.field is not None:
             data = _np.zeros((3, len(self.field[:, 0])))
             data[0, :] = self.field[:, 0]
-            data[1, :] = self.field[:, 1]
-            data[2, :] = self.field[:, 2]
+            data[1, :] = self.field[:, 2]
+            data[2, :] = self.field[:, 1]
             input_temp["Light Source"]["Field Profile"]["data"] = data.tolist()
 
         if self.ky is not None:
@@ -1266,8 +1266,8 @@ class Calc(GeneralConfigs, SpectraTools):
         elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
             if self.output_type == self.CalcConfigs.Output.power_density:
                 self._power_density = data[0, :]
-                self._x = self._output_variables[0, :]
-                self._y = self._output_variables[1, :]
+                self._x = _np.array(self._output_variables[0][:])
+                self._y = _np.array(self._output_variables[1][:])
                 self._power_density = _np.reshape(
                     self._power_density, (len(self._x), len(self._y))
                 )
@@ -1275,8 +1275,8 @@ class Calc(GeneralConfigs, SpectraTools):
 
             if self.output_type == self.CalcConfigs.Output.flux_density:
                 self._flux = data[0, :]
-                self._x = self._output_variables[0, :]
-                self._y = self._output_variables[1, :]
+                self._x = _np.array(self._output_variables[0][:])
+                self._y = _np.array(self._output_variables[1][:])
                 self._flux = _np.reshape(
                     self._flux, (len(self._x), len(self._y))
                 )
@@ -1351,7 +1351,7 @@ class Calc(GeneralConfigs, SpectraTools):
         captions = solver.GetCaptions()
         data = _np.array(solver.GetData()["data"])
         if self.indep_var != self.CalcConfigs.Variable.k:
-            variables = _np.array(solver.GetData()["variables"])
+            variables = _np.array(solver.GetData()["variables"], dtype=object)
         else:
             if (
                 self.source_type == self.SourceType.figure8_undulator
