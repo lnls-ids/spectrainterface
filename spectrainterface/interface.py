@@ -10,6 +10,7 @@ from spectrainterface import spectra
 import sys
 import time
 import os
+import multiprocessing
 
 # REPOS_PATH = os.path.abspath("./")
 # REPOS_PATH = __file__
@@ -19,6 +20,7 @@ ECHARGE = mathphys.constants.elementary_charge
 EMASS = mathphys.constants.electron_mass
 LSPEED = mathphys.constants.light_speed
 ECHARGE_MC = ECHARGE / (2 * _np.pi * EMASS * LSPEED)
+PLANCK = mathphys.constants.reduced_planck_constant
 
 
 class SpectraTools:
@@ -1879,6 +1881,21 @@ class SpectraInterface:
 
         self._energies = energies
         self._fluxes = fluxes
+        
+    def get_k_target(self, n, period, target_energy, gamma):
+        """Get k target with harmonic number and target_energy.
+
+        Args:
+            n (float): harmonic number.
+            period (float): undulator period [mm].
+            target_energy (float): target energy of radiation [eV].
+            gamma (float): Lorentz Fator.
+        Returns:
+            float: K value.
+        """
+        arg = 2*n*gamma**2*PLANCK*2*_np.pi*LSPEED/(target_energy*ECHARGE*1e-3*period)-1
+        return _np.sqrt(2)*_np.sqrt(arg)
+        
 
     def plot_brilliance_curve(
         self,
