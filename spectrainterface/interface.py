@@ -1895,7 +1895,51 @@ class SpectraInterface:
         """
         arg = 2*n*gamma**2*PLANCK*2*_np.pi*LSPEED/(target_energy*ECHARGE*1e-3*period)-1
         return _np.sqrt(2)*_np.sqrt(arg)
+    
+    
+    def calc_flux(target_energy, source_period, source_length, target_k, emittance=False, energy_spread=False):
+        """Calculation flux.
+
+        Args:
+            target_energy (float): target energy of radiation [eV].
+            source_period (float): undulator period [mm].
+            source_length (float): undulator length [m].
+            target_k (float): K value.
+            emittance (bool): calc with emittance or not [True or False].
+            energy_spread (boll): calc with energy spread or not [True or False]
+        Returns:
+            list: max flux in first elemnt and target k in second.
+        """
+        spectra = SpectraInterface()
+        spectra.accelerator.set_low_beta_section()
+        spectra.accelerator.set_bsc_with_ivu18()
         
+        ## Spectra Configuration
+        spectra.accelerator.zero_emittance = emittance
+        spectra.accelerator.zero_energy_spread = energy_spread
+
+        spectra.calc.source_type = (
+            spectra.calc.SourceType.horizontal_undulator
+        )
+
+        spectra.calc.method = spectra.calc.CalcConfigs.Method.far_field
+        spectra.calc.output_type = (
+            spectra.calc.CalcConfigs.Output.flux_density
+        )
+
+        spectra.calc.distance_from_source = 1
+        spectra.calc.observation_angle = [0, 0]
+        spectra.calc.energy_range = [target_energy, target_energy + 0.01]
+        spectra.calc.energy_step = 0.01
+        
+        ## Spectra calculation
+        spectra.calc.period = source_period
+        spectra.calc.length = source_length
+        spectra.calc.ky = target_k
+        spectra.calc.set_config()
+        spectra.calc.run_calculation()
+        
+        return [_np.max(spectra.calc.flux), target_k]
 
     def plot_brilliance_curve(
         self,
