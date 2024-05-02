@@ -2418,11 +2418,11 @@ class SpectraInterface:
         label += 'Best undulator: ({:.2f} mm, {:.2f} m)\n'.format(period_number, length_number)
         label += 'Flux: {:.2e} ph/s/0.1%/100mA'.format(self._flux_matrix[j, i])
         
-        _plt.figure()
+        _plt.figure(figsize=(5,4))
         _plt.title(label)
         _plt.ylabel('Length [m]')
-        _plt.xlabel(r'Period [mm] $1e1$ ')
-        _plt.imshow(_np.log(self._flux_matrix), extent=[self._info_unds[0,1] * 0.1, self._info_unds[-1,1] * 0.1, self._info_unds[-1,2] , self._info_unds[0,2]])
+        _plt.xlabel(r'Period [mm]')
+        _plt.imshow(_np.log(self._flux_matrix), extent=[self._info_unds[0,1] * 0.1, self._info_unds[-1,1] * 0.1, self._info_unds[-1,2] , self._info_unds[0,2]], aspect='auto')
         
                 
     def get_especified_undulator(self, target_period, target_length):
