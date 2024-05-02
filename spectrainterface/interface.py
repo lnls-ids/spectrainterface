@@ -2422,3 +2422,27 @@ class SpectraInterface:
         _plt.ylabel('Length [m]')
         _plt.xlabel(r'Period [mm] $1e1$ ')
         _plt.imshow(_np.log(self._flux_matrix), extent=[self._info_unds[0,1] * 0.1, self._info_unds[-1,1] * 0.1, self._info_unds[-1,2] , self._info_unds[0,2]])
+        
+                
+    def get_especified_undulator(self, target_period, target_length):
+        """ Function to get the flux and undulator parameters close to the specified.
+        
+        Args:
+            target_period (float): Undulator period [mm],
+            target_length (float): Undulator length [m],
+        Returns:
+            Array: Undulator informations.
+              first element: k number
+              second element: undulator period
+              third element: undulator length
+              fourth element: harmonic number used
+            Array: Flux of undulator close to the specified.
+              first element: flux of undulator
+        """
+        idcs_period = _np.isclose(self._info_unds[:, 1], target_period, rtol=1e-2)
+        idcs_p = _np.where(idcs_period == True)[0]
+
+        idcs_length = _np.isclose(self._info_unds[idcs_p, 2], target_length, rtol=1e-2)
+        idcs_l = _np.where(idcs_length == True)[0]
+        
+        return (self._info_unds[idcs_p[idcs_l]], self._flux_matrix.ravel()[idcs_p[idcs_l]])
