@@ -1530,6 +1530,7 @@ class SpectraInterface:
         self._energies = None
         self._brilliances = None
         self._fluxes = None
+        self._target_energy = None
         self._flag_brill_processed = False
         self._flag_flux_processed = False
 
@@ -1589,10 +1590,23 @@ class SpectraInterface:
              harmonic.
         """
         return self._fluxes
+    
+    @property
+    def target_energy(self):
+        """Target energy.
+
+        Returns:
+            float: Target energy to analyse.
+        """
+        return self._target_energy
 
     @sources.setter
     def sources(self, value):
         self._sources = value
+    
+    @target_energy.setter
+    def target_energy(self, value):
+        self._target_energy = value
 
     def calc_brilliance_curve(
         self,
@@ -1956,6 +1970,10 @@ class SpectraInterface:
         
         return [_np.max(spectra.calc.flux), target_k]
 
+    def __parallel_calc(self, args):
+        target_k, period, length, _ = args
+        return self.calc_flux(self._target_energy, period, length, target_k)
+
     def calc_flux_matrix(
         self,
         target_energy:float,
@@ -1988,9 +2006,10 @@ class SpectraInterface:
         Raises:
             ValueError: _description_
         """
+        self._target_energy = target_energy
+        
         periods = _np.linspace(18, 30, pts_period)
         lengths = _np.linspace(1, 3, pts_length)
-
 
         arglist = []
         for length in lengths:
@@ -2002,7 +2021,7 @@ class SpectraInterface:
                 k_max = und.calc_max_k(SpectraInterface().accelerator)
 
                 n = 1
-                while und.get_harmonic_energy(n, gamma, 0, und.period, k_max) < target_energy:
+                while und.get_harmonic_energy(n, gamma, 0, und.period, k_max) < self._target_energy:
                     n += 1
                 if n > 1:
                     n -= 1
@@ -2014,7 +2033,7 @@ class SpectraInterface:
                 
                 ns = _np.linspace(1, n, int(n))
                 
-                target_ks = self.get_k_target(ns, und.period, target_energy, gamma)
+                target_ks = self.get_k_target(ns, und.period, self._target_energy, gamma)
 
                 idx = _np.isnan(target_ks)
                 idx = _np.where(idx == True)
@@ -2023,7 +2042,8 @@ class SpectraInterface:
                 ns = _np.delete(ns, idx)
                 for i, target_k in enumerate(target_ks):
                     arglist += [(target_k, period, length, ns[i])]
-
+        
+        
         return arglist
         
 
