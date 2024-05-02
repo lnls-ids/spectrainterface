@@ -2101,7 +2101,6 @@ class SpectraInterface:
         self._info_unds = info_unds
         
         return flux_matrix, info_unds
-        
 
     def plot_brilliance_curve(
         self,
@@ -2396,3 +2395,11 @@ class SpectraInterface:
             _plt.savefig(figname, dpi=dpi)
         else:
             _plt.show()
+
+    def plot_flux_matrix(self):
+        info = self._info_unds[_np.argmax(self._flux_matrix.ravel())]
+
+        k_number = info[0]
+        period_number = info[1]
+        length_number = info[2]
+        harmonic_number = info[3]
