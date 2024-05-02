@@ -2075,7 +2075,12 @@ class SpectraInterface:
             best_result.append(fluxs[_np.argmax(arr)])
             info_und.append(filter_arglist[i][_np.argmax(arr)])
         
-        return info_und, best_result
+        best_result = _np.array(best_result)
+
+        flux_matrix = best_result[:,0]
+        flux_matrix = flux_matrix.reshape(len(periods), len(lengths), order='F')
+        
+        return flux_matrix
         
 
     def plot_brilliance_curve(
