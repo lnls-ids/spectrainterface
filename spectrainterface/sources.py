@@ -84,21 +84,21 @@ class BendingMagnet(SourceFunctions):
         field[:, 1] = bx
         field[:, 2] = by
         return field
-    
+
     def calc_total_power(self, gamma, acceptance=0.230, current=100):
         """Calculate total power from bending magnet.
 
         Args:
-            gamma (float): Lorentz fator 
+            gamma (float): Lorentz fator
             acceptance (float): slit acceptance [mrad]
             current (float): electron beam current [mA]
         Returns:
             float: Total power of source light [kW]
         """
         const = ((ECHARGE**3) * (gamma**3)) / (6 * PI * VACUUM_PERMITTICITY * EMASS * LSPEED)
-        
+
         total_power = const * self._b_peak * (acceptance*1e-3) * (current * 1e-3) / (1e3 * ECHARGE)
-        
+
         return total_power
 
 
@@ -534,26 +534,27 @@ class Undulator(SourceFunctions):
         self._polarization = polarization0
 
         return br2 ** (1 / n) if br2 != 1 else br0
-    
+
     def calc_total_power(self, gamma, gap, current=100):
         """Calculate total power from an source light.
 
         Args:
-            gamma (float): Lorentz fator 
+            gamma (float): Lorentz fator
             gap (float): light source gap [mm]
             current (float): electron beam current [mA]
         Returns:
             float: Total power of source light [kW]
         """
         b = self.get_beff(gap/self._period)
-        
+
         b = _np.sqrt(2*b**2) if self._polarization == 'cp' else b
-        
+
         const = ( (ECHARGE**4) * (gamma**2)) / (12 * PI * VACUUM_PERMITTICITY * (EMASS**2) * (LSPEED**2))
 
         total_power = const * (b**2) * self._source_length * (current*1e-3) / (1e3 * ECHARGE)
-        
-        return total_power 
+
+        return total_power
+
 
 class Wiggler(Undulator):
     """Wiggler Undulator class.
@@ -739,6 +740,7 @@ class Delta(Elliptic):
         gap = gap + vc_thickness + vc_tolerance
 
         return gap, gap
+
 
 class Hybrid(Undulator):
     """Hybrid Undulator class.

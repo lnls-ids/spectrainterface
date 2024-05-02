@@ -5,7 +5,6 @@ import matplotlib.pyplot as _plt
 from spectrainterface.accelerator import StorageRingParameters
 import mathphys
 from spectrainterface.tools import SourceFunctions
-from spectrainterface.sources import Undulator
 import json
 from spectrainterface import spectra
 import sys
@@ -28,12 +27,13 @@ class SpectraTools:
     """Class with general spectra tools."""
 
     @staticmethod
-    def _run_solver(input_template, time_print):
+    def _run_solver(input_template, verbose=False):
         """Run spectra.
 
         Args:
             input_template (dict): Dictionary containing
             calculation parameters.
+            verbose (bool): If true it will print elapsed time
 
         Returns:
             dict: Output data dictionary
@@ -53,7 +53,7 @@ class SpectraTools:
         # start calculation
         solver.Run()
         dt = time.time() - t0
-        if time_print:
+        if verbose:
             print("elapsed time: {0:.1f} s".format(dt))
         return solver
 
@@ -1229,7 +1229,7 @@ class Calc(GeneralConfigs, SpectraTools):
 
         return True
 
-    def run_calculation(self, time_print:bool=False):
+    def run_calculation(self, time_print: bool = False):
         """Run calculation."""
         self.verify_valid_parameters()
         solver = self._run_solver(self._input_template, time_print)
@@ -1533,7 +1533,7 @@ class SpectraInterface:
         self._fluxes = None
         self._target_energy = None
         self._flux_matrix = None
-        self._info_unds = None
+        self._info_matrix = None
         self._flag_brill_processed = False
         self._flag_flux_processed = False
 
@@ -1593,7 +1593,7 @@ class SpectraInterface:
              harmonic.
         """
         return self._fluxes
-    
+
     @property
     def target_energy(self):
         """Target energy.
@@ -1602,7 +1602,7 @@ class SpectraInterface:
             float: Target energy to analyse.
         """
         return self._target_energy
-    
+
     @property
     def flux_matrix(self):
         """Flux matrix.
@@ -1613,18 +1613,18 @@ class SpectraInterface:
         return self._flux_matrix
 
     @property
-    def info_unds(self):
+    def info_matrix(self):
         """Information about the respective undulators in the flux matrix.
 
         Returns:
             Array: Undulators information to analyse.
         """
-        return self._info_unds
-    
+        return self._info_matrix
+
     @sources.setter
     def sources(self, value):
         self._sources = value
-    
+
     @target_energy.setter
     def target_energy(self, value):
         self._target_energy = value
@@ -1689,9 +1689,7 @@ class SpectraInterface:
                         self.calc.CalcConfigs.Output.brilliance
                     )
                     self.calc.add_phase_errors = source.add_phase_errors
-                    self.calc._use_recovery_params = (
-                        source.use_recovery_params
-                    )
+                    self.calc._use_recovery_params = source.use_recovery_params
                     self.calc.indep_var = self.calc.CalcConfigs.Variable.k
                     self.calc.method = self.calc.CalcConfigs.Method.wigner
                     self.calc.slice_x = 0
@@ -1838,9 +1836,7 @@ class SpectraInterface:
                     self.calc.energy_step = 1
                 else:
                     self.calc.add_phase_errors = source.add_phase_errors
-                    self.calc._use_recovery_params = (
-                        source.use_recovery_params
-                    )
+                    self.calc._use_recovery_params = source.use_recovery_params
                     self.calc.output_type = self.calc.CalcConfigs.Output.flux
                     self.calc.indep_var = self.calc.CalcConfigs.Variable.k
                     self.calc.method = self.calc.CalcConfigs.Method.far_field
@@ -1917,191 +1913,6 @@ class SpectraInterface:
 
         self._energies = energies
         self._fluxes = fluxes
-        
-    def get_k_target(
-        self,
-        n:int,
-        period:float,
-        target_energy:float,
-        gamma:float
-    ):
-        """Get k target with harmonic number and target_energy.
-
-        Args:
-            n (float): harmonic number.
-            period (float): undulator period [mm].
-            target_energy (float): target energy of radiation [eV].
-            gamma (float): Lorentz Fator.
-        Returns:
-            float: K value.
-        """
-        arg = 2*n*gamma**2*PLANCK*2*_np.pi*LSPEED/(target_energy*ECHARGE*1e-3*period)-1
-        return _np.sqrt(2)*_np.sqrt(arg)
-    
-    
-    def calc_flux(
-        self,
-        target_energy:float,
-        source_period:float,
-        source_length:float,
-        target_k:float,
-        emittance:bool=False,
-        energy_spread:bool=False
-    ):
-        """Calculation flux.
-
-        Args:
-            target_energy (float): target energy of radiation [eV].
-            source_period (float): undulator period [mm].
-            source_length (float): undulator length [m].
-            target_k (float): K value.
-            emittance (bool): calc with emittance or not [True or False].
-            energy_spread (boll): calc with energy spread or not [True or False]
-        Returns:
-            list: max flux in first elemnt and target k in second.
-        """
-        spectra = SpectraInterface()
-        spectra.accelerator.set_low_beta_section()
-        spectra.accelerator.set_bsc_with_ivu18()
-        
-        ## Spectra Configuration
-        spectra.accelerator.zero_emittance = not emittance
-        spectra.accelerator.zero_energy_spread = not energy_spread
-
-        spectra.calc.source_type = (
-            spectra.calc.SourceType.horizontal_undulator
-        )
-
-        spectra.calc.method = spectra.calc.CalcConfigs.Method.far_field
-        spectra.calc.output_type = (
-            spectra.calc.CalcConfigs.Output.flux_density
-        )
-
-        spectra.calc.distance_from_source = 1
-        spectra.calc.observation_angle = [0, 0]
-        spectra.calc.energy_range = [target_energy, target_energy + 0.01]
-        spectra.calc.energy_step = 0.01
-        
-        ## Spectra calculation
-        spectra.calc.period = source_period
-        spectra.calc.length = source_length
-        spectra.calc.ky = target_k
-        spectra.calc.set_config()
-        spectra.calc.run_calculation()
-        
-        return [_np.max(spectra.calc.flux), target_k]
-
-    def _parallel_calc(self, args):
-        target_k, period, length, _ = args
-        return self.calc_flux(self._target_energy, period, length, target_k)
-
-    def calc_flux_matrix(
-        self,
-        target_energy:float,
-        und:Undulator,
-        gamma:float,
-        nr_pts_period:int=20,
-        nr_pts_length:int=20,
-        n_harmonic_truc:int=15
-        ):
-        """Calc flux matrix.
-
-        Args:
-            target_energy (float): target energy of radiation [eV].
-            und (Undulator class): Undulator class.
-            gamma (float): Lorentz Fator.
-            nr_pts_period (int, optional): Number of period points. Defaults to 20.
-            nr_pts_length (int, optional): Number of length points. Defaults to 20.
-            n_harmonic_truc (int, optional): Harmonic number to truncate the calculation. Defaults to 15.
-        Returns:
-            Array: Flux matrix.
-            Array: Undulators information.
-        """
-        self._target_energy = target_energy
-        
-        periods = _np.linspace(18, 30, nr_pts_period)
-        lengths = _np.linspace(1, 3, nr_pts_length)
-
-        ### Arglist assembly
-        arglist = []
-        for length in lengths:
-            for period in periods:
-                
-                und.period = period
-                und.source_length = length
-                
-                k_max = und.calc_max_k(SpectraInterface().accelerator)
-
-                n = 1
-                while und.get_harmonic_energy(n, gamma, 0, und.period, k_max) < self._target_energy:
-                    n += 1
-                if n > 1:
-                    n -= 1
-                
-                n_truc = n_harmonic_truc
-                
-                if n > n_truc:
-                    n = n_truc
-                
-                ns = _np.linspace(1, n, int(n))
-                
-                target_ks = self.get_k_target(ns, und.period, self._target_energy, gamma)
-
-                idx = _np.isnan(target_ks)
-                idx = _np.where(idx == True)
-                
-                target_ks = _np.delete(target_ks, idx)
-                ns = _np.delete(ns, idx)
-                for i, target_k in enumerate(target_ks):
-                    arglist += [(target_k, period, length, ns[i])]
-        
-        ### Parallel calculations
-        data = []
-        with multiprocessing.Pool(processes=2) as parallel:
-            data = parallel.map(self._parallel_calc, arglist)
-        
-        arglist = _np.array(arglist)
-        result = _np.array(data)
-        
-        ### Identification of breaks with equal length and equal periods
-        idx_broke = list(_np.where((arglist[:-1, 1] != arglist[1:, 1]) | (arglist[:-1, 2] != arglist[1:, 2]))[0])
-        idx_broke.append(len(arglist) - 1)
-
-        i_start = 0
-        filter_arglist = []
-        filter_result = []
-
-        for i in idx_broke:
-            collection_arg = []
-            collection_result = []
-            for j in range(i_start,i+1):
-                collection_arg.append(list(arglist[j]))
-                collection_result.append(list(result[j]))
-            i_start = i+1
-            filter_arglist.append(collection_arg)
-            filter_result.append(collection_result)
-            
-        ### Selection of the best results for a given period and length
-        best_result = []
-        info_unds = []
-
-        for i, fluxs in enumerate(filter_result):
-            arr = _np.array(fluxs)[:,0]
-            best_result.append(fluxs[_np.argmax(arr)])
-            info_unds.append(filter_arglist[i][_np.argmax(arr)])
-        
-        best_result = _np.array(best_result)
-        info_unds = _np.array(info_unds)
-
-        ### Flux Matrix Reassembly
-        flux_matrix = best_result[:,0]
-        flux_matrix = flux_matrix.reshape(len(periods), len(lengths), order='F')
-        flux_matrix = flux_matrix.transpose()
-        
-        self._flux_matrix = flux_matrix
-        self._info_unds = info_unds
-        
-        return flux_matrix, info_unds
 
     def plot_brilliance_curve(
         self,
@@ -2175,7 +1986,9 @@ class SpectraInterface:
                             brilliance, (1, _np.shape(brilliance)[0])
                         )
                 else:
-                    input_brilliance = _np.array(self.brilliances[i], dtype=float)
+                    input_brilliance = _np.array(
+                        self.brilliances[i], dtype=float
+                    )
                     input_energies = _np.array(self.energies[i], dtype=float)
                     energies_ = _np.linspace(
                         _np.min(input_energies), _np.max(input_energies), 2001
@@ -2205,7 +2018,7 @@ class SpectraInterface:
                 label = source.label
             else:
                 label = source.label
-                if(legend_properties):
+                if legend_properties:
                     label += ", λ = {:.1f} mm".format(source.period)
                     label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
@@ -2226,7 +2039,7 @@ class SpectraInterface:
                         linewidth=linewidth,
                         alpha=0.9,
                     )
-        
+
         _plt.yscale(yscale)
         _plt.xscale(xscale)
 
@@ -2348,7 +2161,7 @@ class SpectraInterface:
                 label = source.label
             else:
                 label = source.label
-                if(legend_properties):
+                if legend_properties:
                     label += ", λ = {:.1f} mm".format(source.period)
                     label += ", L = {:.1f} m".format(source.source_length)
             for j in _np.arange(self.energies[i].shape[0]):
@@ -2369,7 +2182,7 @@ class SpectraInterface:
                         linewidth=linewidth,
                         alpha=0.9,
                     )
-        
+
         _plt.yscale(yscale)
         _plt.xscale(xscale)
 
@@ -2397,53 +2210,275 @@ class SpectraInterface:
         else:
             _plt.show()
 
-    def plot_flux_matrix(self):
-        """
-        Plot Flux Matrix (period x length)
-        """
-        ### Getting the parameters of the best undulator
-        info = self._info_unds[_np.argmax(self._flux_matrix.ravel())]
+    def calc_k_target(self, n: int, period: float, target_energy: float):
+        """Calc k for target energy given harmonic number and period.
 
-        k_number = info[0]
+        Args:
+            n (int): harmonic number.
+            period (float): undulator period [mm].
+            target_energy (float): target energy of radiation [eV].
+
+        Returns:
+            float: K value
+        """
+        gamma = self.accelerator.gamma
+        arg = (
+            2
+            * n
+            * gamma**2
+            * PLANCK
+            * 2
+            * _np.pi
+            * LSPEED
+            / (target_energy * ECHARGE * 1e-3 * period)
+            - 1
+        )
+        return _np.sqrt(2) * _np.sqrt(arg)
+
+    def _calc_flux(
+        self,
+        target_energy: float,
+        source_period: float,
+        source_length: float,
+        target_k: float,
+    ):
+        """Calculate flux for one k value.
+
+        Args:
+            target_energy (float): target energy of radiation [eV].
+            source_period (float): undulator period [mm].
+            source_length (float): undulator length [m].
+            target_k (float): K value.
+
+        Returns:
+            _type_: _description_
+        """
+        # Spectra Configuration
+
+        und = self._und
+        self.calc.source_type = und.source_type
+
+        self.calc.method = self.calc.CalcConfigs.Method.far_field
+        self.calc.output_type = self.calc.CalcConfigs.Output.flux_density
+
+        self.calc.distance_from_source = 1
+        self.calc.observation_angle = [0, 0]
+        self.calc.energy_range = [target_energy, target_energy + 0.01]
+        self.calc.energy_step = 0.01
+
+        # Spectra calculation
+        self.calc.period = source_period
+        self.calc.length = source_length
+        if und.polarization == "hp":
+            self.calc.ky = target_k
+        elif und.polarization == "vp":
+            self.calc.kx = target_k
+        else:
+            self.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
+            self.calc.ky = self.calc.kx * und.fields_ratio
+        self.calc.set_config()
+        self.calc.run_calculation()
+
+        return [_np.max(self.calc.flux), target_k]
+
+    def _parallel_calc(self, args):
+        target_k, period, length, _ = args
+        return self._calc_flux(
+            self._target_energy,
+            period,
+            length,
+            target_k,
+        )
+
+    def calc_flux_matrix(
+        self,
+        target_energy: float,
+        und,
+        nr_pts_period: int = 20,
+        nr_pts_length: int = 20,
+        n_harmonic_truc: int = 15,
+    ):
+        """Calc flux matrix.
+
+        Args:
+            target_energy (float): Target energy [eV]
+            und (Undulator object): Must be an object from undulator class.
+            nr_pts_period (int, optional): Number of period points.
+                Defaults to 20.
+            nr_pts_length (int, optional): Number of length points.
+                Defaults to 20.
+            n_harmonic_truc (int, optional): Harmonic number to truncate
+                the calculation. Defaults to 15.
+
+        Returns:
+            numpy array: Flux matrix.
+            numpy array: Undulators information.
+        """
+        self._target_energy = target_energy
+        self._und = und
+        periods = _np.linspace(18, 30, nr_pts_period)
+        lengths = _np.linspace(1, 3, nr_pts_length)
+
+        # Arglist assembly
+        gamma = self.accelerator.gamma
+        arglist = []
+        for length in lengths:
+            for period in periods:
+                self._und.period = period
+                self._und.source_length = length
+
+                k_max = und.calc_max_k(self.accelerator)
+
+                n = 1
+                while (
+                    self._und.get_harmonic_energy(
+                        n, gamma, 0, self._und.period, k_max
+                    )
+                    < self._target_energy
+                ):
+                    n += 1
+                if n > 1:
+                    n -= 1
+
+                n_truc = n_harmonic_truc
+
+                if n > n_truc:
+                    n = n_truc
+
+                ns = _np.linspace(1, n, int(n))
+
+                target_ks = self.calc_k_target(
+                    ns, self._und.period, self._target_energy
+                )
+
+                idx = _np.isnan(target_ks)
+                idx = _np.where(idx == True)
+
+                target_ks = _np.delete(target_ks, idx)
+                ns = _np.delete(ns, idx)
+                for i, target_k in enumerate(target_ks):
+                    arglist += [(target_k, period, length, ns[i])]
+
+        # Parallel calculations
+        data = []
+        with multiprocessing.Pool(processes=2) as parallel:
+            data = parallel.map(self._parallel_calc, arglist)
+
+        arglist = _np.array(arglist)
+        result = _np.array(data)
+
+        # Identification of breaks with equal length and equal periods
+        idx_broke = list(
+            _np.where(
+                (arglist[:-1, 1] != arglist[1:, 1])
+                | (arglist[:-1, 2] != arglist[1:, 2])
+            )[0]
+        )
+        idx_broke.append(len(arglist) - 1)
+
+        i_start = 0
+        filter_arglist = []
+        filter_result = []
+
+        for i in idx_broke:
+            collection_arg = []
+            collection_result = []
+            for j in range(i_start, i + 1):
+                collection_arg.append(list(arglist[j]))
+                collection_result.append(list(result[j]))
+            i_start = i + 1
+            filter_arglist.append(collection_arg)
+            filter_result.append(collection_result)
+
+        # Selection of the best results for a given period and length
+        best_result = []
+        info_unds = []
+
+        for i, fluxs in enumerate(filter_result):
+            arr = _np.array(fluxs)[:, 0]
+            best_result.append(fluxs[_np.argmax(arr)])
+            info_unds.append(filter_arglist[i][_np.argmax(arr)])
+
+        best_result = _np.array(best_result)
+        info_unds = _np.array(info_unds)
+
+        # Flux Matrix Reassembly
+        flux_matrix = best_result[:, 0]
+        flux_matrix = flux_matrix.reshape(
+            len(periods), len(lengths), order="F"
+        )
+        flux_matrix = flux_matrix.transpose()
+
+        self._flux_matrix = flux_matrix
+        self._info_matrix = info_unds
+
+        return flux_matrix, info_unds
+
+    def plot_flux_matrix(self):
+        """Plot Flux Matrix (period x length)."""
+        # Getting the parameters of the best undulator
+        info = self._info_matrix[_np.argmax(self._flux_matrix.ravel())]
+
         period_number = info[1]
         length_number = info[2]
-        harmonic_number = info[3]
-        
-        ### Getting the position of the best flux
-        j = int(_np.argmax(self._flux_matrix.ravel()) / len(self._flux_matrix[0,:]))
-        i = _np.argmax(self._flux_matrix.ravel()) % len(self._flux_matrix[0,:])
 
-        ### Label creation
-        label = 'Target Energy: {:.2f} KeV\n'.format(self._target_energy / 1e3)
-        label += 'Best undulator: ({:.2f} mm, {:.2f} m)\n'.format(period_number, length_number)
-        label += 'Flux: {:.2e} ph/s/0.1%/100mA'.format(self._flux_matrix[j, i])
-        
-        _plt.figure(figsize=(5,4))
+        # Getting the position of the best flux
+        j = int(
+            _np.argmax(self._flux_matrix.ravel())
+            / len(self._flux_matrix[0, :])
+        )
+        i = _np.argmax(self._flux_matrix.ravel()) % len(
+            self._flux_matrix[0, :]
+        )
+
+        # Label creation
+        label = "Target Energy: {:.2f} KeV\n".format(self._target_energy / 1e3)
+        label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
+            period_number, length_number
+        )
+        label += "Flux: {:.2e} ph/s/0.1%/100mA".format(self._flux_matrix[j, i])
+
+        _plt.figure(figsize=(5, 4))
         _plt.title(label)
-        _plt.ylabel('Length [m]')
-        _plt.xlabel(r'Period [mm]')
-        _plt.imshow(_np.log(self._flux_matrix), extent=[self._info_unds[0,1] * 0.1, self._info_unds[-1,1] * 0.1, self._info_unds[-1,2] , self._info_unds[0,2]], aspect='auto')
-        
-                
-    def get_especified_undulator(self, target_period, target_length):
-        """ Function to get the flux and undulator parameters close to the specified.
-        
+        _plt.ylabel("Length [m]")
+        _plt.xlabel(r"Period [mm]")
+        _plt.imshow(
+            _np.log(self._flux_matrix),
+            extent=[
+                self._info_matrix[0, 1],
+                self._info_matrix[-1, 1],
+                self._info_matrix[-1, 2],
+                self._info_matrix[0, 2],
+            ],
+            aspect="auto",
+        )
+
+    def get_undulator_from_matrix(self, target_period, target_length):
+        """Get information about the target point in matrix.
+
         Args:
-            target_period (float): Undulator period [mm],
-            target_length (float): Undulator length [m],
+            target_period (float): Undulator period [mm]
+            target_length (float): Undulator length [m]
+
         Returns:
-            Array: Undulator informations.
+            Numpy array: Undulator informations.
               first element: k number
               second element: undulator period
               third element: undulator length
               fourth element: harmonic number used
-            Array: Flux of undulator close to the specified.
-              first element: flux of undulator
+            Numpy array: Flux of undulator close to the specified.
         """
-        idcs_period = _np.isclose(self._info_unds[:, 1], target_period, rtol=1e-2)
+        idcs_period = _np.isclose(
+            self._info_matrix[:, 1], target_period, rtol=1e-2
+        )
         idcs_p = _np.where(idcs_period == True)[0]
 
-        idcs_length = _np.isclose(self._info_unds[idcs_p, 2], target_length, rtol=1e-2)
+        idcs_length = _np.isclose(
+            self._info_matrix[idcs_p, 2], target_length, rtol=1e-2
+        )
         idcs_l = _np.where(idcs_length == True)[0]
-        
-        return (self._info_unds[idcs_p[idcs_l]], self._flux_matrix.ravel()[idcs_p[idcs_l]])
+
+        return (
+            self._info_matrix[idcs_p[idcs_l]],
+            self._flux_matrix.ravel()[idcs_p[idcs_l]],
+        )
