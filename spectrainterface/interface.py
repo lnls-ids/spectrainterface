@@ -1531,6 +1531,7 @@ class SpectraInterface:
         self._brilliances = None
         self._fluxes = None
         self._target_energy = None
+        self._flux_matrix = None
         self._flag_brill_processed = False
         self._flag_flux_processed = False
 
@@ -1599,6 +1600,15 @@ class SpectraInterface:
             float: Target energy to analyse.
         """
         return self._target_energy
+    
+    @property
+    def flux_matrix(self):
+        """Flux matrix.
+
+        Returns:
+            Array: Flux matrix to analyse.
+        """
+        return self._flux_matrix
 
     @sources.setter
     def sources(self, value):
