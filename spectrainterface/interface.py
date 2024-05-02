@@ -2079,6 +2079,7 @@ class SpectraInterface:
 
         flux_matrix = best_result[:,0]
         flux_matrix = flux_matrix.reshape(len(periods), len(lengths), order='F')
+        flux_matrix = flux_matrix.transpose()
         
         return flux_matrix
         
