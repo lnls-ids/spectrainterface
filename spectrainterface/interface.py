@@ -1970,7 +1970,7 @@ class SpectraInterface:
         
         return [_np.max(spectra.calc.flux), target_k]
 
-    def __parallel_calc(self, args):
+    def _parallel_calc(self, args):
         target_k, period, length, _ = args
         return self.calc_flux(self._target_energy, period, length, target_k)
 
@@ -2043,8 +2043,10 @@ class SpectraInterface:
                 for i, target_k in enumerate(target_ks):
                     arglist += [(target_k, period, length, ns[i])]
         
-        
-        return arglist
+        data = []
+        with multiprocessing.Pool(processes=2) as parallel:
+            data = parallel.map(self._parallel_calc, arglist)
+        return data
         
 
     def plot_brilliance_curve(
