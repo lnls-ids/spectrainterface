@@ -1964,8 +1964,8 @@ class SpectraInterface:
         spectra.accelerator.set_bsc_with_ivu18()
         
         ## Spectra Configuration
-        spectra.accelerator.zero_emittance = emittance
-        spectra.accelerator.zero_energy_spread = energy_spread
+        spectra.accelerator.zero_emittance = not emittance
+        spectra.accelerator.zero_energy_spread = not energy_spread
 
         spectra.calc.source_type = (
             spectra.calc.SourceType.horizontal_undulator
@@ -2414,4 +2414,8 @@ class SpectraInterface:
         label += 'Best undulator: ({:.2f} mm, {:.2f} m)\n'.format(period_number, length_number)
         label += 'Flux: {:.2e} ph/s/0.1%/100mA'.format(self._flux_matrix[j, i])
         
-        return label
+        _plt.figure()
+        _plt.title(label)
+        _plt.ylabel('Length [m]')
+        _plt.xlabel(r'Period [mm] $1e1$ ')
+        _plt.imshow(_np.log(self._flux_matrix), extent=[self._info_unds[0,1] * 0.1, self._info_unds[-1,1] * 0.1, self._info_unds[-1,2] , self._info_unds[0,2]])
