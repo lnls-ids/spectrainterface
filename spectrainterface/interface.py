@@ -2408,3 +2408,10 @@ class SpectraInterface:
         ### Getting the position of the best flux
         j = int(_np.argmax(self._flux_matrix.ravel()) / len(self._flux_matrix[0,:]))
         i = _np.argmax(self._flux_matrix.ravel()) % len(self._flux_matrix[0,:])
+
+        ### Label creation
+        label = 'Target Energy: {:.2f} KeV\n'.format(self._target_energy / 1e3)
+        label += 'Best undulator: ({:.2f} mm, {:.2f} m)\n'.format(period_number, length_number)
+        label += 'Flux: {:.2e} ph/s/0.1%/100mA'.format(self._flux_matrix[j, i])
+        
+        return label
