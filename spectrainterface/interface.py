@@ -5,6 +5,7 @@ import matplotlib.pyplot as _plt
 from spectrainterface.accelerator import StorageRingParameters
 import mathphys
 from spectrainterface.tools import SourceFunctions
+from spectrainterface.sources import Undulator
 import json
 from spectrainterface import spectra
 import sys
@@ -1882,7 +1883,13 @@ class SpectraInterface:
         self._energies = energies
         self._fluxes = fluxes
         
-    def get_k_target(self, n, period, target_energy, gamma):
+    def get_k_target(
+        self,
+        n:int,
+        period:float,
+        target_energy:float,
+        gamma:float
+    ):
         """Get k target with harmonic number and target_energy.
 
         Args:
@@ -1897,7 +1904,15 @@ class SpectraInterface:
         return _np.sqrt(2)*_np.sqrt(arg)
     
     
-    def calc_flux(target_energy, source_period, source_length, target_k, emittance=False, energy_spread=False):
+    def calc_flux(
+        self,
+        target_energy:float,
+        source_period:float,
+        source_length:float,
+        target_k:float,
+        emittance:bool=False,
+        energy_spread:bool=False
+    ):
         """Calculation flux.
 
         Args:
@@ -1940,6 +1955,77 @@ class SpectraInterface:
         spectra.calc.run_calculation()
         
         return [_np.max(spectra.calc.flux), target_k]
+
+    def calc_flux_matrix(
+        self,
+        target_energy:float,
+        und:Undulator,
+        gamma:float,
+        pts_period:int=20,
+        pts_length:int=20,
+        n_truc:int=15
+        ):
+        """Calc flux matrix.
+
+        Args:
+            target_energy (float): 
+            und (Undulator class): 
+            gamma (float): Lorentz Fator.
+            
+            energy_range (list, optional): Energy range for wigglers and
+             bending magnets. Defaults to [1, 5].
+            harmonic_range (list, optional): List of desired harmonics.
+             Defaults to [1, 5].
+            nr_pts_k (int, optional): Number of k points. Defaults to 15.
+            kmin (float): Minimum k value. Defaults to 0.2
+            slit_shape (str, optional): Circular or rectangular.
+             Defaults to "circslit".
+            slit_acceptance (list, optional): Slit acceptance.
+             Defaults to [0, 0.04].
+            beta_sections (list of string): List of beta sections for each
+             source.
+
+        Raises:
+            ValueError: _description_
+        """
+        periods = _np.linspace(18, 30, pts_period)
+        lengths = _np.linspace(1, 3, pts_length)
+
+
+        arglist = []
+        for length in lengths:
+            for period in periods:
+                
+                und.period = period
+                und.source_length = length
+                
+                k_max = und.calc_max_k(SpectraInterface().accelerator)
+
+                n = 1
+                while und.get_harmonic_energy(n, gamma, 0, und.period, k_max) < target_energy:
+                    n += 1
+                if n > 1:
+                    n -= 1
+                
+                n_truc = n_truc
+                
+                if n > n_truc:
+                    n = n_truc
+                
+                ns = _np.linspace(1, n, int(n))
+                
+                target_ks = self.get_k_target(ns, und.period, target_energy, gamma)
+
+                idx = _np.isnan(target_ks)
+                idx = _np.where(idx == True)
+                
+                target_ks = _np.delete(target_ks, idx)
+                ns = _np.delete(ns, idx)
+                for i, target_k in enumerate(target_ks):
+                    arglist += [(target_k, period, length, ns[i])]
+
+        return arglist
+        
 
     def plot_brilliance_curve(
         self,
