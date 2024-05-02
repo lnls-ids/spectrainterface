@@ -1532,6 +1532,7 @@ class SpectraInterface:
         self._fluxes = None
         self._target_energy = None
         self._flux_matrix = None
+        self._info_unds = None
         self._flag_brill_processed = False
         self._flag_flux_processed = False
 
@@ -1610,6 +1611,15 @@ class SpectraInterface:
         """
         return self._flux_matrix
 
+    @property
+    def info_unds(self):
+        """Information about the respective undulators in the flux matrix.
+
+        Returns:
+            Array: Undulators information to analyse.
+        """
+        return self._info_unds
+    
     @sources.setter
     def sources(self, value):
         self._sources = value
@@ -1989,37 +1999,27 @@ class SpectraInterface:
         target_energy:float,
         und:Undulator,
         gamma:float,
-        pts_period:int=20,
-        pts_length:int=20,
-        n_truc:int=15
+        nr_pts_period:int=20,
+        nr_pts_length:int=20,
+        n_harmonic_truc:int=15
         ):
         """Calc flux matrix.
 
         Args:
-            target_energy (float): 
-            und (Undulator class): 
+            target_energy (float): target energy of radiation [eV].
+            und (Undulator class): Undulator class.
             gamma (float): Lorentz Fator.
-            
-            energy_range (list, optional): Energy range for wigglers and
-             bending magnets. Defaults to [1, 5].
-            harmonic_range (list, optional): List of desired harmonics.
-             Defaults to [1, 5].
-            nr_pts_k (int, optional): Number of k points. Defaults to 15.
-            kmin (float): Minimum k value. Defaults to 0.2
-            slit_shape (str, optional): Circular or rectangular.
-             Defaults to "circslit".
-            slit_acceptance (list, optional): Slit acceptance.
-             Defaults to [0, 0.04].
-            beta_sections (list of string): List of beta sections for each
-             source.
-
-        Raises:
-            ValueError: _description_
+            nr_pts_period (int, optional): Number of period points. Defaults to 20.
+            nr_pts_length (int, optional): Number of length points. Defaults to 20.
+            n_harmonic_truc (int, optional): Harmonic number to truncate the calculation. Defaults to 15.
+        Returns:
+            Array: Flux matrix.
+            Array: Undulators information.
         """
         self._target_energy = target_energy
         
-        periods = _np.linspace(18, 30, pts_period)
-        lengths = _np.linspace(1, 3, pts_length)
+        periods = _np.linspace(18, 30, nr_pts_period)
+        lengths = _np.linspace(1, 3, nr_pts_length)
 
         ### Arglist assembly
         arglist = []
@@ -2037,7 +2037,7 @@ class SpectraInterface:
                 if n > 1:
                     n -= 1
                 
-                n_truc = n_truc
+                n_truc = n_harmonic_truc
                 
                 if n > n_truc:
                     n = n_truc
@@ -2082,21 +2082,25 @@ class SpectraInterface:
             
         ### Selection of the best results for a given period and length
         best_result = []
-        info_und = []
+        info_unds = []
 
         for i, fluxs in enumerate(filter_result):
             arr = _np.array(fluxs)[:,0]
             best_result.append(fluxs[_np.argmax(arr)])
-            info_und.append(filter_arglist[i][_np.argmax(arr)])
+            info_unds.append(filter_arglist[i][_np.argmax(arr)])
         
         best_result = _np.array(best_result)
+        info_unds = _np.array(info_unds)
 
         ### Flux Matrix Reassembly
         flux_matrix = best_result[:,0]
         flux_matrix = flux_matrix.reshape(len(periods), len(lengths), order='F')
         flux_matrix = flux_matrix.transpose()
         
-        return flux_matrix
+        self._flux_matrix = flux_matrix
+        self._info_unds = info_unds
+        
+        return flux_matrix, info_unds
         
 
     def plot_brilliance_curve(
