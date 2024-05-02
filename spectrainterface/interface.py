@@ -28,7 +28,7 @@ class SpectraTools:
     """Class with general spectra tools."""
 
     @staticmethod
-    def _run_solver(input_template):
+    def _run_solver(input_template, time_print):
         """Run spectra.
 
         Args:
@@ -53,7 +53,8 @@ class SpectraTools:
         # start calculation
         solver.Run()
         dt = time.time() - t0
-        print("elapsed time: {0:.1f} s".format(dt))
+        if time_print:
+            print("elapsed time: {0:.1f} s".format(dt))
         return solver
 
     @staticmethod
@@ -1228,10 +1229,10 @@ class Calc(GeneralConfigs, SpectraTools):
 
         return True
 
-    def run_calculation(self):
+    def run_calculation(self, time_print:bool=False):
         """Run calculation."""
         self.verify_valid_parameters()
-        solver = self._run_solver(self._input_template)
+        solver = self._run_solver(self._input_template, time_print)
         self._solver = solver
         captions, data, variables = self.extractdata(solver)
         self._output_captions = captions
