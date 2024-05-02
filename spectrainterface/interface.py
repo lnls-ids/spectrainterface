@@ -2011,6 +2011,7 @@ class SpectraInterface:
         periods = _np.linspace(18, 30, pts_period)
         lengths = _np.linspace(1, 3, pts_length)
 
+        ### Arglist assembly
         arglist = []
         for length in lengths:
             for period in periods:
@@ -2043,6 +2044,7 @@ class SpectraInterface:
                 for i, target_k in enumerate(target_ks):
                     arglist += [(target_k, period, length, ns[i])]
         
+        ### Parallel calculations
         data = []
         with multiprocessing.Pool(processes=2) as parallel:
             data = parallel.map(self._parallel_calc, arglist)
@@ -2050,6 +2052,7 @@ class SpectraInterface:
         arglist = _np.array(arglist)
         result = _np.array(data)
         
+        ### Identification of breaks with equal length and equal periods
         idx_broke = list(_np.where((arglist[:-1, 1] != arglist[1:, 1]) | (arglist[:-1, 2] != arglist[1:, 2]))[0])
         idx_broke.append(len(arglist) - 1)
 
@@ -2066,7 +2069,8 @@ class SpectraInterface:
             i_start = i+1
             filter_arglist.append(collection_arg)
             filter_result.append(collection_result)
-        
+            
+        ### Selection of the best results for a given period and length
         best_result = []
         info_und = []
 
@@ -2077,6 +2081,7 @@ class SpectraInterface:
         
         best_result = _np.array(best_result)
 
+        ### Flux Matrix Reassembly
         flux_matrix = best_result[:,0]
         flux_matrix = flux_matrix.reshape(len(periods), len(lengths), order='F')
         flux_matrix = flux_matrix.transpose()
