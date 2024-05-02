@@ -2397,6 +2397,9 @@ class SpectraInterface:
             _plt.show()
 
     def plot_flux_matrix(self):
+        """
+        Plot Flux Matrix (period x length)
+        """
         ### Getting the parameters of the best undulator
         info = self._info_unds[_np.argmax(self._flux_matrix.ravel())]
 
