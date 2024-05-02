@@ -2397,9 +2397,14 @@ class SpectraInterface:
             _plt.show()
 
     def plot_flux_matrix(self):
+        ### Getting the parameters of the best undulator
         info = self._info_unds[_np.argmax(self._flux_matrix.ravel())]
 
         k_number = info[0]
         period_number = info[1]
         length_number = info[2]
         harmonic_number = info[3]
+        
+        ### Getting the position of the best flux
+        j = int(_np.argmax(self._flux_matrix.ravel()) / len(self._flux_matrix[0,:]))
+        i = _np.argmax(self._flux_matrix.ravel()) % len(self._flux_matrix[0,:])
