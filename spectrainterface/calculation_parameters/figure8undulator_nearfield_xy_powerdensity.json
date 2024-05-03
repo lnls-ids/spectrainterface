@@ -1,0 +1,55 @@
+{
+  "Accelerator": {
+    "Energy (GeV)": 3,
+    "Current (mA)": 100,
+    "&sigma;<sub>z</sub> (mm)": 2.9,
+    "Nat. Emittance (m.rad)": 2.5e-10,
+    "Coupling Constant": 0.01,
+    "Energy Spread": 0.00084,
+    "&beta;<sub>x,y</sub> (m)": [0.338,5.355],
+    "&alpha;<sub>x,y</sub>": [0,0],
+    "&eta;<sub>x,y</sub> (m)": [0,0],
+    "&eta;'<sub>x,y</sub>": [0,0],
+    "Type": "Storage Ring",
+    "Options": {
+      "Bunch Profile": "Gaussian",
+      "Injection Condition": "Automatic",
+      "Zero Emittance": false,
+      "Zero Energy Spread": false
+    }
+  },
+  "Light Source": {
+    "&lambda;<sub>u</sub> (mm)": 18,
+    "Device Length (m)": 2,
+    "K<sub>x,y</sub>": [3.125044512251231,1.6807121999999999],
+    "Type": "Figure-8 Undulator",
+    "Options": {
+      "Field Structure": "Antisymmetric",
+      "End Correction Magnet": true,
+      "Natural Focusing": "None",
+      "Field Offset & Taper": false,
+      "Add Phase Error": false,
+      "Segmentation": "None"
+    }
+  },
+  "Configurations": {
+    "Distance from the Source (m)": 23,
+    "&theta;<sub>x</sub> Range (mrad)": [-0.5,0.5],
+    "Points (x)": 201,
+    "&theta;<sub>y</sub> Range (mrad)": [-0.5,0.5],
+    "Points (y)": 201,
+    "Type": "Near Field::Spatial Dependence::Spatial Power Density::Mesh: x-y",
+    "Options": {
+      "Filtering": "None",
+      "Define Obs. Point in": "Angle",
+      "Accuracy": "Default"
+    }
+  },
+  "Output File": {
+    "Format": "JSON",
+    "Folder": "/home/gabriel/spectra/spectra11/tests_GUI",
+    "Prefix": "b2",
+    "Serial Number": 83,
+    "Comment": ""
+  }
+}

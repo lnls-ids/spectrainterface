@@ -415,6 +415,7 @@ class Calc(GeneralConfigs, SpectraTools):
             flux_density = "fluxdensity"
             flux = "partialflux"
             brilliance = "brilliance"
+            power_density = "powerdensity"
 
         class SlitShape:
             """Sub class to define slit shape."""
@@ -465,6 +466,7 @@ class Calc(GeneralConfigs, SpectraTools):
         self._output_variables = None
 
         self._flux = None
+        self._power_density = None
         self._brilliance = None
         self._pl = None
         self._pc = None
@@ -708,6 +710,10 @@ class Calc(GeneralConfigs, SpectraTools):
             numpy array: Flux [ph/s/mr²/0.1%B.W].
         """
         return self._flux
+
+    @property
+    def power_density(self):
+        return self._power_density
 
     @property
     def brilliance(self):
@@ -1017,8 +1023,8 @@ class Calc(GeneralConfigs, SpectraTools):
         if self.field is not None:
             data = _np.zeros((3, len(self.field[:, 0])))
             data[0, :] = self.field[:, 0]
-            data[1, :] = self.field[:, 1]
-            data[2, :] = self.field[:, 2]
+            data[1, :] = self.field[:, 2]
+            data[2, :] = self.field[:, 1]
             input_temp["Light Source"]["Field Profile"]["data"] = data.tolist()
 
         if self.ky is not None:
@@ -1190,7 +1196,10 @@ class Calc(GeneralConfigs, SpectraTools):
                     raise ValueError("Slit shape must be defined.")
 
         if self.indep_var == self.CalcConfigs.Variable.mesh_xy:
-            if self.target_energy is None:
+            if (
+                self.target_energy is None
+                and self.output_type == self.CalcConfigs.Output.flux_density
+            ):
                 raise ValueError("Energy target must be defined")
 
             if self.x_range is None:
@@ -1260,25 +1269,37 @@ class Calc(GeneralConfigs, SpectraTools):
             self._energies = self._output_variables[0, :]
 
         elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
-            self._flux = data[0, :]
-            self._pl = data[1, :]
-            self._pc = data[2, :]
-            self._pl45 = data[3, :]
+            if self.output_type == self.CalcConfigs.Output.power_density:
+                self._power_density = data[0, :]
+                self._x = _np.array(self._output_variables[0][:])
+                self._y = _np.array(self._output_variables[1][:])
+                self._power_density = _np.reshape(
+                    self._power_density, (len(self._x), len(self._y))
+                )
+                self._power_density = _np.flip(self._power_density, axis=0)
 
-            self._x = self._output_variables[0, :]
-            self._y = self._output_variables[1, :]
+            if self.output_type == self.CalcConfigs.Output.flux_density:
+                self._flux = data[0, :]
+                self._x = _np.array(self._output_variables[0][:])
+                self._y = _np.array(self._output_variables[1][:])
+                self._flux = _np.reshape(
+                    self._flux, (len(self._x), len(self._y))
+                )
+                self._flux = _np.flip(self._flux, axis=0)
+                self._pl = data[1, :]
+                self._pc = data[2, :]
+                self._pl45 = data[3, :]
 
-            self._flux = _np.reshape(self._flux, (len(self._x), len(self._y)))
-            self._flux = _np.flip(self._flux, axis=0)
+                self._pl = _np.reshape(self._pl, (len(self._x), len(self._y)))
+                self._pl = _np.flip(self._pl, axis=0)
 
-            self._pl = _np.reshape(self._pl, (len(self._x), len(self._y)))
-            self._pl = _np.flip(self._pl, axis=0)
+                self._pc = _np.reshape(self._pc, (len(self._x), len(self._y)))
+                self._pc = _np.flip(self._pc, axis=0)
 
-            self._pc = _np.reshape(self._pc, (len(self._x), len(self._y)))
-            self._pc = _np.flip(self._pc, axis=0)
-
-            self._pl45 = _np.reshape(self._pl45, (len(self._x), len(self._y)))
-            self._pl45 = _np.flip(self._pl45, axis=0)
+                self._pl45 = _np.reshape(
+                    self._pl45, (len(self._x), len(self._y))
+                )
+                self._pl45 = _np.flip(self._pl45, axis=0)
 
         elif self.indep_var == self.CalcConfigs.Variable.k:
             if self.method == self.CalcConfigs.Method.wigner:
@@ -1335,7 +1356,7 @@ class Calc(GeneralConfigs, SpectraTools):
         captions = solver.GetCaptions()
         data = _np.array(solver.GetData()["data"])
         if self.indep_var != self.CalcConfigs.Variable.k:
-            variables = _np.array(solver.GetData()["variables"])
+            variables = _np.array(solver.GetData()["variables"], dtype=object)
         else:
             if (
                 self.source_type == self.SourceType.figure8_undulator
