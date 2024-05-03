@@ -2001,11 +2001,11 @@ class SpectraInterface:
 
     def calc_flux_matrix(
         self,
-        target_energy: float,
+        target_energy:float,
         und,
-        nr_pts_period: int = 20,
-        nr_pts_length: int = 20,
-        n_harmonic_truc: int = 15,
+        nr_pts_period:int=20,
+        nr_pts_length:int=20,
+        n_harmonic_truc:int=15,
     ):
         """Calc flux matrix.
 
@@ -2069,8 +2069,9 @@ class SpectraInterface:
                     arglist += [(target_k, period, length, ns[i])]
 
         # Parallel calculations
+        num_processes = multiprocessing.cpu_count()
         data = []
-        with multiprocessing.Pool(processes=2) as parallel:
+        with multiprocessing.Pool(processes=num_processes) as parallel:
             data = parallel.map(self._parallel_calc, arglist)
 
         arglist = _np.array(arglist)
@@ -2457,6 +2458,7 @@ class SpectraInterface:
             ],
             aspect="auto",
         )
+        _plt.colorbar(label='Flux (log)')
 
     def get_undulator_from_matrix(self, target_period, target_length):
         """Get information about the target point in matrix.
