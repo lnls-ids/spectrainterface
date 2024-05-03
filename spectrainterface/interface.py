@@ -2024,7 +2024,9 @@ class SpectraInterface:
         self,
         target_energy:float,
         und,
+        period_range:tuple=(18,30),
         nr_pts_period:int=20,
+        length_range:tuple=(1,3),
         nr_pts_length:int=20,
         n_harmonic_truc:int=15,
     ):
@@ -2047,8 +2049,8 @@ class SpectraInterface:
         gamma = self.accelerator.gamma
         self._target_energy = target_energy
         self._und = und
-        periods = _np.linspace(18, 30, nr_pts_period)
-        lengths = _np.linspace(1, 3, nr_pts_length)
+        periods = _np.linspace(period_range[0], period_range[1], nr_pts_period)
+        lengths = _np.linspace(length_range[0], length_range[1], nr_pts_length)
 
         # Arglist assembly
         arglist = []
