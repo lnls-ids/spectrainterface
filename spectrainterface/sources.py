@@ -85,6 +85,7 @@ class BendingMagnet(SourceFunctions):
         field[:, 2] = by
         return field
 
+
     def calc_total_power(self, gamma, acceptance=0.230, current=100):
         """Calculate total power from bending magnet.
 
@@ -534,6 +535,7 @@ class Undulator(SourceFunctions):
         self._polarization = polarization0
 
         return br2 ** (1 / n) if br2 != 1 else br0
+
 
     def calc_total_power(self, gamma, b, current=100):
         """Calculate total power from an source light.
