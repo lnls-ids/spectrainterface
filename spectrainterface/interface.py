@@ -1256,17 +1256,25 @@ class Calc(GeneralConfigs, SpectraTools):
         variables = self._output_variables
 
         if self.indep_var == self.CalcConfigs.Variable.energy:
-            self._flux = data[0, :]
-            if len(captions["titles"]) == 5:
-                self._pl = data[1, :]
-                self._pc = data[2, :]
-                self._pl45 = data[3, :]
-            elif len(captions["titles"]) == 6:
-                self._brilliance = data[1, :]
-                self._pl = data[2, :]
-                self._pc = data[3, :]
-                self._pl45 = data[4, :]
-            self._energies = self._output_variables[0, :]
+            if self.method == self.CalcConfigs.Method.wigner:
+                self._energies = variables[0, :]
+                self._brilliance = data[0, :]
+                if self.add_phase_errors is True:
+                    self._brilliance = self.apply_phase_errors(self._brilliance, 
+                                                               self._use_recovery_params)
+            else:
+                self._flux = data[0, :]
+                if len(captions["titles"]) == 5:
+                    self._pl = data[1, :]
+                    self._pc = data[2, :]
+                    self._pl45 = data[3, :]
+                elif len(captions["titles"]) == 6:
+                    self._brilliance = data[1, :]
+                    self._pl = data[2, :]
+                    self._pc = data[3, :]
+                    self._pl45 = data[4, :]
+                self._energies = self._output_variables[0, :]
+            
 
         elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
             if self.output_type == self.CalcConfigs.Output.power_density:
@@ -1301,6 +1309,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 )
                 self._pl45 = _np.flip(self._pl45, axis=0)
 
+                
         elif self.indep_var == self.CalcConfigs.Variable.k:
             if self.method == self.CalcConfigs.Method.wigner:
                 if (
