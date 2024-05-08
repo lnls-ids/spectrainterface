@@ -2678,6 +2678,46 @@ class SpectraInterface:
         )
         _plt.colorbar(label='Flux (log)')
 
+    def plot_brilliance_matrix(self):
+        """Plot Brilliance Matrix (period x length)."""
+        # Getting the parameters of the best undulator
+        info = self._info_matrix[_np.argmax(self._brilliance_matrix.ravel())]
+
+        period_number = info[1]
+        length_number = info[2]
+
+        # Getting the position of the best flux
+        j = int(
+            _np.argmax(self._brilliance_matrix.ravel())
+            / len(self._brilliance_matrix[0, :])
+        )
+        i = _np.argmax(self._brilliance_matrix.ravel()) % len(
+            self._brilliance_matrix[0, :]
+        )
+
+        # Label creation
+        label = "Target Energy: {:.2f} KeV\n".format(self._target_energy / 1e3)
+        label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
+            period_number, length_number
+        )
+        label += "Brilliance: {:.2e} ph/s/0.1%/100mA".format(self._brilliance_matrix[j, i])
+
+        _plt.figure(figsize=(5, 4))
+        _plt.title(label)
+        _plt.ylabel("Length [m]")
+        _plt.xlabel(r"Period [mm]")
+        _plt.imshow(
+            _np.log(self._brilliance_matrix),
+            extent=[
+                self._info_matrix[0, 1],
+                self._info_matrix[-1, 1],
+                self._info_matrix[-1, 2],
+                self._info_matrix[0, 2],
+            ],
+            aspect="auto",
+        )
+        _plt.colorbar(label='Brilliance (log)')
+
     def get_undulator_from_matrix(self, target_period, target_length):
         """Get information about the target point in matrix.
 
