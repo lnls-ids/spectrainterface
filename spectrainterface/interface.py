@@ -2295,7 +2295,30 @@ class SpectraInterface:
         arglist = _np.array(arglist)
         result = _np.array(data)
         
-        return arglist, result
+        # Identification of breaks with equal length and equal periods
+        idx_broke = list(
+            _np.where(
+                (arglist[:-1, 1] != arglist[1:, 1])
+                | (arglist[:-1, 2] != arglist[1:, 2])
+            )[0]
+        )
+        idx_broke.append(len(arglist) - 1)
+
+        i_start = 0
+        filter_arglist = []
+        filter_result = []
+
+        for i in idx_broke:
+            collection_arg = []
+            collection_result = []
+            for j in range(i_start, i + 1):
+                collection_arg.append(list(arglist[j]))
+                collection_result.append(result[j])
+            i_start = i + 1
+            filter_arglist.append(collection_arg)
+            filter_result.append(collection_result)
+        
+        return filter_arglist, filter_result
     
     def plot_brilliance_curve(
         self,
