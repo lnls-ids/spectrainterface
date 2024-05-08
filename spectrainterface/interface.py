@@ -1555,6 +1555,7 @@ class SpectraInterface:
         self._fluxes = None
         self._target_energy = None
         self._flux_matrix = None
+        self._brilliance_matrix = None
         self._info_matrix = None
         self._flag_brill_processed = False
         self._flag_flux_processed = False
@@ -1633,6 +1634,15 @@ class SpectraInterface:
             Array: Flux matrix to analyse.
         """
         return self._flux_matrix
+
+    @property
+    def brilliance_matrix(self):
+        """Brilliance matrix.
+
+        Returns:
+            Array: brilliance matrix to analyse.
+        """
+        return self._brilliance_matrix
 
     @property
     def info_matrix(self):
@@ -2732,6 +2742,7 @@ class SpectraInterface:
               third element: undulator length
               fourth element: harmonic number used
             Numpy array: Flux of undulator close to the specified.
+            Numpy array: Brilliance of undulator close to the specified.
         """
         idcs_period = _np.isclose(
             self._info_matrix[:, 1], target_period, rtol=1e-2
@@ -2745,5 +2756,6 @@ class SpectraInterface:
 
         return (
             self._info_matrix[idcs_p[idcs_l]],
-            self._flux_matrix.ravel()[idcs_p[idcs_l]],
+            self._flux_matrix.ravel()[idcs_p[idcs_l]] if type(self._flux_matrix) != type(None) else 'Without Flux Matrix',
+            self._brilliance_matrix.ravel()[idcs_p[idcs_l]] if type(self._brilliance_matrix) != type(None) else 'Without Brilliance Matrix'
         )
