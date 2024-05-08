@@ -2710,7 +2710,7 @@ class SpectraInterface:
         label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
             period_number, length_number
         )
-        label += "Brilliance: {:.2e} ph/s/0.1%/100mA".format(self._brilliance_matrix[j, i])
+        label += "Brilliance: {:.2e} ph/s/0.1%/mm²/mrad²/100mA".format(self._brilliance_matrix[j, i])
 
         _plt.figure(figsize=(5, 4))
         _plt.title(label)
