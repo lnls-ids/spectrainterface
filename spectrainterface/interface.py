@@ -2016,7 +2016,7 @@ class SpectraInterface:
         
         return [_np.max(spectra.calc.flux), target_k]
 
-    def _parallel_calc(self, args):
+    def _parallel_calc_flux(self, args):
         target_k, period, length, _ = args
         return self._calc_flux(self._target_energy, period, length, target_k)
 
@@ -2095,7 +2095,7 @@ class SpectraInterface:
         num_processes = multiprocessing.cpu_count()
         data = []
         with multiprocessing.Pool(processes=num_processes) as parallel:
-            data = parallel.map(self._parallel_calc, arglist)
+            data = parallel.map(self._parallel_calc_flux, arglist)
 
         arglist = _np.array(arglist)
         result = _np.array(data)
@@ -2200,7 +2200,7 @@ class SpectraInterface:
         self.calc.run_calculation()
         
         return _np.max(self.calc.brilliance)
-
+    
     def plot_brilliance_curve(
         self,
         process_curves=True,
