@@ -2010,6 +2010,7 @@ class SpectraInterface:
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
         
+        spectra.calc.output_type = spectra.calc.CalcConfigs.Output.flux_density 
         spectra.calc.method = spectra.calc.CalcConfigs.Method.far_field
         spectra.calc.output_type = self.calc.output_type
 
