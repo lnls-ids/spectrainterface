@@ -2318,7 +2318,19 @@ class SpectraInterface:
             filter_arglist.append(collection_arg)
             filter_result.append(collection_result)
         
-        return filter_arglist, filter_result
+        # Selection of the best results for a given period and length
+        best_result = []
+        info_unds = []
+
+        for i, brilliances in enumerate(filter_result):
+            arr = _np.array(brilliances)
+            best_result.append(brilliances[_np.argmax(arr)])
+            info_unds.append(filter_arglist[i][_np.argmax(arr)])
+
+        best_result = _np.array(best_result)
+        info_unds = _np.array(info_unds)
+        
+        return info_unds, best_result
     
     def plot_brilliance_curve(
         self,
