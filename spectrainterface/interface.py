@@ -2167,39 +2167,50 @@ class SpectraInterface:
         """
         und: Undulator = self._und
         
+        ## Spectra Initialization
+        spectra = SpectraInterface()
+        spectra.accelerator.set_bsc_with_ivu18()
+        if self.accelerator.beta_section == 'low':
+            spectra.accelerator.set_low_beta_section()
+        else:
+            spectra.accelerator.set_high_beta_section()
+        
         ## Spectra Configuration
-        self.calc.output_type = self.calc.CalcConfigs.Output.brilliance
-        self.calc.method = self.calc.CalcConfigs.Method.wigner
-        self.calc.indep_var = self.calc.CalcConfigs.Variable.k
+        spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
+        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
+        
+        spectra.calc.output_type = spectra.calc.CalcConfigs.Output.brilliance
+        spectra.calc.method = spectra.calc.CalcConfigs.Method.wigner
+        spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.k
         
         if und.polarization == "hp":
-            self.calc.source_type = self.calc.SourceType.horizontal_undulator
-            self.calc.ky = target_k
+            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
+            spectra.calc.ky = target_k
         elif und.polarization == "vp":
-            self.calc.source_type = self.calc.SourceType.vertical_undulator
-            self.calc.kx = target_k
+            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
+            spectra.calc.kx = target_k
         else:
-            self.calc.source_type = self.calc.SourceType.elliptic_undulator
-            self.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
-            self.calc.ky = self.calc.kx * und.fields_ratio
+            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
+            spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
+            spectra.calc.ky = spectra.calc.kx * und.fields_ratio
         
-        self.calc.harmonic_range = [target_harmonic, target_harmonic]
-        self.calc.k_range = [0, target_k]
-        self.calc.k_nr_pts = 2
+        spectra.calc.harmonic_range = [target_harmonic, target_harmonic]
+        spectra.calc.k_range = [0, target_k]
+        spectra.calc.k_nr_pts = 2
         
-        self.calc.slice_x = 0
-        self.calc.slice_px = 0
-        self.calc.slice_y = 0
-        self.calc.slice_py = 0
+        spectra.calc.slice_x = 0
+        spectra.calc.slice_px = 0
+        spectra.calc.slice_y = 0
+        spectra.calc.slice_py = 0
         
         ## Spectra calculation
-        self.calc.period = source_period
-        self.calc.length = source_length
+        spectra.calc.period = source_period
+        spectra.calc.length = source_length
         
-        self.calc.set_config()
-        self.calc.run_calculation()
+        spectra.calc.set_config()
+        spectra.calc.run_calculation()
         
-        return _np.max(self.calc.brilliance)
+        return _np.max(spectra.calc.brilliance)
     
     def _parallel_calc_brilliance(self, args):
         target_k, period, length, n_harmonic = args
