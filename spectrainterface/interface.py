@@ -2147,6 +2147,60 @@ class SpectraInterface:
 
         return flux_matrix, info_unds
 
+    def _calc_brilliance(
+        self,
+        target_harmonic:float,
+        source_period:float,
+        source_length:float,
+        target_k:float
+    ):
+        """Calculate brilliance for one k value.
+
+        Args:
+            target_harmonic (float): target harmonic number of radiation energy [eV].
+            source_period (float): undulator period [mm].
+            source_length (float): undulator length [m].
+            target_k (float): K value.
+
+        Returns:
+            _type_: _description_
+        """
+        und: Undulator = self._und
+        
+        ## Spectra Configuration
+        self.calc.output_type = self.calc.CalcConfigs.Output.brilliance
+        self.calc.method = self.calc.CalcConfigs.Method.wigner
+        self.calc.indep_var = self.calc.CalcConfigs.Variable.k
+        
+        if und.polarization == "hp":
+            self.calc.source_type = self.calc.SourceType.horizontal_undulator
+            self.calc.ky = target_k
+        elif und.polarization == "vp":
+            self.calc.source_type = self.calc.SourceType.vertical_undulator
+            self.calc.kx = target_k
+        else:
+            self.calc.source_type = self.calc.SourceType.elliptic_undulator
+            self.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
+            self.calc.ky = self.calc.kx * und.fields_ratio
+        
+        self.calc.harmonic_range = [target_harmonic, target_harmonic]
+        self.calc.k_range = [0, target_k]
+        self.calc.k_nr_pts = 2
+        
+        self.calc.slice_x = 0
+        self.calc.slice_px = 0
+        self.calc.slice_y = 0
+        self.calc.slice_py = 0
+        
+        ## Spectra calculation
+        self.calc.period = source_period
+        self.calc.length = source_length
+        
+        self.calc.set_config()
+        self.calc.run_calculation()
+        
+        return _np.max(self.calc.brilliance)
+
     def plot_brilliance_curve(
         self,
         process_curves=True,
