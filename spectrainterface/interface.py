@@ -2201,6 +2201,10 @@ class SpectraInterface:
         
         return _np.max(self.calc.brilliance)
     
+    def _parallel_calc_brilliance(self, args):
+        target_k, period, length, n_harmonic = args
+        return self._calc_brilliance(n_harmonic, period, length, target_k)
+    
     def plot_brilliance_curve(
         self,
         process_curves=True,
