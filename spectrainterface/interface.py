@@ -2285,8 +2285,17 @@ class SpectraInterface:
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
                     arglist += [(target_k, period, length, ns[i])]
+        
+        # Parallel calculations
+        num_processes = multiprocessing.cpu_count()
+        data = []
+        with multiprocessing.Pool(processes=num_processes-1) as parallel:
+            data = parallel.map(self._parallel_calc_brilliance, arglist)
 
-        return arglist
+        arglist = _np.array(arglist)
+        result = _np.array(data)
+        
+        return arglist, result
     
     def plot_brilliance_curve(
         self,
