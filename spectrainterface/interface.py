@@ -2097,8 +2097,7 @@ class SpectraInterface:
                 idx = _np.isnan(target_ks)
                 idx = _np.where(idx == True)
 
-                target_ks = _np.delete(target_ks, idx)
-                ns = _np.delete(ns, idx)
+                target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
                     arglist += [(target_k, period, length, ns[i])]
 
