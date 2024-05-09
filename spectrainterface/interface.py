@@ -2104,7 +2104,7 @@ class SpectraInterface:
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
         data = []
-        with multiprocessing.Pool(processes=num_processes) as parallel:
+        with multiprocessing.Pool(processes=num_processes-1) as parallel:
             data = parallel.map(self._parallel_calc_flux, arglist)
 
         arglist = _np.array(arglist)
