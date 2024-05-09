@@ -2341,16 +2341,16 @@ class SpectraInterface:
         info_unds = _np.array(info_unds)
         
         # Brilliance Matrix Reassembly
-        brillinace_matrix = best_result
-        brillinace_matrix = brillinace_matrix.reshape(
+        brilliance_matrix = best_result
+        brilliance_matrix = brilliance_matrix.reshape(
             len(periods), len(lengths), order="F"
         )
-        brillinace_matrix = brillinace_matrix.transpose()
+        brilliance_matrix = brilliance_matrix.transpose()
 
-        self._brilliance_matrix = brillinace_matrix
+        self._brilliance_matrix = brilliance_matrix
         self._info_matrix = info_unds
 
-        return brillinace_matrix, info_unds
+        return brilliance_matrix, info_unds
     
     def plot_brilliance_curve(
         self,
