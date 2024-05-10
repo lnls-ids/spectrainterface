@@ -2712,8 +2712,8 @@ class SpectraInterface:
             extent=[
                 self._info_matrix[0, 1],
                 self._info_matrix[-1, 1],
-                self._info_matrix[-1, 2],
                 self._info_matrix[0, 2],
+                self._info_matrix[-1, 2],
             ],
             aspect="auto",
             origin='lower',
@@ -2797,8 +2797,8 @@ class SpectraInterface:
             extent=[
                 self._info_matrix[0, 1],
                 self._info_matrix[-1, 1],
-                self._info_matrix[-1, 2],
                 self._info_matrix[0, 2],
+                self._info_matrix[-1, 2],
             ],
             aspect="auto",
             origin='lower',
@@ -2835,16 +2835,22 @@ class SpectraInterface:
             Numpy array: Flux of undulator close to the specified.
             Numpy array: Brilliance of undulator close to the specified.
         """
-        idcs_period = _np.isclose(
-            self._info_matrix[:, 1], target_period, rtol=1e-2
-        )
-        idcs_p = _np.where(idcs_period == True)[0]
+        rtol=1
+        broke = False
+        while not broke:
+            idcs_period = _np.isclose(
+                self._info_matrix[:, 1], target_period, rtol=rtol
+            )
+            idcs_p = _np.where(idcs_period == True)[0]
 
-        idcs_length = _np.isclose(
-            self._info_matrix[idcs_p, 2], target_length, rtol=1e-2
-        )
-        idcs_l = _np.where(idcs_length == True)[0]
+            idcs_length = _np.isclose(
+                self._info_matrix[idcs_p, 2], target_length, rtol=rtol
+            )
+            idcs_l = _np.where(idcs_length == True)[0]
 
+            rtol -= 1e-3
+            broke = len(idcs_p[idcs_l]) <= 2
+            
         return (
             self._info_matrix[idcs_p[idcs_l]],
             self._flux_matrix.ravel()[idcs_p[idcs_l]] if type(self._flux_matrix) != type(None) else 'Without Flux Matrix',
