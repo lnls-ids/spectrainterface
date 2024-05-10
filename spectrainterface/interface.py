@@ -2700,7 +2700,7 @@ class SpectraInterface:
         fig, ax = _plt.subplots(figsize=figsize)
         ax.set_title(label if title == None else title)
         ax.set_ylabel("Length [m]")
-        ax.set_xlabel(r"Period [mm]")
+        ax.set_xlabel("Period [mm]")
         
         step = 5 if cscale == 'linear' else int(_np.log10(clim[1]) - _np.log10(clim[0])  + 1)
         vmin=clim[0] if cscale == 'linear' else _np.log10(clim[0])
@@ -2734,8 +2734,32 @@ class SpectraInterface:
         else:
             _plt.show()
 
-    def plot_brilliance_matrix(self):
-        """Plot Brilliance Matrix (period x length)."""
+    def plot_brilliance_matrix(
+            self,
+            title=None,
+            clim=(1e18, 1e22),
+            cscale='linear',
+            savefig=False,
+            figsize=(5, 4),
+            figname="brilliance_matrix.png",
+            dpi=400,
+        ):
+        """Plot Brilliance Matrix (period x length).
+        
+        Args:
+            title (str, optional): Plot title.
+            cscale (str, optional): color bar scale
+             cscale. Defalts to 'linear'.
+            clim (tuple): color bar limits.
+            savefig (bool, optional): Save Figure
+             savefig. Defalts to False.
+            figname (str, optional): Figure name
+             figname. Defalts to 'brilliance_matrix.png'
+            dpi (int, optional): Image resolution
+             dpi. Defalts to 400.
+            figsize (tuple, optional): Figure size.
+             figsize. Defalts to (5, 4)
+        """
         # Getting the parameters of the best undulator
         info = self._info_matrix[_np.argmax(self._brilliance_matrix.ravel())]
 
@@ -2758,12 +2782,18 @@ class SpectraInterface:
         )
         label += "Brilliance: {:.2e} ph/s/0.1%/mm²/mrad²/100mA".format(self._brilliance_matrix[j, i])
 
-        _plt.figure(figsize=(5, 4))
-        _plt.title(label)
-        _plt.ylabel("Length [m]")
-        _plt.xlabel(r"Period [mm]")
-        _plt.imshow(
-            _np.log(self._brilliance_matrix),
+        fig, ax = _plt.subplots(figsize=figsize)
+        ax.set_title(label if title == None else title)
+        ax.set_ylabel("Length [m]")
+        ax.set_xlabel("Period [mm]")
+        
+        step = 5 if cscale == 'linear' else int(_np.log10(clim[1]) - _np.log10(clim[0])  + 1)
+        vmin=clim[0] if cscale == 'linear' else _np.log10(clim[0])
+        vmax=clim[1] if cscale == 'linear' else _np.log10(clim[1])
+        bm = self._brilliance_matrix if cscale == 'linear' else _np.log10(self._brilliance_matrix)
+        
+        im = ax.imshow(
+            bm,
             extent=[
                 self._info_matrix[0, 1],
                 self._info_matrix[-1, 1],
@@ -2771,8 +2801,23 @@ class SpectraInterface:
                 self._info_matrix[0, 2],
             ],
             aspect="auto",
+            origin='lower',
+            norm= colors.Normalize(vmin=vmin, vmax=vmax) if cscale == 'linear' else colors.LogNorm(vmin=vmin, vmax=vmax)
         )
-        _plt.colorbar(label='Brilliance (log)')
+        sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
+        sm.set_array(bm)
+        cbar = fig.colorbar(
+            sm,
+            ax=ax,
+            label='[ph/s/0.1%/mm²/mrad²/100mA]',
+            format='%.1e' if cscale == 'linear' else '%.0i'
+        )
+        cbar.set_ticks(_np.linspace(vmin, vmax, step))
+        fig.tight_layout()
+        if savefig:
+            _plt.savefig(figname, dpi=dpi)
+        else:
+            _plt.show()
 
     def get_undulator_from_matrix(self, target_period, target_length):
         """Get information about the target point in matrix.
