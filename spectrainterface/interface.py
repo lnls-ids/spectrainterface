@@ -2835,21 +2835,30 @@ class SpectraInterface:
             Numpy array: Flux of undulator close to the specified.
             Numpy array: Brilliance of undulator close to the specified.
         """
-        rtol=1
-        broke = False
-        while not broke:
-            idcs_period = _np.isclose(
-                self._info_matrix[:, 1], target_period, rtol=rtol
-            )
-            idcs_p = _np.where(idcs_period == True)[0]
+        
+        result_matrix = self._flux_matrix if type(self._flux_matrix) != type(None) else self._brilliance_matrix
+        
+        pts_period = len(result_matrix[0,:])
+        pts_length = len(result_matrix[:,0])
+        
+        max_period = _np.max(self._info_matrix[:,1])
+        min_period = _np.min(self._info_matrix[:,1])
+        
+        max_length = _np.max(self._info_matrix[:,2])
+        min_length = _np.min(self._info_matrix[:,2])
+        
+        rtol_length = 0.6*(max_length - min_length)/pts_length
+        rtol_period = 0.6*(max_period - min_period)/pts_period
+     
+        idcs_period = _np.isclose(
+            self._info_matrix[:, 1], target_period, atol=rtol_period
+        )
+        idcs_p = _np.where(idcs_period == True)[0]
 
-            idcs_length = _np.isclose(
-                self._info_matrix[idcs_p, 2], target_length, rtol=rtol
-            )
-            idcs_l = _np.where(idcs_length == True)[0]
-
-            rtol -= 1e-3
-            broke = len(idcs_p[idcs_l]) <= 2
+        idcs_length = _np.isclose(
+            self._info_matrix[idcs_p, 2], target_length, atol=rtol_length
+        )
+        idcs_l = _np.where(idcs_length == True)[0]
             
         return (
             self._info_matrix[idcs_p[idcs_l]],
