@@ -1555,7 +1555,7 @@ class SpectraInterface:
         self._brilliances = None
         self._fluxes = None
         self._target_energy = None
-        self._flux_matrix = None
+        self._flux_density_matrix = None
         self._brilliance_matrix = None
         self._info_matrix = None
         self._flag_brill_processed = False
@@ -1628,13 +1628,13 @@ class SpectraInterface:
         return self._target_energy
 
     @property
-    def flux_matrix(self):
+    def flux_density_matrix(self):
         """Flux matrix.
 
         Returns:
             Array: Flux matrix to analyse.
         """
-        return self._flux_matrix
+        return self._flux_density_matrix
 
     @property
     def brilliance_matrix(self):
@@ -1967,14 +1967,14 @@ class SpectraInterface:
         arg = 2*n*gamma**2*PLANCK*2*_np.pi*LSPEED/(target_energy*ECHARGE*1e-3*period)-1
         return _np.sqrt(2)*_np.sqrt(arg)
     
-    def _calc_flux(
+    def _calc_flux_density(
         self,
         target_energy:float,
         source_period:float,
         source_length:float,
         target_k:float
     ):
-        """Calculate flux for one k value.
+        """Calculate flux density for one k value.
 
         Args:
             target_energy (float): target energy of radiation [eV].
@@ -2028,11 +2028,11 @@ class SpectraInterface:
         
         return [_np.max(spectra.calc.flux), target_k]
 
-    def _parallel_calc_flux(self, args):
+    def _parallel_calc_flux_density(self, args):
         target_k, period, length, _ = args
-        return self._calc_flux(self._target_energy, period, length, target_k)
+        return self._calc_flux_density(self._target_energy, period, length, target_k)
 
-    def calc_flux_matrix(
+    def calc_flux_density_matrix(
         self,
         target_energy:float,
         und,
@@ -2042,7 +2042,7 @@ class SpectraInterface:
         nr_pts_length:int=20,
         n_harmonic_truc:int=15,
     ):
-        """Calc flux matrix.
+        """Calc flux density matrix.
 
         Args:
             target_energy (float): Target energy [eV]
@@ -2106,7 +2106,7 @@ class SpectraInterface:
         num_processes = multiprocessing.cpu_count()
         data = []
         with multiprocessing.Pool(processes=num_processes-1) as parallel:
-            data = parallel.map(self._parallel_calc_flux, arglist)
+            data = parallel.map(self._parallel_calc_flux_density, arglist)
 
         arglist = _np.array(arglist)
         result = _np.array(data)
@@ -2138,25 +2138,25 @@ class SpectraInterface:
         best_result = []
         info_unds = []
 
-        for i, fluxs in enumerate(filter_result):
-            arr = _np.array(fluxs)[:, 0]
-            best_result.append(fluxs[_np.argmax(arr)])
+        for i, fluxs_densenties in enumerate(filter_result):
+            arr = _np.array(fluxs_densenties)[:, 0]
+            best_result.append(fluxs_densenties[_np.argmax(arr)])
             info_unds.append(filter_arglist[i][_np.argmax(arr)])
 
         best_result = _np.array(best_result)
         info_unds = _np.array(info_unds)
 
-        # Flux Matrix Reassembly
-        flux_matrix = best_result[:, 0]
-        flux_matrix = flux_matrix.reshape(
+        # Flux Density Matrix Reassembly
+        flux_density_matrix = best_result[:, 0]
+        flux_density_matrix = flux_density_matrix.reshape(
             len(periods), len(lengths), order="F"
         )
-        flux_matrix = flux_matrix.transpose()
+        flux_density_matrix = flux_density_matrix.transpose()
 
-        self._flux_matrix = flux_matrix
+        self._flux_density_matrix = flux_density_matrix
         self._info_matrix = info_unds
 
-        return flux_matrix, info_unds
+        return flux_density_matrix, info_unds
 
     def _calc_brilliance(
         self,
@@ -2649,17 +2649,17 @@ class SpectraInterface:
         else:
             _plt.show()
 
-    def plot_flux_matrix(
+    def plot_flux_density_matrix(
             self,
             title=None,
             clim=(1e16, 1e18),
             cscale='linear',
             savefig=False,
             figsize=(5, 4),
-            figname="flux_matrix.png",
+            figname="flux_density_matrix.png",
             dpi=400,
         ):
-        """Plot Flux Matrix (period x length).
+        """Plot Flux Density Matrix (period x length).
         
         Args:
             title (str, optional): Plot title.
@@ -2669,25 +2669,25 @@ class SpectraInterface:
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
             figname (str, optional): Figure name
-             figname. Defalts to 'flux_matrix.png'
+             figname. Defalts to 'flux_density_matrix.png'
             dpi (int, optional): Image resolution
              dpi. Defalts to 400.
             figsize (tuple, optional): Figure size.
              figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
-        info = self._info_matrix[_np.argmax(self._flux_matrix.ravel())]
+        info = self._info_matrix[_np.argmax(self._flux_density_matrix.ravel())]
 
         period_number = info[1]
         length_number = info[2]
 
-        # Getting the position of the best flux
+        # Getting the position of the best flux density
         j = int(
-            _np.argmax(self._flux_matrix.ravel())
-            / len(self._flux_matrix[0, :])
+            _np.argmax(self._flux_density_matrix.ravel())
+            / len(self._flux_density_matrix[0, :])
         )
-        i = _np.argmax(self._flux_matrix.ravel()) % len(
-            self._flux_matrix[0, :]
+        i = _np.argmax(self._flux_density_matrix.ravel()) % len(
+            self._flux_density_matrix[0, :]
         )
 
         # Label creation
@@ -2695,7 +2695,7 @@ class SpectraInterface:
         label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
             period_number, length_number
         )
-        label += "Flux: {:.2e} ph/s/0.1%/100mA".format(self._flux_matrix[j, i])
+        label += "Flux Density: {:.2e} ph/s/mrad²/0.1%/100mA".format(self._flux_density_matrix[j, i])
 
         fig, ax = _plt.subplots(figsize=figsize)
         ax.set_title(label if title == None else title)
@@ -2705,7 +2705,7 @@ class SpectraInterface:
         step = 5 if cscale == 'linear' else int(_np.log10(clim[1]) - _np.log10(clim[0])  + 1)
         vmin=clim[0] if cscale == 'linear' else _np.log10(clim[0])
         vmax=clim[1] if cscale == 'linear' else _np.log10(clim[1])
-        fm = self._flux_matrix if cscale == 'linear' else _np.log10(self._flux_matrix)
+        fm = self._flux_density_matrix if cscale == 'linear' else _np.log10(self._flux_density_matrix)
         
         im = ax.imshow(
             fm,
@@ -2724,7 +2724,7 @@ class SpectraInterface:
         cbar = fig.colorbar(
             sm,
             ax=ax,
-            label='[ph/s/0.1%/100mA]',
+            label='[ph/s/mrad²/0.1%/100mA]',
             format='%.1e' if cscale == 'linear' else '%.0i'
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
@@ -2836,7 +2836,7 @@ class SpectraInterface:
             Numpy array: Brilliance of undulator close to the specified.
         """
         
-        result_matrix = self._flux_matrix if type(self._flux_matrix) != type(None) else self._brilliance_matrix
+        result_matrix = self._flux_density_matrix if type(self._flux_density_matrix) != type(None) else self._brilliance_matrix
         
         pts_period = len(result_matrix[0,:])
         pts_length = len(result_matrix[:,0])
@@ -2862,6 +2862,6 @@ class SpectraInterface:
             
         return (
             self._info_matrix[idcs_p[idcs_l]],
-            self._flux_matrix.ravel()[idcs_p[idcs_l]] if type(self._flux_matrix) != type(None) else 'Without Flux Matrix',
+            self._flux_density_matrix.ravel()[idcs_p[idcs_l]] if type(self._flux_density_matrix) != type(None) else 'Without Flux Matrix',
             self._brilliance_matrix.ravel()[idcs_p[idcs_l]] if type(self._brilliance_matrix) != type(None) else 'Without Brilliance Matrix'
         )
