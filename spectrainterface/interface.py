@@ -2695,7 +2695,7 @@ class SpectraInterface:
         label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
             period_number, length_number
         )
-        label += "Flux Density: {:.2e} ph/s/mrad²/0.1%/100mA".format(self._flux_density_matrix[j, i])
+        label += "Flux density: {:.2e} ph/s/mrad²/0.1%/100mA".format(self._flux_density_matrix[j, i])
 
         fig, ax = _plt.subplots(figsize=figsize)
         ax.set_title(label if title == None else title)
@@ -2724,7 +2724,7 @@ class SpectraInterface:
         cbar = fig.colorbar(
             sm,
             ax=ax,
-            label='[ph/s/mrad²/0.1%/100mA]',
+            label='Flux density [ph/s/mrad²/0.1%/100mA]',
             format='%.1e' if cscale == 'linear' else '%.0i'
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
@@ -2766,7 +2766,7 @@ class SpectraInterface:
         period_number = info[1]
         length_number = info[2]
 
-        # Getting the position of the best flux
+        # Getting the position of the best brilliance
         j = int(
             _np.argmax(self._brilliance_matrix.ravel())
             / len(self._brilliance_matrix[0, :])
@@ -2809,7 +2809,7 @@ class SpectraInterface:
         cbar = fig.colorbar(
             sm,
             ax=ax,
-            label='[ph/s/0.1%/mm²/mrad²/100mA]',
+            label='Brilliance [ph/s/0.1%/mm²/mrad²/100mA]',
             format='%.1e' if cscale == 'linear' else '%.0i'
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
@@ -2832,7 +2832,7 @@ class SpectraInterface:
               second element: undulator period
               third element: undulator length
               fourth element: harmonic number used
-            Numpy array: Flux of undulator close to the specified.
+            Numpy array: Flux Density of undulator close to the specified.
             Numpy array: Brilliance of undulator close to the specified.
         """
         
@@ -2862,6 +2862,6 @@ class SpectraInterface:
             
         return (
             self._info_matrix[idcs_p[idcs_l]],
-            self._flux_density_matrix.ravel()[idcs_p[idcs_l]] if type(self._flux_density_matrix) != type(None) else 'Without Flux Matrix',
+            self._flux_density_matrix.ravel()[idcs_p[idcs_l]] if type(self._flux_density_matrix) != type(None) else 'Without Flux Density Matrix',
             self._brilliance_matrix.ravel()[idcs_p[idcs_l]] if type(self._brilliance_matrix) != type(None) else 'Without Brilliance Matrix'
         )
