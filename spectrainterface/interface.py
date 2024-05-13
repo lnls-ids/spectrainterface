@@ -2196,7 +2196,8 @@ class SpectraInterface:
         source_length:float,
         target_k:float,
         slit_acceptance:list,
-        distance_from_the_source:float
+        distance_from_the_source:float,
+        calcfarfield:int
     ):
         """Calculate flux for one k value.
 
@@ -2206,6 +2207,8 @@ class SpectraInterface:
             source_length (float): undulator length [m].
             target_k (float): K value.
             slit_acceptance (list): slit aceeptance [mrad, mrad].
+            distance_from_the_source (float): distance from the source [m]
+            calcfarfield (int): method to use in fixed point calculation 'farfield' 1 or 'nearfield' 0
 
         Returns:
             _type_: _description_
@@ -2236,8 +2239,11 @@ class SpectraInterface:
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
         
-        
-        spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_far_field
+        if calcfarfield == 1:
+            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_far_field
+        elif calcfarfield == 0:
+            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_near_field
+            
         spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.flux
         spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.rectangular
@@ -2256,9 +2262,9 @@ class SpectraInterface:
         return _np.max(spectra.calc.flux)
 
     def _parallel_calc_flux(self, args):
-        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y = args
+        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y, method = args
         slit_acceptance = [slit_x, slit_y]
-        return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance, distance_from_the_source)
+        return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance, distance_from_the_source, method)
     
     def calc_flux_matrix(
         self,
@@ -2270,24 +2276,33 @@ class SpectraInterface:
         nr_pts_length:int=20,
         n_harmonic_truc:int=15,
         slit_acceptance:list=[0.230, 0.230],
-        distance_from_the_source:float=23
+        distance_from_the_source:float=23,
+        method:str='farfield'
     ):
-        """Calc brilliance matrix.
+        """Calc flux matrix.
 
         Args:
             target_energy (float): Target energy [eV]
             und (Undulator object): Must be an object from undulator class.
+            period_range (tuple): Period range for calculation [mm]
+                Defaults to (18,30) mm
             nr_pts_period (int, optional): Number of period points.
                 Defaults to 20.
+            length_range (tuple): Length range for calculation [m]
+                Defaults to (1,3) m
             nr_pts_length (int, optional): Number of length points.
                 Defaults to 20.
             n_harmonic_truc (int, optional): Harmonic number to truncate
                 the calculation. Defaults to 15.
             slit_acceptance (list): Slit acceptance [mrad, mrad].
                 Defaults to [0.230, 0.230]
-
+            distance_from_the_source (float): Distance from the source [m]
+                Defaults to 23
+            method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
+                Defaults to 'farfield'
+                
         Returns:
-            numpy array: Brilliance matrix.
+            numpy array: Flux matrix.
             numpy array: Undulators information.
         """
         gamma = self.accelerator.gamma
@@ -2295,7 +2310,8 @@ class SpectraInterface:
         self._und = und
         periods = _np.linspace(period_range[0], period_range[1], nr_pts_period)
         lengths = _np.linspace(length_range[0], length_range[1], nr_pts_length)
-
+        calcfarfield = 1 if method == 'farfield' else 0
+        
         # Arglist assembly
         arglist = []
         for length in lengths:
@@ -2332,7 +2348,7 @@ class SpectraInterface:
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
-                    arglist += [(target_k, period, length, ns[i], distance_from_the_source, slit_acceptance[0], slit_acceptance[1])]
+                    arglist += [(target_k, period, length, ns[i], distance_from_the_source, slit_acceptance[0], slit_acceptance[1], calcfarfield)]
         
         
         # Parallel calculations
@@ -3007,7 +3023,7 @@ class SpectraInterface:
         i = _np.argmax(self._flux_matrix.ravel()) % len(
             self._flux_matrix[0, :]
         )
-
+        
         # Label creation
         label = "Target Energy: {:.2f} KeV\n".format(self._target_energy / 1e3)
         label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
@@ -3234,8 +3250,7 @@ class SpectraInterface:
               second element: undulator period
               third element: undulator length
               fourth element: harmonic number used
-            Numpy array: Flux Density of undulator close to the specified.
-            Numpy array: Brilliance of undulator close to the specified.
+            Numpy array: Matrix result especified of undulator close to the specified.
         """
         
         if matrix == 'flux':
