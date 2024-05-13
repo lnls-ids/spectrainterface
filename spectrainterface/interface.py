@@ -2252,10 +2252,11 @@ class SpectraInterface:
         spectra.calc.set_config()
         spectra.calc.run_calculation()
         
-        return spectra.calc.flux
+        return _np.max(spectra.calc.flux)
 
     def _parallel_calc_flux(self, args):
-        target_k, period, length, slit_acceptance = args
+        target_k, period, length, slit_x, slit_y = args
+        slit_acceptance = [slit_x, slit_y]
         return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance)
     
     def calc_flux_matrix(
@@ -2329,9 +2330,19 @@ class SpectraInterface:
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
-                    arglist += [(target_k, period, length, slit_acceptance)]
+                    arglist += [(target_k, period, length, slit_acceptance[0], slit_acceptance[1])]
         
-        return arglist
+        
+        # Parallel calculations
+        num_processes = multiprocessing.cpu_count()
+        data = []
+        with multiprocessing.Pool(processes=num_processes-1) as parallel:
+            data = parallel.map(self._parallel_calc_flux, arglist)
+
+        arglist = _np.array(arglist)
+        result = _np.array(data)
+        
+        return result
     
     def _calc_brilliance(
         self,
