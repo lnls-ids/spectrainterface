@@ -23,7 +23,8 @@ EMASS = mathphys.constants.electron_mass
 LSPEED = mathphys.constants.light_speed
 ECHARGE_MC = ECHARGE / (2 * _np.pi * EMASS * LSPEED)
 PLANCK = mathphys.constants.reduced_planck_constant
-
+VACUUM_PERMITTICITY = mathphys.constants.vacuum_permitticity
+PI = _np.pi
 
 class SpectraTools:
     """Class with general spectra tools."""
@@ -2813,6 +2814,89 @@ class SpectraInterface:
             format='%.1e' if cscale == 'linear' else '%.0i'
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
+        fig.tight_layout()
+        if savefig:
+            _plt.savefig(figname, dpi=dpi)
+        else:
+            _plt.show()
+
+    def plot_total_power(
+        self,
+        title='Total Power of Undulators',
+        info_unds_matrix=None,
+        savefig=False,
+        figsize=(5, 4),
+        figname="total_power_matrix.png",
+        dpi=400
+        
+    ):
+        """Plot Total Power Matrix (period x length).
+        
+        Args:
+            title (str, optional): Plot title.
+            cscale (str, optional): color bar scale
+             cscale. Defalts to 'linear'.
+            clim (tuple): color bar limits.
+            savefig (bool, optional): Save Figure
+             savefig. Defalts to False.
+            figname (str, optional): Figure name
+             figname. Defalts to 'brilliance_matrix.png'
+            dpi (int, optional): Image resolution
+             dpi. Defalts to 400.
+            figsize (tuple, optional): Figure size.
+             figsize. Defalts to (5, 4)
+        """
+        if type(info_unds_matrix) == type(None):
+            info_unds_matrix = self._info_matrix 
+            
+        current = 100
+        ks = info_unds_matrix[:,0]
+        periods = info_unds_matrix[:,1]
+        lengths = info_unds_matrix[:,2]
+        
+        # Calc Fields
+        bs = (ks * EMASS * LSPEED * 2 * PI) / ( ECHARGE * periods * 1e-3)
+        
+        # Calc total power
+        const = ( (ECHARGE**4) * (self.accelerator.gamma**2)) / (12 * PI * VACUUM_PERMITTICITY * (EMASS**2) * (LSPEED**2))
+        total_powers = const * (bs**2) * lengths * (current*1e-3) / (1e3 * ECHARGE)
+        
+        pts_period = len(_np.where(info_unds_matrix[:,2] == info_unds_matrix[0,2])[0])
+        pts_length = len(_np.where(info_unds_matrix[:,1] == info_unds_matrix[0,1])[0])
+        
+        total_powers = total_powers.reshape(pts_length,pts_period)
+        
+        vmin = _np.min(total_powers)
+        vmax = _np.max(total_powers)
+        
+        fig, ax = _plt.subplots(figsize=(figsize))
+        ax.set_title(title)
+        ax.set_ylabel("Length [m]")
+        ax.set_xlabel("Period [mm]")
+
+        im = ax.imshow(
+            total_powers,
+            extent=[
+                _np.min(periods),
+                _np.max(periods),
+                _np.min(lengths),
+                _np.max(lengths),
+            ],
+            aspect="auto",
+            origin='lower',
+            norm= colors.Normalize(vmin=vmin, vmax=vmax)
+        )
+
+        sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
+        sm.set_array(total_powers)
+        
+        cbar = fig.colorbar(
+            sm,
+            ax=ax,
+            label='Total Power [kW]',
+            format = '%.2f'
+        )
+        cbar.set_ticks(_np.linspace(vmin, vmax, 9))
         fig.tight_layout()
         if savefig:
             _plt.savefig(figname, dpi=dpi)
