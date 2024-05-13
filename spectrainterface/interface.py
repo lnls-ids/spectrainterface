@@ -3220,12 +3220,13 @@ class SpectraInterface:
         else:
             _plt.show()
 
-    def get_undulator_from_matrix(self, target_period, target_length):
+    def get_undulator_from_matrix(self, target_period, target_length, matrix):
         """Get information about the target point in matrix.
 
         Args:
             target_period (float): Undulator period [mm]
             target_length (float): Undulator length [m]
+            matrix (str): Matrix especified 'flux' or 'flux_density' or 'brilliance'
 
         Returns:
             Numpy array: Undulator informations.
@@ -3237,7 +3238,12 @@ class SpectraInterface:
             Numpy array: Brilliance of undulator close to the specified.
         """
         
-        result_matrix = self._flux_density_matrix if type(self._flux_density_matrix) != type(None) else self._brilliance_matrix
+        if matrix == 'flux':
+            result_matrix = self._flux_matrix
+        elif matrix == 'flux_density':
+            result_matrix = self._flux_density_matrix
+        elif matrix == 'brilliance':
+            result_matrix = self._brilliance_matrix
         
         pts_period = len(result_matrix[0,:])
         pts_length = len(result_matrix[:,0])
@@ -3263,6 +3269,5 @@ class SpectraInterface:
             
         return (
             self._info_matrix[idcs_p[idcs_l]],
-            self._flux_density_matrix.ravel()[idcs_p[idcs_l]] if type(self._flux_density_matrix) != type(None) else 'Without Flux Density Matrix',
-            self._brilliance_matrix.ravel()[idcs_p[idcs_l]] if type(self._brilliance_matrix) != type(None) else 'Without Brilliance Matrix'
+            result_matrix.ravel()[idcs_p[idcs_l]]
         )
