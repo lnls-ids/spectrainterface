@@ -2189,6 +2189,71 @@ class SpectraInterface:
 
         return flux_density_matrix, info_unds
 
+    def _calc_flux(
+        self,
+        target_energy:float,
+        source_period:float,
+        source_length:float,
+        target_k:float,
+        slit_acceptance:list
+    ):
+        """Calculate flux for one k value.
+
+        Args:
+            target_energy (float): target energy of radiation [eV].
+            source_period (float): undulator period [mm].
+            source_length (float): undulator length [m].
+            target_k (float): K value.
+            slit_acceptance (list): slit aceeptance [mrad, mrad].
+
+        Returns:
+            _type_: _description_
+        """
+        self._target_energy = target_energy
+        und: Undulator = self._und
+        
+        ## Spectra Initialization
+        spectra = SpectraInterface()
+        spectra.accelerator.set_bsc_with_ivu18()
+        if self.accelerator.beta_section == 'low':
+            spectra.accelerator.set_low_beta_section()
+        else:
+            spectra.accelerator.set_high_beta_section()
+        
+        ## Spectra Configuration
+        spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
+        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
+        
+        if und.polarization == "hp":
+            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
+            spectra.calc.ky = target_k
+        elif und.polarization == "vp":
+            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
+            spectra.calc.kx = target_k
+        else:
+            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
+            spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
+            spectra.calc.ky = spectra.calc.kx * und.fields_ratio
+        
+        
+        spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_far_field
+        spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
+        spectra.calc.output_type = spectra.calc.CalcConfigs.Output.flux
+        spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.rectangular
+
+        spectra.calc.target_energy = self._target_energy
+        spectra.calc.distance_from_source = 23
+        spectra.calc.observation_angle = [0, 0]
+        spectra.calc.slit_acceptance = slit_acceptance
+        
+        ## Spectra calculation
+        spectra.calc.period = source_period
+        spectra.calc.length = source_length
+        spectra.calc.set_config()
+        spectra.calc.run_calculation()
+        
+        return spectra.calc.flux
+
     def _calc_brilliance(
         self,
         target_harmonic:float,
