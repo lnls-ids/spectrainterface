@@ -2258,6 +2258,81 @@ class SpectraInterface:
         target_k, period, length, slit_acceptance = args
         return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance)
     
+    def calc_flux_matrix(
+        self,
+        target_energy:float,
+        und: Undulator,
+        period_range:tuple=(18,30),
+        nr_pts_period:int=20,
+        length_range:tuple=(1,3),
+        nr_pts_length:int=20,
+        n_harmonic_truc:int=15,
+        slit_acceptance:list=[0.230, 0.230]
+    ):
+        """Calc brilliance matrix.
+
+        Args:
+            target_energy (float): Target energy [eV]
+            und (Undulator object): Must be an object from undulator class.
+            nr_pts_period (int, optional): Number of period points.
+                Defaults to 20.
+            nr_pts_length (int, optional): Number of length points.
+                Defaults to 20.
+            n_harmonic_truc (int, optional): Harmonic number to truncate
+                the calculation. Defaults to 15.
+            slit_acceptance (list): Slit acceptance [mrad, mrad].
+                Defaults to [0.230, 0.230]
+
+        Returns:
+            numpy array: Brilliance matrix.
+            numpy array: Undulators information.
+        """
+        gamma = self.accelerator.gamma
+        self._target_energy = target_energy
+        self._und = und
+        periods = _np.linspace(period_range[0], period_range[1], nr_pts_period)
+        lengths = _np.linspace(length_range[0], length_range[1], nr_pts_length)
+
+        # Arglist assembly
+        arglist = []
+        for length in lengths:
+            for period in periods:
+                self._und.period = period
+                self._und.source_length = length
+
+                k_max = und.calc_max_k(self.accelerator)
+
+                n = 1
+                while (
+                    self._und.get_harmonic_energy(
+                        n, gamma, 0, self._und.period, k_max
+                    )
+                    < self._target_energy
+                ):
+                    n += 2
+                if n > 2:
+                    n -= 2
+
+                n_truc = n_harmonic_truc
+
+                if n > n_truc:
+                    n = n_truc
+
+                ns = _np.linspace(1, n, int(n/2 + 1))
+
+                target_ks = self.calc_k_target(
+                    ns, self._und.period, self._target_energy
+                )
+
+                idx = _np.isnan(target_ks)
+                idx = _np.where(idx == True)
+
+                target_ks[idx] = 0
+                for i, target_k in enumerate(target_ks):
+                    arglist += [(target_k, period, length, slit_acceptance)]
+        
+        return arglist
+    
     def _calc_brilliance(
         self,
         target_harmonic:float,
