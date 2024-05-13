@@ -2965,6 +2965,91 @@ class SpectraInterface:
         else:
             _plt.show()
 
+    def plot_flux_matrix(
+            self,
+            title=None,
+            clim=(1e18, 1e22),
+            cscale='linear',
+            savefig=False,
+            figsize=(5, 4),
+            figname="flux_matrix.png",
+            dpi=400,
+        ):
+        """Plot Flux Matrix (period x length).
+        
+        Args:
+            title (str, optional): Plot title.
+            cscale (str, optional): color bar scale
+             cscale. Defalts to 'linear'.
+            clim (tuple): color bar limits.
+            savefig (bool, optional): Save Figure
+             savefig. Defalts to False.
+            figname (str, optional): Figure name
+             figname. Defalts to 'flux_matrix.png'
+            dpi (int, optional): Image resolution
+             dpi. Defalts to 400.
+            figsize (tuple, optional): Figure size.
+             figsize. Defalts to (5, 4)
+        """
+        # Getting the parameters of the best undulator
+        info = self._info_matrix[_np.argmax(self._flux_matrix.ravel())]
+
+        period_number = info[1]
+        length_number = info[2]
+
+        # Getting the position of the best brilliance
+        j = int(
+            _np.argmax(self._flux_matrix.ravel())
+            / len(self._flux_matrix[0, :])
+        )
+        i = _np.argmax(self._flux_matrix.ravel()) % len(
+            self._flux_matrix[0, :]
+        )
+
+        # Label creation
+        label = "Target Energy: {:.2f} KeV\n".format(self._target_energy / 1e3)
+        label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
+            period_number, length_number
+        )
+        label += "Flux: {:.2e} ph/s/0.1%/100mA".format(self._flux_matrix[j, i])
+
+        fig, ax = _plt.subplots(figsize=figsize)
+        ax.set_title(label if title == None else title)
+        ax.set_ylabel("Length [m]")
+        ax.set_xlabel("Period [mm]")
+        
+        step = 5 if cscale == 'linear' else int(_np.log10(clim[1]) - _np.log10(clim[0])  + 1)
+        vmin=clim[0] if cscale == 'linear' else _np.log10(clim[0])
+        vmax=clim[1] if cscale == 'linear' else _np.log10(clim[1])
+        fm = self._flux_matrix if cscale == 'linear' else _np.log10(self._flux_matrix)
+        
+        im = ax.imshow(
+            fm,
+            extent=[
+                self._info_matrix[0, 1],
+                self._info_matrix[-1, 1],
+                self._info_matrix[0, 2],
+                self._info_matrix[-1, 2],
+            ],
+            aspect="auto",
+            origin='lower',
+            norm= colors.Normalize(vmin=vmin, vmax=vmax) if cscale == 'linear' else colors.LogNorm(vmin=vmin, vmax=vmax)
+        )
+        sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
+        sm.set_array(fm)
+        cbar = fig.colorbar(
+            sm,
+            ax=ax,
+            label='Flux [ph/s/0.1%/100mA]',
+            format='%.1e' if cscale == 'linear' else '%.0i'
+        )
+        cbar.set_ticks(_np.linspace(vmin, vmax, step))
+        fig.tight_layout()
+        if savefig:
+            _plt.savefig(figname, dpi=dpi)
+        else:
+            _plt.show()
+
     def plot_brilliance_matrix(
             self,
             title=None,
