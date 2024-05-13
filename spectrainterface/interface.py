@@ -2255,7 +2255,7 @@ class SpectraInterface:
         return _np.max(spectra.calc.flux)
 
     def _parallel_calc_flux(self, args):
-        target_k, period, length, slit_x, slit_y = args
+        target_k, period, length, n_harmonic, slit_x, slit_y = args
         slit_acceptance = [slit_x, slit_y]
         return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance)
     
@@ -2330,7 +2330,7 @@ class SpectraInterface:
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
-                    arglist += [(target_k, period, length, slit_acceptance[0], slit_acceptance[1])]
+                    arglist += [(target_k, period, length, ns[i], slit_acceptance[0], slit_acceptance[1])]
         
         
         # Parallel calculations
@@ -2365,7 +2365,19 @@ class SpectraInterface:
             filter_arglist.append(collection_arg)
             filter_result.append(collection_result)
         
-        return filter_result
+        # Selection of the best results for a given period and length
+        best_result = []
+        info_unds = []
+
+        for i, fluxs in enumerate(filter_result):
+            arr = _np.array(fluxs)
+            best_result.append(fluxs[_np.argmax(arr)])
+            info_unds.append(filter_arglist[i][_np.argmax(arr)])
+
+        best_result = _np.array(best_result)
+        info_unds = _np.array(info_unds)
+        
+        return best_result, info_unds
     
     def _calc_brilliance(
         self,
