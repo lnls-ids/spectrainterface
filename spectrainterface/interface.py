@@ -2377,7 +2377,17 @@ class SpectraInterface:
         best_result = _np.array(best_result)
         info_unds = _np.array(info_unds)
         
-        return best_result, info_unds
+        # Flux Matrix Reassembly
+        flux_matrix = best_result
+        flux_matrix = flux_matrix.reshape(
+            len(periods), len(lengths), order="F"
+        )
+        flux_matrix = flux_matrix.transpose()
+
+        self._flux_matrix = flux_matrix
+        self._info_matrix = info_unds
+
+        return flux_matrix, info_unds
     
     def _calc_brilliance(
         self,
