@@ -400,6 +400,8 @@ class Calc(GeneralConfigs, SpectraTools):
         class Method:
             """Sub class to define calculation method."""
 
+            fixedpoint_near_field = "fpnearfield"
+            fixedpoint_far_field = "fpfarfield"
             near_field = "nearfield"
             far_field = "farfield"
             wigner = "wigner"
@@ -877,9 +879,19 @@ class Calc(GeneralConfigs, SpectraTools):
     @target_energy.setter
     def target_energy(self, value):
         if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
-            raise ValueError(
-                "Target energy can only be defined if the variable is a xy mesh."  # noqa: E501
-            )
+            if self.indep_var == self.CalcConfigs.Variable.energy:
+                if self.method == self.CalcConfigs.Method.fixedpoint_near_field:
+                    self._target_energy = value
+                elif self.method == self.CalcConfigs.Method.fixedpoint_far_field:
+                    self._target_energy = value
+                else:            
+                    raise ValueError(
+                        "Target energy can only be defined if the variable is a xy mesh or calculation method is a fixed point."  # noqa: E501
+                    )
+            else:            
+                raise ValueError(
+                    "Target energy can only be defined if the variable is a xy mesh or calculation method is a fixed point."  # noqa: E501
+                )
         else:
             self._target_energy = value
 
@@ -1177,11 +1189,13 @@ class Calc(GeneralConfigs, SpectraTools):
             bool: Returns True of False.
         """
         if self.indep_var == self.CalcConfigs.Variable.energy:
-            if self.energy_range is None:
-                raise ValueError("Energy range must be defined.")
+            if self.target_energy is None:
+                if self.energy_range is None:
+                    raise ValueError("Energy range must be defined.")
 
-            if self.energy_step is None:
-                raise ValueError("Energy step must be defined.")
+            if self.target_energy is None:
+                if self.energy_step is None:
+                    raise ValueError("Energy step must be defined.")
 
             if self.observation_angle is None:
                 raise ValueError("Observation angle must be defined.")
@@ -1258,17 +1272,23 @@ class Calc(GeneralConfigs, SpectraTools):
         variables = self._output_variables
 
         if self.indep_var == self.CalcConfigs.Variable.energy:
-            self._flux = data[0, :]
-            if len(captions["titles"]) == 5:
-                self._pl = data[1, :]
-                self._pc = data[2, :]
-                self._pl45 = data[3, :]
-            elif len(captions["titles"]) == 6:
-                self._brilliance = data[1, :]
-                self._pl = data[2, :]
-                self._pc = data[3, :]
-                self._pl45 = data[4, :]
-            self._energies = self._output_variables[0, :]
+            if self.method == self.CalcConfigs.Method.fixedpoint_near_field or self.method == self.CalcConfigs.Method.fixedpoint_far_field:
+                self._flux = data[0]
+                self._pl = data[1]
+                self._pc = data[2]
+                self._pl45 = data[3]
+            else: 
+                self._flux = data[0, :]
+                if len(captions["titles"]) == 5:
+                    self._pl = data[1, :]
+                    self._pc = data[2, :]
+                    self._pl45 = data[3, :]
+                elif len(captions["titles"]) == 6:
+                    self._brilliance = data[1, :]
+                    self._pl = data[2, :]
+                    self._pc = data[3, :]
+                    self._pl45 = data[4, :]
+                self._energies = self._output_variables[0, :]
 
         elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
             if self.output_type == self.CalcConfigs.Output.power_density:
@@ -1557,6 +1577,7 @@ class SpectraInterface:
         self._fluxes = None
         self._target_energy = None
         self._flux_density_matrix = None
+        self._flux_matrix = None
         self._brilliance_matrix = None
         self._info_matrix = None
         self._flag_brill_processed = False
@@ -1630,12 +1651,21 @@ class SpectraInterface:
 
     @property
     def flux_density_matrix(self):
+        """Flux density matrix.
+
+        Returns:
+            Array: Flux density matrix to analyse.
+        """
+        return self._flux_density_matrix
+
+    @property
+    def flux_matrix(self):
         """Flux matrix.
 
         Returns:
             Array: Flux matrix to analyse.
         """
-        return self._flux_density_matrix
+        return self._flux_matrix
 
     @property
     def brilliance_matrix(self):
