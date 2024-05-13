@@ -2254,6 +2254,10 @@ class SpectraInterface:
         
         return spectra.calc.flux
 
+    def _parallel_calc_flux(self, args):
+        target_k, period, length, slit_acceptance = args
+        return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance)
+    
     def _calc_brilliance(
         self,
         target_harmonic:float,
