@@ -2195,7 +2195,8 @@ class SpectraInterface:
         source_period:float,
         source_length:float,
         target_k:float,
-        slit_acceptance:list
+        slit_acceptance:list,
+        distance_from_the_source:float
     ):
         """Calculate flux for one k value.
 
@@ -2242,7 +2243,7 @@ class SpectraInterface:
         spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.rectangular
 
         spectra.calc.target_energy = self._target_energy
-        spectra.calc.distance_from_source = 23
+        spectra.calc.distance_from_source = distance_from_the_source
         spectra.calc.observation_angle = [0, 0]
         spectra.calc.slit_acceptance = slit_acceptance
         
@@ -2255,9 +2256,9 @@ class SpectraInterface:
         return _np.max(spectra.calc.flux)
 
     def _parallel_calc_flux(self, args):
-        target_k, period, length, n_harmonic, slit_x, slit_y = args
+        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y = args
         slit_acceptance = [slit_x, slit_y]
-        return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance)
+        return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance, distance_from_the_source)
     
     def calc_flux_matrix(
         self,
@@ -2268,7 +2269,8 @@ class SpectraInterface:
         length_range:tuple=(1,3),
         nr_pts_length:int=20,
         n_harmonic_truc:int=15,
-        slit_acceptance:list=[0.230, 0.230]
+        slit_acceptance:list=[0.230, 0.230],
+        distance_from_the_source:float=23
     ):
         """Calc brilliance matrix.
 
@@ -2330,7 +2332,7 @@ class SpectraInterface:
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
-                    arglist += [(target_k, period, length, ns[i], slit_acceptance[0], slit_acceptance[1])]
+                    arglist += [(target_k, period, length, ns[i], distance_from_the_source, slit_acceptance[0], slit_acceptance[1])]
         
         
         # Parallel calculations
