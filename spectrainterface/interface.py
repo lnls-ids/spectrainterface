@@ -2695,6 +2695,11 @@ class SpectraInterface:
         
         return spectra.calc.power
     
+    def _parallel_calc_partial_power(self, args):
+        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y, method = args
+        slit_acceptance = [slit_x, slit_y]
+        return self._calc_partial_power(self._target_energy, period, length, target_k, slit_acceptance, distance_from_the_source, method)
+    
     def plot_brilliance_curve(
         self,
         process_curves=True,
