@@ -2733,8 +2733,19 @@ class SpectraInterface:
         arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[1]]
         # Add method farfield or nearfield
         arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * calcfarfield]
+
+        arglist = list(arglist)
         
-        return arglist
+        # Parallel calculations
+        num_processes = multiprocessing.cpu_count()
+        data = []
+        with multiprocessing.Pool(processes=num_processes-1) as parallel:
+            data = parallel.map(self._parallel_calc_partial_power, arglist)
+
+        arglist = _np.array(arglist)
+        result = _np.array(data)
+        
+        return result
     
     def plot_brilliance_curve(
         self,
