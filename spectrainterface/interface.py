@@ -2402,6 +2402,8 @@ class SpectraInterface:
         )
         flux_matrix = flux_matrix.transpose()
 
+        info_unds = info_unds[:,[0,1,2,3]]
+        
         self._flux_matrix = flux_matrix
         self._info_matrix = info_unds
 
