@@ -2627,7 +2627,6 @@ class SpectraInterface:
     
     def _calc_partial_power(
         self,
-        target_energy:float,
         source_period:float,
         source_length:float,
         target_k:float,
@@ -2649,7 +2648,6 @@ class SpectraInterface:
         Returns:
             _type_: _description_
         """
-        self._target_energy = target_energy
         und: Undulator = self._und
         
         ## Spectra Initialization
@@ -2698,9 +2696,45 @@ class SpectraInterface:
         return spectra.calc.power
     
     def _parallel_calc_partial_power(self, args):
-        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y, method = args
+        target_k, period, length, distance_from_the_source, slit_x, slit_y, method = args
         slit_acceptance = [slit_x, slit_y]
-        return self._calc_partial_power(self._target_energy, period, length, target_k, slit_acceptance, distance_from_the_source, method)
+        return self._calc_partial_power(period, length, target_k, slit_acceptance, distance_from_the_source, method)
+    
+    def calc_partial_power_from_matrix(
+        self,
+        slit_acceptance:list=[0.230, 0.230],
+        distance_from_the_source:float=23,
+        method:str='farfield'
+    ):
+        """Calc partial power from matrix.
+
+        Args:
+            slit_acceptance (list): Slit acceptance [mrad, mrad].
+                Defaults to [0.230, 0.230]
+            distance_from_the_source (float): Distance from the source [m]
+                Defaults to 23
+            method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
+                Defaults to 'farfield'
+                
+        Returns:
+            numpy array: partial power matrix.
+        """
+        gamma = self.accelerator.gamma
+        calcfarfield = 1 if method == 'farfield' else 0
+        
+        # Arglist assembly
+        arglist = self._info_matrix[:,[0,1,2]]
+        
+        # Add distance from the source
+        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * distance_from_the_source]
+        # Add slit x
+        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[0]]
+        # Add slit y
+        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[1]]
+        # Add method farfield or nearfield
+        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * calcfarfield]
+        
+        return arglist
     
     def plot_brilliance_curve(
         self,
