@@ -2745,8 +2745,15 @@ class SpectraInterface:
         arglist = _np.array(arglist)
         result = _np.array(data)
         
-        return result
-    
+        # Partial power Matrix Reassembly
+        pts_period = len(_np.where(arglist[:,2] == arglist[0,2])[0])
+        pts_length = len(_np.where(arglist[:,1] == arglist[0,1])[0])
+        
+        partial_power_matrix = result.reshape(pts_length, pts_period)
+        partial_power_matrix = _np.flip(partial_power_matrix, 0)
+        
+        return partial_power_matrix
+        
     def plot_brilliance_curve(
         self,
         process_curves=True,
