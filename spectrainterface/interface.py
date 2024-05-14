@@ -420,6 +420,7 @@ class Calc(GeneralConfigs, SpectraTools):
             flux = "partialflux"
             brilliance = "brilliance"
             power_density = "powerdensity"
+            power = "partialpower"
 
         class SlitShape:
             """Sub class to define slit shape."""
@@ -471,6 +472,7 @@ class Calc(GeneralConfigs, SpectraTools):
 
         self._flux = None
         self._power_density = None
+        self._power = None
         self._brilliance = None
         self._pl = None
         self._pc = None
@@ -717,7 +719,21 @@ class Calc(GeneralConfigs, SpectraTools):
 
     @property
     def power_density(self):
+        """Power density output.
+
+        Returns:
+            numpy array: power density [kW/mr²].
+        """
         return self._power_density
+
+    @property
+    def power(self):
+        """Partial power output.
+
+        Returns:
+            numpy array: power density [kW].
+        """
+        return self._power
 
     @property
     def brilliance(self):
@@ -857,7 +873,9 @@ class Calc(GeneralConfigs, SpectraTools):
 
     @slit_acceptance.setter
     def slit_acceptance(self, value):
-        if self.output_type != self.CalcConfigs.Output.flux:
+        if self.output_type == self.CalcConfigs.Output.power:
+            self._slit_acceptance = value
+        elif self.output_type != self.CalcConfigs.Output.flux:
             if self.source_type == self.SourceType.bending_magnet:
                 self._slit_acceptance = value
             else:
@@ -869,12 +887,12 @@ class Calc(GeneralConfigs, SpectraTools):
 
     @slit_shape.setter
     def slit_shape(self, value):
-        if self.output_type != self.CalcConfigs.Output.flux:
+        if self.output_type == self.CalcConfigs.Output.flux or self.output_type == self.CalcConfigs.Output.power:
+            self._slit_shape = value
+        else:
             raise ValueError(
                 "Slit shape can only be defined if the output type is flux."  # noqa: E501
             )
-        else:
-            self._slit_shape = value
 
     @target_energy.setter
     def target_energy(self, value):
@@ -1273,10 +1291,13 @@ class Calc(GeneralConfigs, SpectraTools):
 
         if self.indep_var == self.CalcConfigs.Variable.energy:
             if self.method == self.CalcConfigs.Method.fixedpoint_near_field or self.method == self.CalcConfigs.Method.fixedpoint_far_field:
-                self._flux = data[0]
-                self._pl = data[1]
-                self._pc = data[2]
-                self._pl45 = data[3]
+                if self.output_type == self.CalcConfigs.Output.power:
+                    self._power = data[0][0]
+                else:
+                    self._flux = data[0]
+                    self._pl = data[1]
+                    self._pc = data[2]
+                    self._pl45 = data[3]
             else: 
                 self._flux = data[0, :]
                 if len(captions["titles"]) == 5:
