@@ -2802,7 +2802,12 @@ class SpectraInterface:
         
         partial_power_matrix = result.reshape(pts_length, pts_period)
         
-        self._partial_power_matrix = partial_power_matrix
+        if matrix == 'flux':
+            self._partial_power_matrix_flux = partial_power_matrix
+        elif matrix == 'flux_density':
+            self._partial_power_matrix_flux_density = partial_power_matrix
+        elif matrix == 'brilliance':
+            self._partial_power_matrix_brilliance = partial_power_matrix
         
         return partial_power_matrix
         
@@ -3462,12 +3467,9 @@ class SpectraInterface:
         else:
             _plt.show()
     
-    def process_partial_power(
+    def plot_partial_power_matrix(
         self,
         title:str='Partial Power of Undulators',
-        slit_acceptance:list=[0.230,0.230],
-        distance_from_the_source:int=10,
-        method:str='farfield',
         savefig:bool=False,
         figsize:tuple=(5, 4),
         figname:str="partial_power_matrix.png",
@@ -3475,34 +3477,21 @@ class SpectraInterface:
         matrix:str='flux'
         
     ):
-        """Process Partial Power Matrix (period x length).
+        """Plot Partial Power Matrix (period x length).
         
         Args:
             title (str, optional): Plot title.
-            slit_acceptance (list): Slit acceptance [mrad, mrad].
-             Defaults to [0.230, 0.230]
-            distance_from_the_source (float): Distance from the source [m]
-             Defaults to 10
-            method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
-             Defaults to 'farfield'
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
             figsize (tuple, optional): Figure size.
              figsize. Defalts to (5, 4)
             figname (str, optional): Figure name
-             figname. Defalts to 'brilliance_matrix.png'
+             figname. Defalts to 'partial_power_matrix.png'
             dpi (int, optional): Image resolution
              dpi. Defalts to 400.
             matrix (str): matrix to use undulators information 'flux', 'flux_density' or 'brilliance'
              Defaults to 'flux'
         """
-        
-        partial_power_matrix = self.calc_partial_power_from_matrix(
-            slit_acceptance=slit_acceptance,
-            distance_from_the_source=distance_from_the_source,
-            method=method
-        )
-        
         if matrix == 'flux':
             if self._info_matrix_flux is None:
                 raise ValueError(
@@ -3510,6 +3499,7 @@ class SpectraInterface:
             )
             else:
                 info_unds_matrix = self._info_matrix_flux
+                partial_power_matrix = self._partial_power_matrix_flux
         elif matrix == 'flux_density':
             if self._info_matrix_flux_density is None:
                 raise ValueError(
@@ -3517,6 +3507,7 @@ class SpectraInterface:
             )
             else:
                 info_unds_matrix = self._info_matrix_flux_density
+                partial_power_matrix = self._partial_power_matrix_flux_density
         elif matrix == 'brilliance':
             if self._info_matrix_brilliance is None:
                 raise ValueError(
@@ -3524,6 +3515,7 @@ class SpectraInterface:
             )
             else:
                 info_unds_matrix = self._info_matrix_brilliance
+                partial_power_matrix = self._partial_power_matrix_brilliance
         else:
             raise ValueError(
                 "'matrix' parameter has to be defined by 'flux', 'flux_density' or 'brilliance'"
