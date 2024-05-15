@@ -2726,10 +2726,10 @@ class SpectraInterface:
     
     def calc_partial_power_from_matrix(
         self,
+        data:tuple,
         slit_acceptance:list=[0.230, 0.230],
         distance_from_the_source:float=10,
         method:str='farfield',
-        unds_matrix=None
     ):
         """Calc partial power from matrix.
 
@@ -2740,10 +2740,13 @@ class SpectraInterface:
              Defaults to 10
             method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
              Defaults to 'farfield'
-            unds_matrix (numpy array): matrix of undulators information to use in calculation
+            data (tuple): data especified to use in calculation
+             First position 'flux matrix' or 'flux density matrix' or 'brilliance matrix'
+             Second position unds matrix
         Returns:
             numpy array: partial power matrix.
         """
+        unds_matrix = data[1]
         if unds_matrix is None:
             raise ValueError(
                 "'unds_matrix' parameter has to be defined"
