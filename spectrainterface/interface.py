@@ -2727,27 +2727,54 @@ class SpectraInterface:
     def calc_partial_power_from_matrix(
         self,
         slit_acceptance:list=[0.230, 0.230],
-        distance_from_the_source:float=23,
-        method:str='farfield'
+        distance_from_the_source:float=10,
+        method:str='farfield',
+        matrix:str='flux'
     ):
         """Calc partial power from matrix.
 
         Args:
             slit_acceptance (list): Slit acceptance [mrad, mrad].
-                Defaults to [0.230, 0.230]
+             Defaults to [0.230, 0.230]
             distance_from_the_source (float): Distance from the source [m]
-                Defaults to 23
+             Defaults to 10
             method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
-                Defaults to 'farfield'
-                
+             Defaults to 'farfield'
+            matrix (str): matrix to use undulators information 'flux', 'flux_density' or 'brilliance'
+             Defaults to 'flux'
         Returns:
             numpy array: partial power matrix.
         """
-        gamma = self.accelerator.gamma
+        if matrix == 'flux':
+            if self._info_matrix_flux is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_flux
+        elif matrix == 'flux_density':
+            if self._info_matrix_flux_density is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_flux_density
+        elif matrix == 'brilliance':
+            if self._info_matrix_brilliance is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_brilliance
+        else:
+            raise ValueError(
+                "'matrix' parameter has to be defined by 'flux', 'flux_density' or 'brilliance'"
+            )
+        
         calcfarfield = 1 if method == 'farfield' else 0
         
         # Arglist assembly
-        arglist = self._info_matrix[:,[0,1,2]]
+        arglist = info_unds_matrix[:,[0,1,2]]
         
         # Add distance from the source
         arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * distance_from_the_source]
@@ -2774,6 +2801,8 @@ class SpectraInterface:
         pts_length = len(_np.where(arglist[:,1] == arglist[0,1])[0])
         
         partial_power_matrix = result.reshape(pts_length, pts_period)
+        
+        self._partial_power_matrix = partial_power_matrix
         
         return partial_power_matrix
         
@@ -3435,15 +3464,15 @@ class SpectraInterface:
     
     def process_partial_power(
         self,
-        title='Partial Power of Undulators',
-        slit_acceptance=[0.230,0.230],
-        distance_from_the_source=23,
-        method='farfield',
-        info_unds_matrix=None,
-        savefig=False,
-        figsize=(5, 4),
-        figname="partial_power_matrix.png",
-        dpi=400
+        title:str='Partial Power of Undulators',
+        slit_acceptance:list=[0.230,0.230],
+        distance_from_the_source:int=10,
+        method:str='farfield',
+        savefig:bool=False,
+        figsize:tuple=(5, 4),
+        figname:str="partial_power_matrix.png",
+        dpi:int=400,
+        matrix:str='flux'
         
     ):
         """Process Partial Power Matrix (period x length).
@@ -3453,20 +3482,19 @@ class SpectraInterface:
             slit_acceptance (list): Slit acceptance [mrad, mrad].
              Defaults to [0.230, 0.230]
             distance_from_the_source (float): Distance from the source [m]
-             Defaults to 23
+             Defaults to 10
             method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
              Defaults to 'farfield'
-            cscale (str, optional): color bar scale
-             cscale. Defalts to 'linear'.
-            clim (tuple): color bar limits.
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
+            figsize (tuple, optional): Figure size.
+             figsize. Defalts to (5, 4)
             figname (str, optional): Figure name
              figname. Defalts to 'brilliance_matrix.png'
             dpi (int, optional): Image resolution
              dpi. Defalts to 400.
-            figsize (tuple, optional): Figure size.
-             figsize. Defalts to (5, 4)
+            matrix (str): matrix to use undulators information 'flux', 'flux_density' or 'brilliance'
+             Defaults to 'flux'
         """
         
         partial_power_matrix = self.calc_partial_power_from_matrix(
@@ -3475,8 +3503,31 @@ class SpectraInterface:
             method=method
         )
         
-        if type(info_unds_matrix) == type(None):
-            info_unds_matrix = self._info_matrix 
+        if matrix == 'flux':
+            if self._info_matrix_flux is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_flux
+        elif matrix == 'flux_density':
+            if self._info_matrix_flux_density is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_flux_density
+        elif matrix == 'brilliance':
+            if self._info_matrix_brilliance is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_brilliance
+        else:
+            raise ValueError(
+                "'matrix' parameter has to be defined by 'flux', 'flux_density' or 'brilliance'"
+            )
         
         periods = info_unds_matrix[:,1]
         lengths = info_unds_matrix[:,2]
