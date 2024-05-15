@@ -3500,46 +3500,25 @@ class SpectraInterface:
         self,
         target_period:float,
         target_length:float,
-        matrix:str
+        data:tuple
     ):
         """Get information about the target point in matrix.
 
         Args:
             target_period (float): Undulator period [mm]
             target_length (float): Undulator length [m]
-            matrix (str): Matrix especified 'flux' or 'flux_density' or 'brilliance'
+            data (tuple): data especified 
+             First position 'flux matrix' or 'flux density matrix' or 'brilliance matrix'
+             Second position unds matrix
         """
-        if matrix == 'flux':
-            if self._info_matrix_flux is None:
-                raise ValueError(
-                "There are no undulators for this matrix"
-            )
-            else:
-                info_unds_matrix = self._info_matrix_flux
-                result_matrix = self._flux_matrix
-                unity = 'Flux'
-        elif matrix == 'flux_density':
-            if self._info_matrix_flux_density is None:
-                raise ValueError(
-                "There are no undulators for this matrix"
-            )
-            else:
-                info_unds_matrix = self._info_matrix_flux_density
-                result_matrix = self._flux_density_matrix
-                unity = 'Flux Density'
-        elif matrix == 'brilliance':
-            if self._info_matrix_brilliance is None:
-                raise ValueError(
-                "There are no undulators for this matrix"
-            )
-            else:
-                info_unds_matrix = self._info_matrix_brilliance
-                result_matrix = self._brilliance_matrix
-                unity = 'Brilliance'
-        else:
+        
+        if data is None:
             raise ValueError(
-                "'matrix' parameter has to be defined by 'flux', 'flux_density' or 'brilliance'"
+                "'data' parameter has to be defined"
             )
+            
+        result_matrix = data[0]
+        info_unds_matrix = data[1]
         
         pts_period = len(result_matrix[0,:])
         pts_length = len(result_matrix[:,0])
@@ -3576,7 +3555,7 @@ class SpectraInterface:
             '',
             'H Number',
             '',
-            unity
+            'Result'
         ))        
         
         for i, idx in enumerate(idxs):
