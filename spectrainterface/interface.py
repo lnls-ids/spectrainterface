@@ -3561,53 +3561,100 @@ class SpectraInterface:
         else:
             _plt.show()
 
-    def get_undulator_from_matrix(self, target_period, target_length, matrix):
+    def get_undulator_from_matrix(
+        self,
+        target_period:float,
+        target_length:float,
+        matrix:str
+    ):
         """Get information about the target point in matrix.
 
         Args:
             target_period (float): Undulator period [mm]
             target_length (float): Undulator length [m]
             matrix (str): Matrix especified 'flux' or 'flux_density' or 'brilliance'
-
-        Returns:
-            Numpy array: Undulator informations.
-              first element: k number
-              second element: undulator period
-              third element: undulator length
-              fourth element: harmonic number used
-            Numpy array: Matrix result especified of undulator close to the specified.
         """
-        
         if matrix == 'flux':
-            result_matrix = self._flux_matrix
+            if self._info_matrix_flux is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_flux
+                result_matrix = self._flux_matrix
+                unity = 'Flux'
         elif matrix == 'flux_density':
-            result_matrix = self._flux_density_matrix
+            if self._info_matrix_flux_density is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_flux_density
+                result_matrix = self._flux_density_matrix
+                unity = 'Flux Density'
         elif matrix == 'brilliance':
-            result_matrix = self._brilliance_matrix
+            if self._info_matrix_brilliance is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_brilliance
+                result_matrix = self._brilliance_matrix
+                unity = 'Brilliance'
+        else:
+            raise ValueError(
+                "'matrix' parameter has to be defined by 'flux', 'flux_density' or 'brilliance'"
+            )
         
         pts_period = len(result_matrix[0,:])
         pts_length = len(result_matrix[:,0])
         
-        max_period = _np.max(self._info_matrix[:,1])
-        min_period = _np.min(self._info_matrix[:,1])
+        max_period = _np.max(info_unds_matrix[:,1])
+        min_period = _np.min(info_unds_matrix[:,1])
         
-        max_length = _np.max(self._info_matrix[:,2])
-        min_length = _np.min(self._info_matrix[:,2])
+        max_length = _np.max(info_unds_matrix[:,2])
+        min_length = _np.min(info_unds_matrix[:,2])
         
         rtol_length = 0.6*(max_length - min_length)/pts_length
         rtol_period = 0.6*(max_period - min_period)/pts_period
      
         idcs_period = _np.isclose(
-            self._info_matrix[:, 1], target_period, atol=rtol_period
+            info_unds_matrix[:, 1], target_period, atol=rtol_period
         )
         idcs_p = _np.where(idcs_period == True)[0]
 
         idcs_length = _np.isclose(
-            self._info_matrix[idcs_p, 2], target_length, atol=rtol_length
+            info_unds_matrix[idcs_p, 2], target_length, atol=rtol_length
         )
         idcs_l = _np.where(idcs_length == True)[0]
-            
-        return (
-            self._info_matrix[idcs_p[idcs_l]],
-            result_matrix.ravel()[idcs_p[idcs_l]]
-        )
+        
+        idxs = idcs_p[idcs_l]
+        
+        print("{:}{:<2}{:}{:<8}{:}{:<2}{:}{:<2}{:}{:<2}{:}".format(
+            'Und',
+            '',
+            'K',
+            '',
+            'Period',
+            '',
+            'Length',
+            '',
+            'H Number',
+            '',
+            unity
+        ))        
+        
+        for i, idx in enumerate(idxs):
+            print("{:}{:<4}{:.5f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}".format(
+                i,
+                '',
+                info_unds_matrix[idx][0],
+                '',
+                info_unds_matrix[idx][1],
+                '',
+                info_unds_matrix[idx][2],
+                '',
+                int(info_unds_matrix[idx][3]),
+                '',
+                result_matrix.ravel()[idx]
+            ))
