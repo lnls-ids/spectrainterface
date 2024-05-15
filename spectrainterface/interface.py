@@ -1598,9 +1598,11 @@ class SpectraInterface:
         self._fluxes = None
         self._target_energy = None
         self._flux_density_matrix = None
+        self._info_matrix_flux_density = None
         self._flux_matrix = None
+        self._info_matrix_flux = None
         self._brilliance_matrix = None
-        self._info_matrix = None
+        self._info_matrix_brilliance = None
         self._flag_brill_processed = False
         self._flag_flux_processed = False
 
@@ -1698,13 +1700,31 @@ class SpectraInterface:
         return self._brilliance_matrix
 
     @property
-    def info_matrix(self):
+    def info_matrix_flux_density(self):
+        """Information about the respective undulators in the flux density matrix.
+
+        Returns:
+            Array: Undulators information to analyse.
+        """
+        return self._info_matrix_flux_density
+
+    @property
+    def info_matrix_flux(self):
         """Information about the respective undulators in the flux matrix.
 
         Returns:
             Array: Undulators information to analyse.
         """
-        return self._info_matrix
+        return self._info_matrix_flux
+
+    @property
+    def info_matrix_brilliance(self):
+        """Information about the respective undulators in the brilliance matrix.
+
+        Returns:
+            Array: Undulators information to analyse.
+        """
+        return self._info_matrix_brilliance
 
     @sources.setter
     def sources(self, value):
@@ -2205,8 +2225,10 @@ class SpectraInterface:
         )
         flux_density_matrix = flux_density_matrix.transpose()
 
+        info_unds = info_unds[:,[0,1,2,3]]
+
         self._flux_density_matrix = flux_density_matrix
-        self._info_matrix = info_unds
+        self._info_matrix_flux_density = info_unds
 
         return flux_density_matrix, info_unds
 
@@ -2426,7 +2448,7 @@ class SpectraInterface:
         info_unds = info_unds[:,[0,1,2,3]]
         
         self._flux_matrix = flux_matrix
-        self._info_matrix = info_unds
+        self._info_matrix_flux = info_unds
 
         return flux_matrix, info_unds
     
@@ -2620,8 +2642,10 @@ class SpectraInterface:
         )
         brilliance_matrix = brilliance_matrix.transpose()
 
+        info_unds = info_unds[:,[0,1,2,3]]
+        
         self._brilliance_matrix = brilliance_matrix
-        self._info_matrix = info_unds
+        self._info_matrix_brilliance = info_unds
 
         return brilliance_matrix, info_unds
     
@@ -2750,7 +2774,6 @@ class SpectraInterface:
         pts_length = len(_np.where(arglist[:,1] == arglist[0,1])[0])
         
         partial_power_matrix = result.reshape(pts_length, pts_period)
-        partial_power_matrix = _np.flip(partial_power_matrix, 0)
         
         return partial_power_matrix
         
@@ -3077,7 +3100,7 @@ class SpectraInterface:
              figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
-        info = self._info_matrix[_np.argmax(self._flux_density_matrix.ravel())]
+        info = self._info_matrix_flux_density[_np.argmax(self._flux_density_matrix.ravel())]
 
         period_number = info[1]
         length_number = info[2]
@@ -3111,10 +3134,10 @@ class SpectraInterface:
         im = ax.imshow(
             fm,
             extent=[
-                self._info_matrix[0, 1],
-                self._info_matrix[-1, 1],
-                self._info_matrix[0, 2],
-                self._info_matrix[-1, 2],
+                self._info_matrix_flux_density[0, 1],
+                self._info_matrix_flux_density[-1, 1],
+                self._info_matrix_flux_density[0, 2],
+                self._info_matrix_flux_density[-1, 2],
             ],
             aspect="auto",
             origin='lower',
@@ -3162,7 +3185,7 @@ class SpectraInterface:
              figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
-        info = self._info_matrix[_np.argmax(self._flux_matrix.ravel())]
+        info = self._info_matrix_flux[_np.argmax(self._flux_matrix.ravel())]
 
         period_number = info[1]
         length_number = info[2]
@@ -3196,10 +3219,10 @@ class SpectraInterface:
         im = ax.imshow(
             fm,
             extent=[
-                self._info_matrix[0, 1],
-                self._info_matrix[-1, 1],
-                self._info_matrix[0, 2],
-                self._info_matrix[-1, 2],
+                self._info_matrix_flux[0, 1],
+                self._info_matrix_flux[-1, 1],
+                self._info_matrix_flux[0, 2],
+                self._info_matrix_flux[-1, 2],
             ],
             aspect="auto",
             origin='lower',
@@ -3247,7 +3270,7 @@ class SpectraInterface:
              figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
-        info = self._info_matrix[_np.argmax(self._brilliance_matrix.ravel())]
+        info = self._info_matrix_brilliance[_np.argmax(self._brilliance_matrix.ravel())]
 
         period_number = info[1]
         length_number = info[2]
@@ -3281,10 +3304,10 @@ class SpectraInterface:
         im = ax.imshow(
             bm,
             extent=[
-                self._info_matrix[0, 1],
-                self._info_matrix[-1, 1],
-                self._info_matrix[0, 2],
-                self._info_matrix[-1, 2],
+                self._info_matrix_brilliance[0, 1],
+                self._info_matrix_brilliance[-1, 1],
+                self._info_matrix_brilliance[0, 2],
+                self._info_matrix_brilliance[-1, 2],
             ],
             aspect="auto",
             origin='lower',
@@ -3387,7 +3410,91 @@ class SpectraInterface:
             _plt.savefig(figname, dpi=dpi)
         else:
             _plt.show()
+    
+    def process_partial_power(
+        self,
+        title='Partial Power of Undulators',
+        slit_acceptance=[0.230,0.230],
+        distance_from_the_source=23,
+        method='farfield',
+        info_unds_matrix=None,
+        savefig=False,
+        figsize=(5, 4),
+        figname="partial_power_matrix.png",
+        dpi=400
+        
+    ):
+        """Process Partial Power Matrix (period x length).
+        
+        Args:
+            title (str, optional): Plot title.
+            slit_acceptance (list): Slit acceptance [mrad, mrad].
+             Defaults to [0.230, 0.230]
+            distance_from_the_source (float): Distance from the source [m]
+             Defaults to 23
+            method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
+             Defaults to 'farfield'
+            cscale (str, optional): color bar scale
+             cscale. Defalts to 'linear'.
+            clim (tuple): color bar limits.
+            savefig (bool, optional): Save Figure
+             savefig. Defalts to False.
+            figname (str, optional): Figure name
+             figname. Defalts to 'brilliance_matrix.png'
+            dpi (int, optional): Image resolution
+             dpi. Defalts to 400.
+            figsize (tuple, optional): Figure size.
+             figsize. Defalts to (5, 4)
+        """
+        
+        partial_power_matrix = self.calc_partial_power_from_matrix(
+            slit_acceptance=slit_acceptance,
+            distance_from_the_source=distance_from_the_source,
+            method=method
+        )
+        
+        if type(info_unds_matrix) == type(None):
+            info_unds_matrix = self._info_matrix 
+        
+        periods = info_unds_matrix[:,1]
+        lengths = info_unds_matrix[:,2]
+        
+        vmin = _np.min(partial_power_matrix)
+        vmax = _np.max(partial_power_matrix)
+        
+        fig, ax = _plt.subplots(figsize=(figsize))
+        ax.set_title(title)
+        ax.set_ylabel("Length [m]")
+        ax.set_xlabel("Period [mm]")
 
+        im = ax.imshow(
+            partial_power_matrix,
+            extent=[
+                _np.min(periods),
+                _np.max(periods),
+                _np.min(lengths),
+                _np.max(lengths),
+            ],
+            aspect="auto",
+            origin='lower',
+            norm= colors.Normalize(vmin=vmin, vmax=vmax)
+        )
+
+        sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
+        sm.set_array(partial_power_matrix)
+        
+        cbar = fig.colorbar(
+            sm,
+            ax=ax,
+            label='Partial Power [kW]',
+            format = '%.2f'
+        )
+        cbar.set_ticks(_np.linspace(vmin, vmax, 9))
+        fig.tight_layout()
+        if savefig:
+            _plt.savefig(figname, dpi=dpi)
+        else:
+            _plt.show()
 
     def get_undulator_from_matrix(self, target_period, target_length, matrix):
         """Get information about the target point in matrix.
