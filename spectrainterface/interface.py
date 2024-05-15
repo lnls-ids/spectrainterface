@@ -2746,12 +2746,12 @@ class SpectraInterface:
         Returns:
             numpy array: partial power matrix.
         """
-        unds_matrix = data[1]
-        if unds_matrix is None:
+        if data is None:
             raise ValueError(
-                "'unds_matrix' parameter has to be defined"
+                "'data' parameter has to be defined"
             )
             
+        unds_matrix = data[1]
         info_unds_matrix = unds_matrix
         
         calcfarfield = 1 if method == 'farfield' else 0
