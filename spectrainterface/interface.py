@@ -3330,32 +3330,54 @@ class SpectraInterface:
 
     def plot_total_power(
         self,
-        title='Total Power of Undulators',
-        info_unds_matrix=None,
-        savefig=False,
-        figsize=(5, 4),
-        figname="total_power_matrix.png",
-        dpi=400
+        title:str='Total Power of Undulators',
+        savefig:bool=False,
+        figsize:tuple=(5, 4),
+        figname:str="total_power_matrix.png",
+        dpi:int=400,
+        matrix:str='flux'
         
     ):
         """Plot Total Power Matrix (period x length).
         
         Args:
             title (str, optional): Plot title.
-            cscale (str, optional): color bar scale
-             cscale. Defalts to 'linear'.
-            clim (tuple): color bar limits.
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
-            figname (str, optional): Figure name
-             figname. Defalts to 'brilliance_matrix.png'
-            dpi (int, optional): Image resolution
-             dpi. Defalts to 400.
             figsize (tuple, optional): Figure size.
              figsize. Defalts to (5, 4)
+            figname (str, optional): Figure name
+             figname. Defalts to 'total_power_matrix.png'
+            dpi (int, optional): Image resolution
+             dpi. Defalts to 400.
+            matrix (str): matrix to use undulators information 'flux', 'flux_density' or 'brilliance'
+             Defaults to 'flux'
         """
-        if type(info_unds_matrix) == type(None):
-            info_unds_matrix = self._info_matrix 
+        if matrix == 'flux':
+            if self._info_matrix_flux is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_flux
+        elif matrix == 'flux_density':
+            if self._info_matrix_flux_density is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_flux_density
+        elif matrix == 'brilliance':
+            if self._info_matrix_brilliance is None:
+                raise ValueError(
+                "There are no undulators for this matrix"
+            )
+            else:
+                info_unds_matrix = self._info_matrix_brilliance
+        else:
+            raise ValueError(
+                "'matrix' parameter has to be defined by 'flux', 'flux_density' or 'brilliance'"
+            )
             
         current = 100
         ks = info_unds_matrix[:,0]
