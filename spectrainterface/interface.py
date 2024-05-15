@@ -3340,12 +3340,12 @@ class SpectraInterface:
 
     def plot_total_power(
         self,
+        data:tuple,
         title:str='Total Power of Undulators',
         savefig:bool=False,
         figsize:tuple=(5, 4),
         figname:str="total_power_matrix.png",
-        dpi:int=400,
-        unds_matrix=None
+        dpi:int=400
         
     ):
         """Plot Total Power Matrix (period x length).
@@ -3360,14 +3360,17 @@ class SpectraInterface:
              figname. Defalts to 'total_power_matrix.png'
             dpi (int, optional): Image resolution
              dpi. Defalts to 400.
-            unds_matrix (numpy array): matrix of undulators information to use in calculation
+            data (tuple): data especified 
+             First position 'flux matrix' or 'flux density matrix' or 'brilliance matrix'
+             Second position unds matrix
         """
-        if unds_matrix is None:
+        if data is None:
             raise ValueError(
                 "'unds_matrix' parameter has to be defined"
             )
-            
-        info_unds_matrix = unds_matrix
+        
+        
+        info_unds_matrix = data[1]
         
         current = 100
         ks = info_unds_matrix[:,0]
@@ -3510,7 +3513,7 @@ class SpectraInterface:
         Args:
             target_period (float): Undulator period [mm]
             target_length (float): Undulator length [m]
-            data (tuple): data especified 
+            data (tuple): data especified to use in calculation
              First position 'flux matrix' or 'flux density matrix' or 'brilliance matrix'
              Second position unds matrix
         """
