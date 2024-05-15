@@ -3369,7 +3369,7 @@ class SpectraInterface:
         figsize:tuple=(5, 4),
         figname:str="total_power_matrix.png",
         dpi:int=400,
-        matrix:str='flux'
+        unds_matrix=None
         
     ):
         """Plot Total Power Matrix (period x length).
@@ -3384,35 +3384,15 @@ class SpectraInterface:
              figname. Defalts to 'total_power_matrix.png'
             dpi (int, optional): Image resolution
              dpi. Defalts to 400.
-            matrix (str): matrix to use undulators information 'flux', 'flux_density' or 'brilliance'
-             Defaults to 'flux'
+            unds_matrix (str): matrix of undulators information to use in calculation
         """
-        if matrix == 'flux':
-            if self._info_matrix_flux is None:
-                raise ValueError(
-                "There are no undulators for this matrix"
-            )
-            else:
-                info_unds_matrix = self._info_matrix_flux
-        elif matrix == 'flux_density':
-            if self._info_matrix_flux_density is None:
-                raise ValueError(
-                "There are no undulators for this matrix"
-            )
-            else:
-                info_unds_matrix = self._info_matrix_flux_density
-        elif matrix == 'brilliance':
-            if self._info_matrix_brilliance is None:
-                raise ValueError(
-                "There are no undulators for this matrix"
-            )
-            else:
-                info_unds_matrix = self._info_matrix_brilliance
-        else:
+        if unds_matrix is None:
             raise ValueError(
-                "'matrix' parameter has to be defined by 'flux', 'flux_density' or 'brilliance'"
+                "'unds_matrix' parameter has to be defined"
             )
             
+        info_unds_matrix = unds_matrix
+        
         current = 100
         ks = info_unds_matrix[:,0]
         periods = info_unds_matrix[:,1]
