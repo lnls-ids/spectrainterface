@@ -3556,7 +3556,9 @@ class SpectraInterface:
         
         idxs = idcs_p[idcs_l]
         
-        print("{:}{:<2}{:}{:<8}{:}{:<2}{:}{:<2}{:}{:<2}{:}".format(
+        gap = 0
+        
+        print("{:}{:<2}{:}{:<8}{:}{:<2}{:}{:<2}{:}{:<2}{:}{:<4}{:}".format(
             'Und',
             '',
             'K',
@@ -3567,11 +3569,13 @@ class SpectraInterface:
             '',
             'H Number',
             '',
-            'Result'
+            'Result',
+            '',
+            'Gap'
         ))        
         
         for i, idx in enumerate(idxs):
-            print("{:}{:<4}{:.5f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}".format(
+            print("{:}{:<4}{:.5f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}{:<2}{:}".format(
                 i,
                 '',
                 info_unds_matrix[idx][0],
@@ -3582,5 +3586,7 @@ class SpectraInterface:
                 '',
                 int(info_unds_matrix[idx][3]),
                 '',
-                result_matrix.ravel()[idx]
+                result_matrix.ravel()[idx],
+                '',
+                gap
             ))
