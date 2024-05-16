@@ -2167,6 +2167,9 @@ class SpectraInterface:
                     ns, self._und.period, self._target_energy
                 )
 
+                if target_ks[0] > k_max:
+                    target_ks[0] = 0
+                    
                 idx = _np.isnan(target_ks)
                 idx = _np.where(idx == True)
 
@@ -2362,16 +2365,15 @@ class SpectraInterface:
                 self._und.period = period
                 self._und.source_length = length
 
-                k_max = und.calc_max_k(self.accelerator)
-
+                k_max = self._und.calc_max_k(self.accelerator)
+                
                 n = 1
+                en = self._und.get_harmonic_energy(n, gamma, 0, self._und.period, k_max)
                 while (
-                    self._und.get_harmonic_energy(
-                        n, gamma, 0, self._und.period, k_max
-                    )
-                    < self._target_energy
+                    en < self._target_energy
                 ):
                     n += 2
+                    en = self._und.get_harmonic_energy(n, gamma, 0, self._und.period, k_max)
                 if n > 2:
                     n -= 2
 
@@ -2379,13 +2381,14 @@ class SpectraInterface:
 
                 if n > n_truc:
                     n = n_truc
-
+                
                 ns = _np.linspace(1, n, int(n/2 + 1))
-
+             
                 target_ks = self.calc_k_target(
                     ns, self._und.period, self._target_energy
                 )
-
+                if target_ks[0] > k_max:
+                    target_ks[0] = 0
                 idx = _np.isnan(target_ks)
                 idx = _np.where(idx == True)
 
@@ -2583,7 +2586,10 @@ class SpectraInterface:
                 target_ks = self.calc_k_target(
                     ns, self._und.period, self._target_energy
                 )
-
+                
+                if target_ks[0] > k_max:
+                    target_ks[0] = 0
+                    
                 idx = _np.isnan(target_ks)
                 idx = _np.where(idx == True)
 
