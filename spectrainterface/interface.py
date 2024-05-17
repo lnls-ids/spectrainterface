@@ -625,7 +625,6 @@ class Calc(GeneralConfigs, SpectraTools):
         """
         return self._target_harmonic
 
-    
     @property
     def k_range(self):
         """K range.
@@ -984,7 +983,6 @@ class Calc(GeneralConfigs, SpectraTools):
                 "Harmonic number can only be defined if the variable is energy."
             )
 
-    
     @k_range.setter
     def k_range(self, value):
         if self.indep_var != self.CalcConfigs.Variable.k:
@@ -1217,6 +1215,11 @@ class Calc(GeneralConfigs, SpectraTools):
             input_temp["Configurations"]["Target Energy (eV)"] = (
                 self.target_energy
             )
+        
+        if self.target_harmonic is not None:
+            input_temp["Configurations"]["Target Harmonic"] = (
+                self.target_harmonic
+            )
 
         if self.x_range is not None:
             input_temp["Configurations"][
@@ -1356,7 +1359,7 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._pc = data[2]
                     self._pl45 = data[3]
             elif self.method == self.CalcConfigs.Method.fixedpoint_wigner:
-                self._brilliance = data[0][0]
+                self._brilliance = data[0]
             else: 
                 self._flux = data[0, :]
                 if len(captions["titles"]) == 5:
@@ -2536,7 +2539,8 @@ class SpectraInterface:
         target_harmonic:float,
         source_period:float,
         source_length:float,
-        target_k:float
+        target_k:float,
+        flag_fix_point_method:int
     ):
         """Calculate brilliance for one k value.
 
@@ -2545,7 +2549,7 @@ class SpectraInterface:
             source_period (float): undulator period [mm].
             source_length (float): undulator length [m].
             target_k (float): K value.
-
+            flag_fix_point_method (int)
         Returns:
             _type_: _description_
         """
@@ -2564,9 +2568,13 @@ class SpectraInterface:
         spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
         
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.brilliance
-        spectra.calc.method = spectra.calc.CalcConfigs.Method.wigner
-        spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.k
-        
+        if flag_fix_point_method == 1:
+            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_wigner
+            spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
+        else:
+            spectra.calc.method = spectra.calc.CalcConfigs.Method.wigner
+            spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.k
+            
         if und.polarization == "hp":
             spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
             spectra.calc.ky = target_k
@@ -2578,9 +2586,12 @@ class SpectraInterface:
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
         
-        spectra.calc.harmonic_range = [target_harmonic, target_harmonic]
-        spectra.calc.k_range = [0, target_k]
-        spectra.calc.k_nr_pts = 2
+        if flag_fix_point_method == 1:
+            spectra.calc.target_harmonic = int(target_harmonic)
+        else:
+            spectra.calc.harmonic_range = [target_harmonic, target_harmonic]
+            spectra.calc.k_range = [0, target_k]
+            spectra.calc.k_nr_pts = 2
         
         spectra.calc.slice_x = 0
         spectra.calc.slice_px = 0
@@ -2597,8 +2608,8 @@ class SpectraInterface:
         return _np.max(spectra.calc.brilliance)
     
     def _parallel_calc_brilliance(self, args):
-        target_k, period, length, n_harmonic, gap = args
-        return self._calc_brilliance(n_harmonic, period, length, target_k)
+        target_k, period, length, n_harmonic, flag_fix_point_method, gap = args
+        return self._calc_brilliance(n_harmonic, period, length, target_k, flag_fix_point_method)
     
     def calc_brilliance_matrix(
         self,
@@ -2609,6 +2620,7 @@ class SpectraInterface:
         length_range:tuple=(1,3),
         nr_pts_length:int=20,
         n_harmonic_truc:int=15,
+        fixed_point_method:bool=False
     ):
         """Calc brilliance matrix.
 
@@ -2621,6 +2633,8 @@ class SpectraInterface:
                 Defaults to 20.
             n_harmonic_truc (int, optional): Harmonic number to truncate
                 the calculation. Defaults to 15.
+            fixed_point_method (bool): Fixed Point Calculation method with wigner function.
+                Defaults to False
 
         Returns:
             numpy array: Brilliance matrix.
@@ -2632,6 +2646,8 @@ class SpectraInterface:
         periods = _np.linspace(period_range[0], period_range[1], nr_pts_period)
         lengths = _np.linspace(length_range[0], length_range[1], nr_pts_length)
 
+        flag_fix_point_method = 1 if fixed_point_method else 0
+        
         # Arglist assembly
         arglist = []
         for length in lengths:
@@ -2679,7 +2695,7 @@ class SpectraInterface:
                         b=self._und.halbach_coef[self._und.polarization]['b'],
                         c=self._und.halbach_coef[self._und.polarization]['c']
                     )
-                    arglist += [(target_k, period, length, ns[i], gap)]
+                    arglist += [(target_k, period, length, ns[i], flag_fix_point_method, gap)]
         
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
