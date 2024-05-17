@@ -404,6 +404,7 @@ class Calc(GeneralConfigs, SpectraTools):
             fixedpoint_far_field = "fpfarfield"
             near_field = "nearfield"
             far_field = "farfield"
+            fixedpoint_wigner = "fpwigner"
             wigner = "wigner"
 
         class Variable:
@@ -440,6 +441,7 @@ class Calc(GeneralConfigs, SpectraTools):
         self._input_template = None
 
         # Energy related
+        self._target_harmonic = None
         self._energy_range = None
         self._energy_step = None
         self._slit_position = None
@@ -614,6 +616,16 @@ class Calc(GeneralConfigs, SpectraTools):
         """
         return self._harmonic_range
 
+    @property
+    def target_harmonic(self):
+        """Harmonic number.
+
+        Returns:
+            int: number of harmonic to calculate brilliance.
+        """
+        return self._target_harmonic
+
+    
     @property
     def k_range(self):
         """K range.
@@ -958,6 +970,21 @@ class Calc(GeneralConfigs, SpectraTools):
         else:
             self._harmonic_range = value
 
+    @target_harmonic.setter
+    def target_harmonic(self, value):
+        if self.indep_var == self.CalcConfigs.Variable.energy:
+            if self.method == self.CalcConfigs.Method.fixedpoint_wigner:
+                self._target_harmonic = value
+            else:
+                raise ValueError(
+                    "Harmonic number can only be defined if the method is fixed point wigner."
+                )
+        else:
+            raise ValueError(
+                "Harmonic number can only be defined if the variable is energy."
+            )
+
+    
     @k_range.setter
     def k_range(self, value):
         if self.indep_var != self.CalcConfigs.Variable.k:
@@ -978,39 +1005,67 @@ class Calc(GeneralConfigs, SpectraTools):
 
     @slice_x.setter
     def slice_x(self, value):
-        if self.indep_var != self.CalcConfigs.Variable.k:
-            raise ValueError(
-                "Slice x can only be defined if the variable is k."
-            )
-        else:
+        if self.indep_var == self.CalcConfigs.Variable.k:
             self._slice_x = value
+        elif self.indep_var == self.CalcConfigs.Variable.energy:
+            if self.method == self.CalcConfigs.Method.fixedpoint_wigner:
+                self._slice_x = value
+            else:
+                raise ValueError(
+                    "Slice x can only be defined if the method is fixed point wigner."
+                )
+        else:
+            raise ValueError(
+                "Slice x can only be defined if the variable is k  or energy."
+            )
 
     @slice_y.setter
     def slice_y(self, value):
-        if self.indep_var != self.CalcConfigs.Variable.k:
-            raise ValueError(
-                "Slice y can only be defined if the variable is k."
-            )
-        else:
+        if self.indep_var == self.CalcConfigs.Variable.k:
             self._slice_y = value
+        elif self.indep_var == self.CalcConfigs.Variable.energy:
+            if self.method == self.CalcConfigs.Method.fixedpoint_wigner:
+                self._slice_y = value
+            else:
+                raise ValueError(
+                    "Slice y can only be defined if the method is fixed point wigner."
+                )
+        else:
+            raise ValueError(
+                "Slice y can only be defined if the variable is k  or energy."
+            )
 
     @slice_px.setter
     def slice_px(self, value):
-        if self.indep_var != self.CalcConfigs.Variable.k:
-            raise ValueError(
-                "Slice x' can only be defined if the variable is k."
-            )
-        else:
+        if self.indep_var == self.CalcConfigs.Variable.k:
             self._slice_px = value
+        elif self.indep_var == self.CalcConfigs.Variable.energy:
+            if self.method == self.CalcConfigs.Method.fixedpoint_wigner:
+                self._slice_px = value
+            else:
+                raise ValueError(
+                    "Slice x' can only be defined if the method is fixed point wigner."
+                )
+        else:
+            raise ValueError(
+                "Slice x' can only be defined if the variable is k  or energy."
+            )
 
     @slice_py.setter
     def slice_py(self, value):
-        if self.indep_var != self.CalcConfigs.Variable.k:
-            raise ValueError(
-                "Slice y' can only be defined if the variable is k."
-            )
-        else:
+        if self.indep_var == self.CalcConfigs.Variable.k:
             self._slice_py = value
+        elif self.indep_var == self.CalcConfigs.Variable.energy:
+            if self.method == self.CalcConfigs.Method.fixedpoint_wigner:
+                self._slice_py = value
+            else:
+                raise ValueError(
+                    "Slice y' can only be defined if the method is fixed point wigner."
+                )
+        else:
+            raise ValueError(
+                "Slice y' can only be defined if the variable is k or energy."
+            )
 
     @add_phase_errors.setter
     def add_phase_errors(self, value):
@@ -1209,11 +1264,13 @@ class Calc(GeneralConfigs, SpectraTools):
         if self.indep_var == self.CalcConfigs.Variable.energy:
             if self.target_energy is None:
                 if self.energy_range is None:
-                    raise ValueError("Energy range must be defined.")
+                    if self.target_harmonic is None:
+                        raise ValueError("Energy range must be defined.")
 
             if self.target_energy is None:
                 if self.energy_step is None:
-                    raise ValueError("Energy step must be defined.")
+                    if self.target_harmonic is None:
+                        raise ValueError("Energy step must be defined.")
 
             if self.observation_angle is None:
                 raise ValueError("Observation angle must be defined.")
@@ -1298,6 +1355,8 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._pl = data[1]
                     self._pc = data[2]
                     self._pl45 = data[3]
+            elif self.method == self.CalcConfigs.Method.fixedpoint_wigner:
+                self._brilliance = data[0][0]
             else: 
                 self._flux = data[0, :]
                 if len(captions["titles"]) == 5:
