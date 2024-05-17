@@ -76,7 +76,6 @@ class SourceFunctions:
             gap = (period/b)* _np.log(beff/(a*br))
         
         return gap
-
     
     @staticmethod
     def _generate_field(a, peak, period, nr_periods, pts_period):

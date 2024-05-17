@@ -2101,7 +2101,7 @@ class SpectraInterface:
         return [_np.max(spectra.calc.flux), target_k]
 
     def _parallel_calc_flux_density(self, args):
-        target_k, period, length, _ = args
+        target_k, period, length, n_hamonic, gap = args
         return self._calc_flux_density(self._target_energy, period, length, target_k)
 
     def calc_flux_density_matrix(
@@ -2175,7 +2175,15 @@ class SpectraInterface:
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
-                    arglist += [(target_k, period, length, ns[i])]
+                    gap = self._und.undulator_k_to_gap(
+                        k=target_k,
+                        period=self._und.period,
+                        br=self._und.br,
+                        a=self._und.halbach_coef[self._und.polarization]['a'],
+                        b=self._und.halbach_coef[self._und.polarization]['b'],
+                        c=self._und.halbach_coef[self._und.polarization]['c']
+                    )
+                    arglist += [(target_k, period, length, ns[i], gap)]
 
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
@@ -2228,7 +2236,7 @@ class SpectraInterface:
         )
         flux_density_matrix = flux_density_matrix.transpose()
 
-        info_unds = info_unds[:,[0,1,2,3]]
+        info_unds = info_unds[:,[0,1,2,3,-1]]
 
         self._flux_density_matrix = flux_density_matrix
         self._info_matrix_flux_density = info_unds
@@ -2308,7 +2316,7 @@ class SpectraInterface:
         return _np.max(spectra.calc.flux)
 
     def _parallel_calc_flux(self, args):
-        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y, method = args
+        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y, method, gap = args
         slit_acceptance = [slit_x, slit_y]
         return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance, distance_from_the_source, method)
     
@@ -2394,7 +2402,16 @@ class SpectraInterface:
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
-                    arglist += [(target_k, period, length, ns[i], distance_from_the_source, slit_acceptance[0], slit_acceptance[1], calcfarfield)]
+                    
+                    gap = self._und.undulator_k_to_gap(
+                        k=target_k,
+                        period=self._und.period,
+                        br=self._und.br,
+                        a=self._und.halbach_coef[self._und.polarization]['a'],
+                        b=self._und.halbach_coef[self._und.polarization]['b'],
+                        c=self._und.halbach_coef[self._und.polarization]['c']
+                    )
+                    arglist += [(target_k, period, length, ns[i], distance_from_the_source, slit_acceptance[0], slit_acceptance[1], calcfarfield, gap)]
         
         
         # Parallel calculations
@@ -2448,7 +2465,7 @@ class SpectraInterface:
         )
         flux_matrix = flux_matrix.transpose()
 
-        info_unds = info_unds[:,[0,1,2,3]]
+        info_unds = info_unds[:,[0,1,2,3,-1]]
         
         self._flux_matrix = flux_matrix
         self._info_matrix_flux = info_unds
@@ -2521,7 +2538,7 @@ class SpectraInterface:
         return _np.max(spectra.calc.brilliance)
     
     def _parallel_calc_brilliance(self, args):
-        target_k, period, length, n_harmonic = args
+        target_k, period, length, n_harmonic, gap = args
         return self._calc_brilliance(n_harmonic, period, length, target_k)
     
     def calc_brilliance_matrix(
@@ -2595,7 +2612,15 @@ class SpectraInterface:
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
-                    arglist += [(target_k, period, length, ns[i])]
+                    gap = self._und.undulator_k_to_gap(
+                        k=target_k,
+                        period=self._und.period,
+                        br=self._und.br,
+                        a=self._und.halbach_coef[self._und.polarization]['a'],
+                        b=self._und.halbach_coef[self._und.polarization]['b'],
+                        c=self._und.halbach_coef[self._und.polarization]['c']
+                    )
+                    arglist += [(target_k, period, length, ns[i], gap)]
         
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
@@ -2648,7 +2673,7 @@ class SpectraInterface:
         )
         brilliance_matrix = brilliance_matrix.transpose()
 
-        info_unds = info_unds[:,[0,1,2,3]]
+        info_unds = info_unds[:,[0,1,2,3,-1]]
         
         self._brilliance_matrix = brilliance_matrix
         self._info_matrix_brilliance = info_unds
@@ -3558,10 +3583,12 @@ class SpectraInterface:
         
         gap = 0
         
-        print("{:}{:<2}{:}{:<8}{:}{:<2}{:}{:<2}{:}{:<2}{:}{:<4}{:}".format(
+        print("{:}{:<2}{:}{:<8}{:}{:<3}{:}{:<2}{:}{:<2}{:}{:<2}{:}".format(
             'Und',
             '',
             'K',
+            '',
+            'Gap',
             '',
             'Period',
             '',
@@ -3570,15 +3597,15 @@ class SpectraInterface:
             'H Number',
             '',
             'Result',
-            '',
-            'Gap'
         ))        
         
         for i, idx in enumerate(idxs):
-            print("{:}{:<4}{:.5f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}{:<2}{:}".format(
+            print("{:}{:<4}{:.5f}{:<2}{:.2f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}".format(
                 i,
                 '',
                 info_unds_matrix[idx][0],
+                '',
+                info_unds_matrix[idx][-1],
                 '',
                 info_unds_matrix[idx][1],
                 '',
@@ -3587,6 +3614,4 @@ class SpectraInterface:
                 int(info_unds_matrix[idx][3]),
                 '',
                 result_matrix.ravel()[idx],
-                '',
-                gap
             ))
