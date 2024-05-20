@@ -1651,6 +1651,117 @@ class SpectraInterface:
     def target_energy(self, value):
         self._target_energy = value
 
+    def _parallel_calc_brilliance_curve(
+        self,
+        args
+    ):
+        source, beta_section, emax, harmonic_range, nr_pts_k, x_accep, kmin = args
+        
+        ## Spectra Initialization
+        spectra = SpectraInterface()
+        spectra.accelerator.set_bsc_with_ivu18()
+        if self.accelerator.beta_section == 'low':
+            spectra.accelerator.set_low_beta_section()
+        else:
+            spectra.accelerator.set_high_beta_section()
+        
+        ## Spectra Configuration
+        spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
+        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
+        
+        if source.source_type != "bendingmagnet":
+            if source.gap == 0:
+                kmax = source.calc_max_k(spectra.accelerator)
+            else:
+                kmax = source.get_k()
+
+            if source.source_type == "wiggler":
+                b_max = source.undulator_k_to_b(kmax, source.period)
+                spectra.calc.source_type = spectra.calc.SourceType.wiggler
+                spectra.calc.method = spectra.calc.CalcConfigs.Method.far_field
+                spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
+                spectra.calc.output_type = (
+                    spectra.calc.CalcConfigs.Output.flux_density
+                )
+                spectra.calc.period = source.period
+                spectra.calc.by_peak = b_max
+                spectra.calc.ky = kmax
+                spectra.calc.observation_angle = [0, 0]
+                spectra.calc.energy_range = [1, emax]
+                spectra.calc.energy_step = 50
+            else:
+                spectra.calc.output_type = (
+                    spectra.calc.CalcConfigs.Output.brilliance
+                )
+                spectra.calc.add_phase_errors = source.add_phase_errors
+                spectra.calc._use_recovery_params = source.use_recovery_params
+                spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.k
+                spectra.calc.method = spectra.calc.CalcConfigs.Method.wigner
+                spectra.calc.slice_x = 0
+                spectra.calc.slice_px = 0
+                spectra.calc.slice_y = 0
+                spectra.calc.slice_py = 0
+                spectra.calc.harmonic_range = harmonic_range
+                spectra.calc.k_nr_pts = nr_pts_k
+
+                polarization = source.polarization
+                if polarization == "hp":
+                    spectra.calc.source_type = (
+                        spectra.calc.SourceType.horizontal_undulator
+                    )
+                    spectra.calc.by_peak = 1
+                elif polarization == "vp":
+                    spectra.calc.source_type = (
+                        spectra.calc.SourceType.vertical_undulator
+                    )
+                    spectra.calc.bx_peak = 1
+                elif polarization == "cp":
+                    spectra.calc.source_type = (
+                        spectra.calc.SourceType.elliptic_undulator
+                    )
+                    spectra.calc.bx_peak = 1
+                    spectra.calc.by_peak = source.fields_ratio
+                else:
+                    return
+
+                spectra.calc.k_range = [kmin, kmax]
+                spectra.calc.period = source.period
+
+        else:
+            b = source.b_peak
+            spectra.calc.source_type = spectra.calc.SourceType.bending_magnet
+            spectra.calc.method = spectra.calc.CalcConfigs.Method.far_field
+            spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
+            spectra.calc.slit_acceptance = x_accep
+            spectra.calc.output_type = (
+                spectra.calc.CalcConfigs.Output.flux_density
+            )
+            spectra.calc.by_peak = b
+            spectra.calc.observation_angle = [0, 0]
+            spectra.calc.energy_range = [1, emax]
+            spectra.calc.energy_step = 50
+
+        spectra.calc.length = source.source_length
+
+        if beta_section is not None:
+            if beta_section == "high":
+                spectra.accelerator.set_high_beta_section()
+            elif beta_section == "low":
+                spectra.accelerator.set_low_beta_section()
+            elif beta_section == "b2":
+                spectra.accelerator.set_b2_section()
+            elif beta_section == "bc":
+                spectra.accelerator.set_bc_section()
+            elif beta_section == "b1":
+                spectra.accelerator.set_b1_section()
+            else:
+                raise ValueError("Invalid beta section.")
+
+        spectra.calc.set_config()
+        spectra.calc.run_calculation()
+        
+        return spectra.calc.energies, spectra.calc.brilliance
+
     def calc_brilliance_curve(
         self,
         harmonic_range=[1, 5],
@@ -1679,107 +1790,31 @@ class SpectraInterface:
         energies = list()
         brilliances = list()
         flag_bend = False
+        
+        arglist = []
         for i, source in enumerate(source_list):
-            print(
-                "Calculating curve for source {:.0f}/{:.0f}".format(
-                    i + 1, len(source_list)
-                )
-            )
-            if source.source_type != "bendingmagnet":
-                if source.gap == 0:
-                    kmax = source.calc_max_k(self.accelerator)
-                else:
-                    kmax = source.get_k()
-
-                if source.source_type == "wiggler":
-                    flag_bend = True
-                    b_max = source.undulator_k_to_b(kmax, source.period)
-                    self.calc.source_type = self.calc.SourceType.wiggler
-                    self.calc.method = self.calc.CalcConfigs.Method.far_field
-                    self.calc.indep_var = self.calc.CalcConfigs.Variable.energy
-                    self.calc.output_type = (
-                        self.calc.CalcConfigs.Output.flux_density
-                    )
-                    self.calc.period = source.period
-                    self.calc.by_peak = b_max
-                    self.calc.ky = kmax
-                    self.calc.observation_angle = [0, 0]
-                    self.calc.energy_range = [1, emax]
-                    self.calc.energy_step = 50
-                else:
-                    self.calc.output_type = (
-                        self.calc.CalcConfigs.Output.brilliance
-                    )
-                    self.calc.add_phase_errors = source.add_phase_errors
-                    self.calc._use_recovery_params = source.use_recovery_params
-                    self.calc.indep_var = self.calc.CalcConfigs.Variable.k
-                    self.calc.method = self.calc.CalcConfigs.Method.wigner
-                    self.calc.slice_x = 0
-                    self.calc.slice_px = 0
-                    self.calc.slice_y = 0
-                    self.calc.slice_py = 0
-                    self.calc.harmonic_range = harmonic_range
-                    self.calc.k_nr_pts = nr_pts_k
-
-                    polarization = source.polarization
-                    if polarization == "hp":
-                        self.calc.source_type = (
-                            self.calc.SourceType.horizontal_undulator
-                        )
-                        self.calc.by_peak = 1
-                    elif polarization == "vp":
-                        self.calc.source_type = (
-                            self.calc.SourceType.vertical_undulator
-                        )
-                        self.calc.bx_peak = 1
-                    elif polarization == "cp":
-                        self.calc.source_type = (
-                            self.calc.SourceType.elliptic_undulator
-                        )
-                        self.calc.bx_peak = 1
-                        self.calc.by_peak = source.fields_ratio
-                    else:
-                        return
-
-                    self.calc.k_range = [kmin, kmax]
-                    self.calc.period = source.period
-
-            else:
+            if source.source_type == "wiggler" or source.source_type == "bendingmagnet":
                 flag_bend = True
-                b = source.b_peak
-                self.calc.source_type = self.calc.SourceType.bending_magnet
-                self.calc.method = self.calc.CalcConfigs.Method.far_field
-                self.calc.indep_var = self.calc.CalcConfigs.Variable.energy
-                self.calc.slit_acceptance = x_accep
-                self.calc.output_type = (
-                    self.calc.CalcConfigs.Output.flux_density
-                )
-                self.calc.by_peak = b
-                self.calc.observation_angle = [0, 0]
-                self.calc.energy_range = [1, emax]
-                self.calc.energy_step = 50
-
-            self.calc.length = source.source_length
-
-            if beta_sections is not None:
-                if beta_sections[i] == "high":
-                    self.accelerator.set_high_beta_section()
-                elif beta_sections[i] == "low":
-                    self.accelerator.set_low_beta_section()
-                elif beta_sections[i] == "b2":
-                    self.accelerator.set_b2_section()
-                elif beta_sections[i] == "bc":
-                    self.accelerator.set_bc_section()
-                elif beta_sections[i] == "b1":
-                    self.accelerator.set_b1_section()
-                else:
-                    raise ValueError("Invalid beta section.")
-
-            self.calc.set_config()
-            self.calc.run_calculation()
-
-            energies.append(self.calc.energies)
-            brilliances.append(self.calc.brilliance)
+            arglist += [(
+                source,
+                beta_sections[i],
+                emax,
+                harmonic_range,
+                nr_pts_k,
+                x_accep,
+                kmin
+            )]
+           
+        # Parallel calculations
+        num_processes = multiprocessing.cpu_count()
+        data = []
+        with multiprocessing.Pool(processes=num_processes-1) as parallel:
+            data = parallel.map(self._parallel_calc_brilliance_curve, arglist)
+        
+        # Assembly data
+        for i, result in enumerate(data):
+            energies.append(result[0])
+            brilliances.append(result[1])
 
         if flag_bend:
             energies = _np.array(energies, dtype=object)
@@ -1787,6 +1822,7 @@ class SpectraInterface:
         else:
             energies = _np.array(energies)
             brilliances = _np.array(brilliances)
+            
         self._energies = energies
         self._brilliances = brilliances
 
