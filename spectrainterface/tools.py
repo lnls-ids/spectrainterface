@@ -51,6 +51,34 @@ class SourceFunctions:
         return 2 * PI * EMASS * LSPEED * k / (ECHARGE * 1e-3 * period)
 
     @staticmethod
+    def undulator_k_to_gap(k, period, br, a, b, c):
+        """Calculate undulator gap for a k value (Halbach equation).
+
+        Args:
+            k (float): K value deflection parameter.
+            period (float): ID's period [mm].
+            br (float): Remanent field in [T].
+            a (float): Halbach coefficient 'a'.
+            b (float): Halbach coefficient 'b'.
+            c (float): Halbach coefficient 'c'.
+
+        Returns:
+            float: gap [mm]
+        """
+        beff = 2 * PI * EMASS * LSPEED * k / (ECHARGE * 1e-3 * period)
+        delta = b**2 + 4*c*_np.log(beff/ (a*br))
+        
+        if c != 0:
+            gap = period * (-b + _np.sqrt(delta)) / (2*c)
+            if gap < 0:
+                gap = period * (-b - _np.sqrt(delta)) / (2*c)
+        else:
+            gap = (period/b)* _np.log(beff/(a*br))
+        
+        return gap
+
+    
+    @staticmethod
     def _generate_field(a, peak, period, nr_periods, pts_period):
         x_1period = _np.linspace(-period / 2, period / 2, pts_period)
         y = peak * _np.sin(2 * PI / period * x_1period)
