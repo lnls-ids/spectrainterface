@@ -1660,10 +1660,6 @@ class SpectraInterface:
         ## Spectra Initialization
         spectra = SpectraInterface()
         spectra.accelerator.set_bsc_with_ivu18()
-        if self.accelerator.beta_section == 'low':
-            spectra.accelerator.set_low_beta_section()
-        else:
-            spectra.accelerator.set_high_beta_section()
         
         ## Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
