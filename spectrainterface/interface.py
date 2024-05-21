@@ -2395,6 +2395,7 @@ class SpectraInterface:
         ## Spectra calculation
         spectra.calc.period = source_period
         spectra.calc.length = source_length
+        print('ruuuun')
         spectra.calc.set_config()
         spectra.calc.run_calculation()
         if und.add_phase_errors:
