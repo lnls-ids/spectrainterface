@@ -1796,6 +1796,28 @@ class SpectraInterface:
     def target_energy(self, value):
         self._target_energy = value
 
+    def apply_phase_error_matrix(self, values, harm, rec_param=True):
+        """Add phase errors.
+
+        Args:
+            values (numpy 2d array): It can be brilliance of flux
+            rec_param (bool, optional): Use recovery params. Defaults to True.
+
+        Returns:
+            numpy 2d array: brilliance of flux with phase errors
+        """
+        fname = REPOS_PATH + "/files/phase_errors_fit.txt"
+        data = _np.genfromtxt(fname, unpack=True, skip_header=1)
+        h = data[:, 0]
+        ph_err1 = data[:, 1]
+        ph_err2 = data[:, 2]
+        idx = _np.argmin(_np.abs(harm-h))
+        if rec_param:
+            ph = ph_err2[idx]
+        else:
+            ph = ph_err1[idx]
+        return values * ph
+    
     def calc_brilliance_curve(
         self,
         harmonic_range=[1, 5],
@@ -2313,7 +2335,8 @@ class SpectraInterface:
         target_k:float,
         slit_acceptance:list,
         distance_from_the_source:float,
-        calcfarfield:int
+        calcfarfield:int,
+        n_harmonic
     ):
         """Calculate flux for one k value.
 
@@ -2372,15 +2395,22 @@ class SpectraInterface:
         ## Spectra calculation
         spectra.calc.period = source_period
         spectra.calc.length = source_length
+        print('ruuuun')
         spectra.calc.set_config()
         spectra.calc.run_calculation()
-        
-        return _np.max(spectra.calc.flux)
+        if und.add_phase_errors:
+            print('PHASE ERROR ON!')
+            rec_param = und.use_recovery_params
+            flux = spectra.apply_phase_error_matrix(_np.max(spectra.calc.flux), n_harmonic, rec_param=rec_param)
+        else:
+            print('not using phase error')
+            flux = _np.max(spectra.calc.flux)
+        return flux
 
     def _parallel_calc_flux(self, args):
         target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y, method, gap = args
         slit_acceptance = [slit_x, slit_y]
-        return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance, distance_from_the_source, method)
+        return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance, distance_from_the_source, method, n_harmonic)
     
     def calc_flux_matrix(
         self,
@@ -2540,7 +2570,7 @@ class SpectraInterface:
         source_period:float,
         source_length:float,
         target_k:float,
-        flag_fix_point_method:int
+        flag_fix_point_method:int,
     ):
         """Calculate brilliance for one k value.
 
@@ -2604,8 +2634,13 @@ class SpectraInterface:
         
         spectra.calc.set_config()
         spectra.calc.run_calculation()
+        if und.add_phase_errors:
+            rec_param = und.use_recovery_params
+            brilliance = spectra.apply_phase_error_matrix(_np.max(spectra.calc.brilliance), target_harmonic, rec_param=rec_param)
+        else:
+            brilliance = _np.max(spectra.calc.brilliance)
         
-        return _np.max(spectra.calc.brilliance)
+        return brilliance
     
     def _parallel_calc_brilliance(self, args):
         target_k, period, length, n_harmonic, flag_fix_point_method, gap = args
