@@ -69,13 +69,15 @@ class SourceFunctions:
         delta = b**2 + 4*c*_np.log(beff/ (a*br))
         
         if c != 0:
-            gap = period * (-b + _np.sqrt(delta)) / (2*c)
-            if gap < 0:
-                gap = period * (-b - _np.sqrt(delta)) / (2*c)
+            gap1 = period * (-b + _np.sqrt(delta)) / (2*c)
+            gap2 = period * (-b - _np.sqrt(delta)) / (2*c)
+            
+            if gap1 > 0 and gap2 > 0:
+                return _np.min([gap1, gap2])
+            else:
+                return _np.max([gap1, gap2])
         else:
-            gap = (period/b)* _np.log(beff/(a*br))
-        
-        return gap
+            return (period/b)* _np.log(beff/(a*br))
     
     @staticmethod
     def _generate_field(a, peak, period, nr_periods, pts_period):
