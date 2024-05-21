@@ -2395,15 +2395,13 @@ class SpectraInterface:
         ## Spectra calculation
         spectra.calc.period = source_period
         spectra.calc.length = source_length
-        print('ruuuun')
+        
         spectra.calc.set_config()
         spectra.calc.run_calculation()
         if und.add_phase_errors:
-            print('PHASE ERROR ON!')
             rec_param = und.use_recovery_params
             flux = spectra.apply_phase_error_matrix(_np.max(spectra.calc.flux), n_harmonic, rec_param=rec_param)
         else:
-            print('not using phase error')
             flux = _np.max(spectra.calc.flux)
         return flux
 
