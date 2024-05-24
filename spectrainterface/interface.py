@@ -3296,7 +3296,7 @@ class SpectraInterface:
     def plot_flux_density_matrix(
             self,
             title=None,
-            clim=(1e16, 1e18),
+            clim=(None, None),
             cscale='linear',
             savefig=False,
             figsize=(5, 4),
@@ -3310,6 +3310,7 @@ class SpectraInterface:
             cscale (str, optional): color bar scale
              cscale. Defalts to 'linear'.
             clim (tuple): color bar limits.
+             Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
             figname (str, optional): Figure name
@@ -3346,9 +3347,17 @@ class SpectraInterface:
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
         
-        step = 5 if cscale == 'linear' else int(_np.log10(clim[1]) - _np.log10(clim[0])  + 1)
-        vmin=clim[0] if cscale == 'linear' else _np.log10(clim[0])
-        vmax=clim[1] if cscale == 'linear' else _np.log10(clim[1])
+        vmin=clim[0]
+        vmax=clim[1]
+        
+        if vmin == None:
+            vmin = _np.min(self._flux_density_matrix)
+        if vmax == None:
+            vmax = _np.max(self._flux_density_matrix)
+        
+        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
+        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
+        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
         fm = self._flux_density_matrix if cscale == 'linear' else _np.log10(self._flux_density_matrix)
         
         im = ax.imshow(
@@ -3381,7 +3390,7 @@ class SpectraInterface:
     def plot_flux_matrix(
             self,
             title=None,
-            clim=(1e18, 1e22),
+            clim=(None, None),
             cscale='linear',
             savefig=False,
             figsize=(5, 4),
@@ -3395,6 +3404,7 @@ class SpectraInterface:
             cscale (str, optional): color bar scale
              cscale. Defalts to 'linear'.
             clim (tuple): color bar limits.
+             Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
             figname (str, optional): Figure name
@@ -3431,9 +3441,17 @@ class SpectraInterface:
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
         
-        step = 5 if cscale == 'linear' else int(_np.log10(clim[1]) - _np.log10(clim[0])  + 1)
-        vmin=clim[0] if cscale == 'linear' else _np.log10(clim[0])
-        vmax=clim[1] if cscale == 'linear' else _np.log10(clim[1])
+        vmin=clim[0]
+        vmax=clim[1]
+        
+        if vmin == None:
+            vmin = _np.min(self._flux_matrix)
+        if vmax == None:
+            vmax = _np.max(self._flux_matrix)
+        
+        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
+        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
+        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
         fm = self._flux_matrix if cscale == 'linear' else _np.log10(self._flux_matrix)
         
         im = ax.imshow(
@@ -3466,7 +3484,7 @@ class SpectraInterface:
     def plot_brilliance_matrix(
             self,
             title=None,
-            clim=(1e18, 1e22),
+            clim=(None, None),
             cscale='linear',
             savefig=False,
             figsize=(5, 4),
@@ -3480,6 +3498,7 @@ class SpectraInterface:
             cscale (str, optional): color bar scale
              cscale. Defalts to 'linear'.
             clim (tuple): color bar limits.
+             Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
             figname (str, optional): Figure name
@@ -3516,9 +3535,17 @@ class SpectraInterface:
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
         
-        step = 5 if cscale == 'linear' else int(_np.log10(clim[1]) - _np.log10(clim[0])  + 1)
-        vmin=clim[0] if cscale == 'linear' else _np.log10(clim[0])
-        vmax=clim[1] if cscale == 'linear' else _np.log10(clim[1])
+        vmin=clim[0]
+        vmax=clim[1]
+        
+        if vmin == None:
+            vmin = _np.min(self._brilliance_matrix)
+        if vmax == None:
+            vmax = _np.max(self._brilliance_matrix)
+        
+        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
+        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
+        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
         bm = self._brilliance_matrix if cscale == 'linear' else _np.log10(self._brilliance_matrix)
         
         im = ax.imshow(
@@ -3548,10 +3575,12 @@ class SpectraInterface:
         else:
             _plt.show()
 
-    def plot_total_power(
+    def plot_total_power_matrix(
         self,
         data:tuple,
         title:str='Total Power of Undulators',
+        clim:tuple=(None, None),
+        cscale:str='linear',
         savefig:bool=False,
         figsize:tuple=(5, 4),
         figname:str="total_power_matrix.png",
@@ -3562,6 +3591,10 @@ class SpectraInterface:
         
         Args:
             title (str, optional): Plot title.
+            cscale (str, optional): color bar scale
+             cscale. Defalts to 'linear'.
+            clim (tuple): color bar limits.
+             Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
             figsize (tuple, optional): Figure size.
@@ -3579,6 +3612,8 @@ class SpectraInterface:
                 "'unds_matrix' parameter has to be defined"
             )
         
+        vmin=clim[0]
+        vmax=clim[1]
         
         info_unds_matrix = data[1]
         
@@ -3599,16 +3634,23 @@ class SpectraInterface:
         
         total_powers = total_powers.reshape(pts_length,pts_period)
         
-        vmin = _np.min(total_powers)
-        vmax = _np.max(total_powers)
+        if vmin == None:
+            vmin = _np.min(total_powers)
+        if vmax == None:
+            vmax = _np.max(total_powers)
         
         fig, ax = _plt.subplots(figsize=(figsize))
         ax.set_title(title)
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
 
+        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
+        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
+        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
+        pm = total_powers if cscale == 'linear' else _np.log10(total_powers)
+
         im = ax.imshow(
-            total_powers,
+            pm,
             extent=[
                 _np.min(periods),
                 _np.max(periods),
@@ -3617,19 +3659,19 @@ class SpectraInterface:
             ],
             aspect="auto",
             origin='lower',
-            norm= colors.Normalize(vmin=vmin, vmax=vmax)
+            norm= colors.Normalize(vmin=vmin, vmax=vmax) if cscale == 'linear' else colors.LogNorm(vmin=vmin, vmax=vmax)
         )
 
         sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
-        sm.set_array(total_powers)
+        sm.set_array(pm)
         
         cbar = fig.colorbar(
             sm,
             ax=ax,
             label='Total Power [kW]',
-            format = '%.2f'
+            format='%.2f' if cscale == 'linear' else '%.0i'
         )
-        cbar.set_ticks(_np.linspace(vmin, vmax, 9))
+        cbar.set_ticks(_np.linspace(vmin, vmax, step))
         fig.tight_layout()
         if savefig:
             _plt.savefig(figname, dpi=dpi)
@@ -3639,6 +3681,8 @@ class SpectraInterface:
     def plot_partial_power_matrix(
         self,
         title:str='Partial Power of Undulators',
+        clim:tuple=(None, None),
+        cscale:str='linear',
         savefig:bool=False,
         figsize:tuple=(5, 4),
         figname:str="partial_power_matrix.png",
@@ -3650,6 +3694,10 @@ class SpectraInterface:
         
         Args:
             title (str, optional): Plot title.
+            cscale (str, optional): color bar scale
+             cscale. Defalts to 'linear'.
+            clim (tuple): color bar limits.
+             Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
             figsize (tuple, optional): Figure size.
@@ -3675,13 +3723,23 @@ class SpectraInterface:
         periods = info_unds_matrix[:,1]
         lengths = info_unds_matrix[:,2]
         
-        vmin = _np.min(partial_power_matrix)
-        vmax = _np.max(partial_power_matrix)
+        vmin=clim[0]
+        vmax=clim[1]
+        
+        if vmin == None:
+            vmin = _np.min(partial_power_matrix)
+        if vmax == None:
+            vmax = _np.max(partial_power_matrix)
         
         fig, ax = _plt.subplots(figsize=(figsize))
         ax.set_title(title)
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
+        
+        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
+        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
+        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
+        partial_power_matrix = partial_power_matrix if cscale == 'linear' else _np.log10(partial_power_matrix)
 
         im = ax.imshow(
             partial_power_matrix,
@@ -3693,7 +3751,7 @@ class SpectraInterface:
             ],
             aspect="auto",
             origin='lower',
-            norm= colors.Normalize(vmin=vmin, vmax=vmax)
+            norm= colors.Normalize(vmin=vmin, vmax=vmax) if cscale == 'linear' else colors.LogNorm(vmin=vmin, vmax=vmax)
         )
 
         sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
@@ -3703,9 +3761,9 @@ class SpectraInterface:
             sm,
             ax=ax,
             label='Partial Power [kW]',
-            format = '%.2f'
+            format='%.3f' if cscale == 'linear' else '%.0i'
         )
-        cbar.set_ticks(_np.linspace(vmin, vmax, 9))
+        cbar.set_ticks(_np.linspace(vmin, vmax, step))
         fig.tight_layout()
         if savefig:
             _plt.savefig(figname, dpi=dpi)
