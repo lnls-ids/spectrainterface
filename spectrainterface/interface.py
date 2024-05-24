@@ -2185,7 +2185,7 @@ class SpectraInterface:
         return [_np.max(spectra.calc.flux), target_k]
 
     def _parallel_calc_flux_density(self, args):
-        target_k, period, length, n_hamonic, gap = args
+        target_k, period, length, n_hamonic, gap, ky, kx = args
         return self._calc_flux_density(self._target_energy, period, length, target_k)
 
     def calc_flux_density_matrix(
@@ -2228,7 +2228,9 @@ class SpectraInterface:
                 self._und.source_length = length
 
                 k_max = und.calc_max_k(self.accelerator)
-
+                ky = 0
+                kx = 0
+                
                 n = 1
                 while (
                     self._und.get_harmonic_energy(
@@ -2259,6 +2261,14 @@ class SpectraInterface:
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
+                    if self._und.polarization == 'hp':
+                        ky = target_k
+                    elif self._und.polarization == 'vp':
+                        kx = target_k
+                    elif self._und.polarization == 'cp':
+                        kx = target_k / _np.sqrt(1 + self._und.fields_ratio**2)
+                        ky = kx * self._und.fields_ratio
+                      
                     gap = self._und.undulator_k_to_gap(
                         k=target_k,
                         period=self._und.period,
@@ -2267,7 +2277,15 @@ class SpectraInterface:
                         b=self._und.halbach_coef[self._und.polarization]['b'],
                         c=self._und.halbach_coef[self._und.polarization]['c']
                     )
-                    arglist += [(target_k, period, length, ns[i], gap)]
+                    arglist += [(
+                        target_k,
+                        period,
+                        length,
+                        ns[i],
+                        gap,
+                        ky,
+                        kx                 
+                    )]
 
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
@@ -2275,7 +2293,8 @@ class SpectraInterface:
         with multiprocessing.Pool(processes=num_processes-1) as parallel:
             data = parallel.map(self._parallel_calc_flux_density, arglist)
 
-        arglist = _np.array(arglist)
+        arglist = _np.array(arglist, dtype='object')
+        arglist = arglist[:,[0,1,2,3,4,5,6]]
         result = _np.array(data)
 
         # Identification of breaks with equal length and equal periods
@@ -2320,8 +2339,6 @@ class SpectraInterface:
         )
         flux_density_matrix = flux_density_matrix.transpose()
 
-        info_unds = info_unds[:,[0,1,2,3,-1]]
-
         self._flux_density_matrix = flux_density_matrix
         self._info_matrix_flux_density = info_unds
 
@@ -2333,9 +2350,10 @@ class SpectraInterface:
         source_period:float,
         source_length:float,
         target_k:float,
+        slit_shape:str,
         slit_acceptance:list,
         distance_from_the_source:float,
-        calcfarfield:int,
+        method:str,
         n_harmonic
     ):
         """Calculate flux for one k value.
@@ -2345,9 +2363,10 @@ class SpectraInterface:
             source_period (float): undulator period [mm].
             source_length (float): undulator length [m].
             target_k (float): K value.
+            slit_shape (str): shape of slit acceptance 'retslit' or 'circslit'.
             slit_acceptance (list): slit aceeptance [mrad, mrad].
             distance_from_the_source (float): distance from the source [m]
-            calcfarfield (int): method to use in fixed point calculation 'farfield' 1 or 'nearfield' 0
+            method (int): method to use in fixed point calculation 'farfield' or 'nearfield'
 
         Returns:
             _type_: _description_
@@ -2378,14 +2397,18 @@ class SpectraInterface:
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
         
-        if calcfarfield == 1:
+        if method == 'farfield':
             spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_far_field
-        elif calcfarfield == 0:
+        elif method == 'nearfield':
             spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_near_field
             
         spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.flux
-        spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.rectangular
+        
+        if slit_shape == 'retslit':
+            spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.rectangular
+        elif slit_shape == 'circslit':
+            spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.circular
 
         spectra.calc.target_energy = self._target_energy
         spectra.calc.distance_from_source = distance_from_the_source
@@ -2405,9 +2428,9 @@ class SpectraInterface:
         return flux
 
     def _parallel_calc_flux(self, args):
-        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y, method, gap = args
+        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y, method, gap, slit_shape, ky, kx = args
         slit_acceptance = [slit_x, slit_y]
-        return self._calc_flux(self._target_energy, period, length, target_k, slit_acceptance, distance_from_the_source, method, n_harmonic)
+        return self._calc_flux(self._target_energy, period, length, target_k, slit_shape, slit_acceptance, distance_from_the_source, method, n_harmonic)
     
     def calc_flux_matrix(
         self,
@@ -2418,9 +2441,11 @@ class SpectraInterface:
         length_range:tuple=(1,3),
         nr_pts_length:int=20,
         n_harmonic_truc:int=15,
+        slit_shape:str='retslit',
         slit_acceptance:list=[0.230, 0.230],
         distance_from_the_source:float=23,
-        method:str='farfield'
+        method:str='farfield',
+        nr_pts_k:int=1
     ):
         """Calc flux matrix.
 
@@ -2437,6 +2462,8 @@ class SpectraInterface:
                 Defaults to 20.
             n_harmonic_truc (int, optional): Harmonic number to truncate
                 the calculation. Defaults to 15.
+            slit_shape: (str): shape of slit acceptance 'retslit' or 'circslit'
+                Defaults to 'retslit'.
             slit_acceptance (list): Slit acceptance [mrad, mrad].
                 Defaults to [0.230, 0.230]
             distance_from_the_source (float): Distance from the source [m]
@@ -2453,7 +2480,6 @@ class SpectraInterface:
         self._und = und
         periods = _np.linspace(period_range[0], period_range[1], nr_pts_period)
         lengths = _np.linspace(length_range[0], length_range[1], nr_pts_length)
-        calcfarfield = 1 if method == 'farfield' else 0
         
         # Arglist assembly
         arglist = []
@@ -2463,6 +2489,8 @@ class SpectraInterface:
                 self._und.source_length = length
 
                 k_max = self._und.calc_max_k(self.accelerator)
+                kx = 0
+                ky = 0
                 
                 n = 1
                 en = self._und.get_harmonic_energy(n, gamma, 0, self._und.period, k_max)
@@ -2490,17 +2518,44 @@ class SpectraInterface:
                 idx = _np.where(idx == True)
 
                 target_ks[idx] = 0
+                
                 for i, target_k in enumerate(target_ks):
                     
-                    gap = self._und.undulator_k_to_gap(
-                        k=target_k,
-                        period=self._und.period,
-                        br=self._und.br,
-                        a=self._und.halbach_coef[self._und.polarization]['a'],
-                        b=self._und.halbach_coef[self._und.polarization]['b'],
-                        c=self._und.halbach_coef[self._und.polarization]['c']
-                    )
-                    arglist += [(target_k, period, length, ns[i], distance_from_the_source, slit_acceptance[0], slit_acceptance[1], calcfarfield, gap)]
+                    ks = _np.linspace(target_k, target_k - 0.01, nr_pts_k)
+                    # k = target_k
+                    ks = _np.delete(ks, _np.where(ks < 0)[0])
+                    
+                    for k in ks:
+                        gap = self._und.undulator_k_to_gap(
+                            k=k,
+                            period=self._und.period,
+                            br=self._und.br,
+                            a=self._und.halbach_coef[self._und.polarization]['a'],
+                            b=self._und.halbach_coef[self._und.polarization]['b'],
+                            c=self._und.halbach_coef[self._und.polarization]['c']
+                        )
+                        if self._und.polarization == 'hp':
+                            ky = k
+                        elif self._und.polarization == 'vp':
+                            kx = k
+                        elif self._und.polarization == 'cp':
+                            kx = k / _np.sqrt(1 + self._und.fields_ratio**2)
+                            ky = kx * self._und.fields_ratio
+                            
+                        arglist += [(
+                            k,
+                            period,
+                            length,
+                            ns[i],
+                            distance_from_the_source, 
+                            slit_acceptance[0],
+                            slit_acceptance[1],
+                            method,
+                            gap,
+                            slit_shape,
+                            ky,
+                            kx
+                        )]
         
         
         # Parallel calculations
@@ -2509,7 +2564,8 @@ class SpectraInterface:
         with multiprocessing.Pool(processes=num_processes-1) as parallel:
             data = parallel.map(self._parallel_calc_flux, arglist)
 
-        arglist = _np.array(arglist)
+        arglist = _np.array(arglist, dtype='object')
+        arglist = arglist[:,[0,1,2,3,8,10,11]]
         result = _np.array(data)
         
         # Identification of breaks with equal length and equal periods
@@ -2554,8 +2610,6 @@ class SpectraInterface:
         )
         flux_matrix = flux_matrix.transpose()
 
-        info_unds = info_unds[:,[0,1,2,3,-1]]
-        
         self._flux_matrix = flux_matrix
         self._info_matrix_flux = info_unds
 
@@ -2640,7 +2694,7 @@ class SpectraInterface:
         return brilliance
     
     def _parallel_calc_brilliance(self, args):
-        target_k, period, length, n_harmonic, flag_fix_point_method, gap = args
+        target_k, period, length, n_harmonic, flag_fix_point_method, gap, ky, kx = args
         return self._calc_brilliance(n_harmonic, period, length, target_k, flag_fix_point_method)
     
     def calc_brilliance_matrix(
@@ -2688,7 +2742,9 @@ class SpectraInterface:
                 self._und.source_length = length
 
                 k_max = und.calc_max_k(self.accelerator)
-
+                ky = 0
+                kx = 0
+                
                 n = 1
                 while (
                     self._und.get_harmonic_energy(
@@ -2719,6 +2775,14 @@ class SpectraInterface:
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
+                    if self._und.polarization == 'hp':
+                        ky = target_k
+                    elif self._und.polarization == 'vp':
+                        kx = target_k
+                    elif self._und.polarization == 'cp':
+                        kx = target_k / _np.sqrt(1 + self._und.fields_ratio**2)
+                        ky = kx * self._und.fields_ratio
+                        
                     gap = self._und.undulator_k_to_gap(
                         k=target_k,
                         period=self._und.period,
@@ -2727,7 +2791,16 @@ class SpectraInterface:
                         b=self._und.halbach_coef[self._und.polarization]['b'],
                         c=self._und.halbach_coef[self._und.polarization]['c']
                     )
-                    arglist += [(target_k, period, length, ns[i], flag_fix_point_method, gap)]
+                    arglist += [(
+                        target_k,
+                        period,
+                        length,
+                        ns[i],
+                        flag_fix_point_method,
+                        gap,
+                        ky,
+                        kx
+                    )]
         
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
@@ -2735,7 +2808,8 @@ class SpectraInterface:
         with multiprocessing.Pool(processes=num_processes-1) as parallel:
             data = parallel.map(self._parallel_calc_brilliance, arglist)
 
-        arglist = _np.array(arglist)
+        arglist = _np.array(arglist, dtype='object')
+        arglist = arglist[:,[0,1,2,3,5,6,7]]
         result = _np.array(data)
         
         # Identification of breaks with equal length and equal periods
@@ -2779,8 +2853,6 @@ class SpectraInterface:
             len(periods), len(lengths), order="F"
         )
         brilliance_matrix = brilliance_matrix.transpose()
-
-        info_unds = info_unds[:,[0,1,2,3,-1]]
         
         self._brilliance_matrix = brilliance_matrix
         self._info_matrix_brilliance = info_unds
@@ -2866,7 +2938,7 @@ class SpectraInterface:
         self,
         data:tuple,
         slit_acceptance:list=[0.230, 0.230],
-        distance_from_the_source:float=10,
+        distance_from_the_source:float=30,
         method:str='farfield',
     ):
         """Calc partial power from matrix.
@@ -3690,10 +3762,14 @@ class SpectraInterface:
         
         gap = 0
         
-        print("{:}{:<2}{:}{:<8}{:}{:<3}{:}{:<2}{:}{:<2}{:}{:<2}{:}".format(
+        print("{:}{:<2}{:}{:<5}{:}{:<7}{:}{:<7}{:}{:<3}{:}{:<2}{:}{:<2}{:}{:<2}{:}".format(
             'Und',
             '',
-            'K',
+            'Keff',
+            '',
+            'Ky',
+            '',
+            'Kx',
             '',
             'Gap',
             '',
@@ -3707,12 +3783,16 @@ class SpectraInterface:
         ))        
         
         for i, idx in enumerate(idxs):
-            print("{:}{:<4}{:.5f}{:<2}{:.2f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}".format(
+            print("{:}{:<4}{:.5f}{:<2}{:.5f}{:<2}{:.5f}{:<2}{:.2f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}".format(
                 i,
                 '',
                 info_unds_matrix[idx][0],
                 '',
-                info_unds_matrix[idx][-1],
+                info_unds_matrix[idx][5],
+                '',
+                info_unds_matrix[idx][6],
+                '',
+                info_unds_matrix[idx][4],
                 '',
                 info_unds_matrix[idx][1],
                 '',
