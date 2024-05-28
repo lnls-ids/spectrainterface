@@ -26,6 +26,7 @@ PLANCK = mathphys.constants.reduced_planck_constant
 VACUUM_PERMITTICITY = mathphys.constants.vacuum_permitticity
 PI = _np.pi
 
+
 class SpectraTools:
     """Class with general spectra tools."""
 
@@ -898,7 +899,10 @@ class Calc(GeneralConfigs, SpectraTools):
 
     @slit_shape.setter
     def slit_shape(self, value):
-        if self.output_type == self.CalcConfigs.Output.flux or self.output_type == self.CalcConfigs.Output.power:
+        if (
+            self.output_type == self.CalcConfigs.Output.flux
+            or self.output_type == self.CalcConfigs.Output.power
+        ):
             self._slit_shape = value
         else:
             raise ValueError(
@@ -909,15 +913,20 @@ class Calc(GeneralConfigs, SpectraTools):
     def target_energy(self, value):
         if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
             if self.indep_var == self.CalcConfigs.Variable.energy:
-                if self.method == self.CalcConfigs.Method.fixedpoint_near_field:
+                if (
+                    self.method
+                    == self.CalcConfigs.Method.fixedpoint_near_field
+                ):
                     self._target_energy = value
-                elif self.method == self.CalcConfigs.Method.fixedpoint_far_field:
+                elif (
+                    self.method == self.CalcConfigs.Method.fixedpoint_far_field
+                ):
                     self._target_energy = value
-                else:            
+                else:
                     raise ValueError(
                         "Target energy can only be defined if the variable is a xy mesh or calculation method is a fixed point."  # noqa: E501
                     )
-            else:            
+            else:
                 raise ValueError(
                     "Target energy can only be defined if the variable is a xy mesh or calculation method is a fixed point."  # noqa: E501
                 )
@@ -1215,7 +1224,7 @@ class Calc(GeneralConfigs, SpectraTools):
             input_temp["Configurations"]["Target Energy (eV)"] = (
                 self.target_energy
             )
-        
+
         if self.target_harmonic is not None:
             input_temp["Configurations"]["Target Harmonic"] = (
                 self.target_harmonic
@@ -1344,13 +1353,16 @@ class Calc(GeneralConfigs, SpectraTools):
         self._output_variables = variables
         self._set_outputs()
 
-    def _set_outputs(self):
+    def _set_outputs(self):  # noqa: C901
         data = self._output_data
         captions = self._output_captions
         variables = self._output_variables
 
         if self.indep_var == self.CalcConfigs.Variable.energy:
-            if self.method == self.CalcConfigs.Method.fixedpoint_near_field or self.method == self.CalcConfigs.Method.fixedpoint_far_field:
+            if (
+                self.method == self.CalcConfigs.Method.fixedpoint_near_field
+                or self.method == self.CalcConfigs.Method.fixedpoint_far_field
+            ):
                 if self.output_type == self.CalcConfigs.Output.power:
                     self._power = data[0][0]
                 else:
@@ -1360,7 +1372,7 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._pl45 = data[3]
             elif self.method == self.CalcConfigs.Method.fixedpoint_wigner:
                 self._brilliance = data[0]
-            else: 
+            else:
                 self._flux = data[0, :]
                 if len(captions["titles"]) == 5:
                     self._pl = data[1, :]
@@ -1811,14 +1823,14 @@ class SpectraInterface:
         h = data[:, 0]
         ph_err1 = data[:, 1]
         ph_err2 = data[:, 2]
-        idx = _np.argmin(_np.abs(harm-h))
+        idx = _np.argmin(_np.abs(harm - h))
         if rec_param:
             ph = ph_err2[idx]
         else:
             ph = ph_err1[idx]
         return values * ph
-    
-    def calc_brilliance_curve(
+
+    def calc_brilliance_curve(  # noqa: C901
         self,
         harmonic_range=[1, 5],
         nr_pts_k=15,
@@ -1957,7 +1969,7 @@ class SpectraInterface:
         self._energies = energies
         self._brilliances = brilliances
 
-    def calc_flux_curve(
+    def calc_flux_curve(  # noqa: C901
         self,
         energy_range=[1, 5],
         harmonic_range=[1, 5],
@@ -1978,7 +1990,7 @@ class SpectraInterface:
             kmin (float): Minimum k value. Defaults to 0.2
             slit_shape (str, optional): Circular or rectangular.
              Defaults to "circslit".
-            slit_acceptance (list, optional): Slit acceptance.
+            slit_acceptances (list, optional): Slit acceptance.
              Defaults to [0, 0.04].
             beta_sections (list of string): List of beta sections for each
              source.
@@ -2102,13 +2114,8 @@ class SpectraInterface:
 
         self._energies = energies
         self._fluxes = fluxes
-    
-    def calc_k_target(
-        self,
-        n:int,
-        period:float,
-        target_energy:float
-    ):
+
+    def calc_k_target(self, n: int, period: float, target_energy: float):
         """Calc k for target energy given harmonic number and period.
 
         Args:
@@ -2120,15 +2127,25 @@ class SpectraInterface:
             float: K value
         """
         gamma = self.accelerator.gamma
-        arg = 2*n*gamma**2*PLANCK*2*_np.pi*LSPEED/(target_energy*ECHARGE*1e-3*period)-1
-        return _np.sqrt(2)*_np.sqrt(arg)
-    
+        arg = (
+            2
+            * n
+            * gamma**2
+            * PLANCK
+            * 2
+            * _np.pi
+            * LSPEED
+            / (target_energy * ECHARGE * 1e-3 * period)
+            - 1
+        )
+        return _np.sqrt(2) * _np.sqrt(arg)
+
     def _calc_flux_density(
         self,
-        target_energy:float,
-        source_period:float,
-        source_length:float,
-        target_k:float
+        target_energy: float,
+        source_period: float,
+        source_length: float,
+        target_k: float,
     ):
         """Calculate flux density for one k value.
 
@@ -2143,60 +2160,73 @@ class SpectraInterface:
         """
         self._target_energy = target_energy
         und: Undulator = self._und
-        
-        ## Spectra Initialization
+
+        # Spectra Initialization
         spectra = SpectraInterface()
         spectra.accelerator.set_bsc_with_ivu18()
-        if self.accelerator.beta_section == 'low':
+        if self.accelerator.beta_section == "low":
             spectra.accelerator.set_low_beta_section()
         else:
             spectra.accelerator.set_high_beta_section()
-        
-        ## Spectra Configuration
+
+        # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
-        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
-        
+        spectra.accelerator.zero_energy_spread = (
+            self.accelerator.zero_emittance
+        )
+
         if und.polarization == "hp":
-            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.horizontal_undulator
+            )
             spectra.calc.ky = target_k
         elif und.polarization == "vp":
-            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.vertical_undulator
+            )
             spectra.calc.kx = target_k
         else:
-            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.elliptic_undulator
+            )
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
-        
-        spectra.calc.output_type = spectra.calc.CalcConfigs.Output.flux_density 
+
+        spectra.calc.output_type = spectra.calc.CalcConfigs.Output.flux_density
         spectra.calc.method = spectra.calc.CalcConfigs.Method.far_field
         spectra.calc.output_type = self.calc.output_type
 
         spectra.calc.distance_from_source = 1
         spectra.calc.observation_angle = [0, 0]
-        spectra.calc.energy_range = [self._target_energy, self._target_energy + 0.01]
+        spectra.calc.energy_range = [
+            self._target_energy,
+            self._target_energy + 0.01,
+        ]
         spectra.calc.energy_step = 0.01
-        
-        ## Spectra calculation
+
+        # Spectra calculation
         spectra.calc.period = source_period
         spectra.calc.length = source_length
         spectra.calc.set_config()
         spectra.calc.run_calculation()
-        
+
         return [_np.max(spectra.calc.flux), target_k]
 
     def _parallel_calc_flux_density(self, args):
-        target_k, period, length, n_hamonic, gap, ky, kx = args
-        return self._calc_flux_density(self._target_energy, period, length, target_k)
+        target_k, period, length, *_ = args
+        return self._calc_flux_density(
+            self._target_energy, period, length, target_k
+        )
 
-    def calc_flux_density_matrix(
+    def calc_flux_density_matrix(  # noqa: C901
         self,
-        target_energy:float,
+        target_energy: float,
         und,
-        period_range:tuple=(18,30),
-        nr_pts_period:int=20,
-        length_range:tuple=(1,3),
-        nr_pts_length:int=20,
-        n_harmonic_truc:int=15,
+        period_range: tuple = (18, 30),
+        nr_pts_period: int = 20,
+        length_range: tuple = (1, 3),
+        nr_pts_length: int = 20,
+        n_harmonic_truc: int = 15,
     ):
         """Calc flux density matrix.
 
@@ -2205,8 +2235,10 @@ class SpectraInterface:
             und (Undulator object): Must be an object from undulator class.
             nr_pts_period (int, optional): Number of period points.
                 Defaults to 20.
+            period_range (tuple): length range to use in the calculation
             nr_pts_length (int, optional): Number of length points.
                 Defaults to 20.
+            length_range (tuple): length range to use in the calculation
             n_harmonic_truc (int, optional): Harmonic number to truncate
                 the calculation. Defaults to 15.
 
@@ -2230,7 +2262,7 @@ class SpectraInterface:
                 k_max = und.calc_max_k(self.accelerator)
                 ky = 0
                 kx = 0
-                
+
                 n = 1
                 while (
                     self._und.get_harmonic_energy(
@@ -2255,46 +2287,38 @@ class SpectraInterface:
 
                 if target_ks[0] > k_max:
                     target_ks[0] = 0
-                    
+
                 idx = _np.isnan(target_ks)
-                idx = _np.where(idx == True)
+                idx = _np.where(idx)
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
-                    if self._und.polarization == 'hp':
+                    if self._und.polarization == "hp":
                         ky = target_k
-                    elif self._und.polarization == 'vp':
+                    elif self._und.polarization == "vp":
                         kx = target_k
-                    elif self._und.polarization == 'cp':
+                    elif self._und.polarization == "cp":
                         kx = target_k / _np.sqrt(1 + self._und.fields_ratio**2)
                         ky = kx * self._und.fields_ratio
-                      
+
                     gap = self._und.undulator_k_to_gap(
                         k=target_k,
                         period=self._und.period,
                         br=self._und.br,
-                        a=self._und.halbach_coef[self._und.polarization]['a'],
-                        b=self._und.halbach_coef[self._und.polarization]['b'],
-                        c=self._und.halbach_coef[self._und.polarization]['c']
+                        a=self._und.halbach_coef[self._und.polarization]["a"],
+                        b=self._und.halbach_coef[self._und.polarization]["b"],
+                        c=self._und.halbach_coef[self._und.polarization]["c"],
                     )
-                    arglist += [(
-                        target_k,
-                        period,
-                        length,
-                        ns[i],
-                        gap,
-                        ky,
-                        kx                 
-                    )]
+                    arglist += [(target_k, period, length, ns[i], gap, ky, kx)]
 
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
         data = []
-        with multiprocessing.Pool(processes=num_processes-1) as parallel:
+        with multiprocessing.Pool(processes=num_processes - 1) as parallel:
             data = parallel.map(self._parallel_calc_flux_density, arglist)
 
-        arglist = _np.array(arglist, dtype='object')
-        arglist = arglist[:,[0,1,2,3,4,5,6]]
+        arglist = _np.array(arglist, dtype="object")
+        arglist = arglist[:, [0, 1, 2, 3, 4, 5, 6]]
         result = _np.array(data)
 
         # Identification of breaks with equal length and equal periods
@@ -2346,15 +2370,15 @@ class SpectraInterface:
 
     def _calc_flux(
         self,
-        target_energy:float,
-        source_period:float,
-        source_length:float,
-        target_k:float,
-        slit_shape:str,
-        slit_acceptance:list,
-        distance_from_the_source:float,
-        method:str,
-        n_harmonic
+        target_energy: float,
+        source_period: float,
+        source_length: float,
+        target_k: float,
+        slit_shape: str,
+        slit_acceptance: list,
+        distance_from_the_source: float,
+        method: str,
+        n_harmonic: int,
     ):
         """Calculate flux for one k value.
 
@@ -2367,85 +2391,125 @@ class SpectraInterface:
             slit_acceptance (list): slit aceeptance [mrad, mrad].
             distance_from_the_source (float): distance from the source [m]
             method (int): method to use in fixed point calculation 'farfield' or 'nearfield'
-
+            n_harmonic (int): harmonic number to used in the calculation
         Returns:
             _type_: _description_
-        """
+        """  # noqa: E501
         self._target_energy = target_energy
         und: Undulator = self._und
-        
-        ## Spectra Initialization
+
+        # Spectra Initialization
         spectra = SpectraInterface()
         spectra.accelerator.set_bsc_with_ivu18()
-        if self.accelerator.beta_section == 'low':
+        if self.accelerator.beta_section == "low":
             spectra.accelerator.set_low_beta_section()
         else:
             spectra.accelerator.set_high_beta_section()
-        
-        ## Spectra Configuration
+
+        # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
-        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
-        
+        spectra.accelerator.zero_energy_spread = (
+            self.accelerator.zero_emittance
+        )
+
         if und.polarization == "hp":
-            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.horizontal_undulator
+            )
             spectra.calc.ky = target_k
         elif und.polarization == "vp":
-            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.vertical_undulator
+            )
             spectra.calc.kx = target_k
         else:
-            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.elliptic_undulator
+            )
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
-        
-        if method == 'farfield':
-            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_far_field
-        elif method == 'nearfield':
-            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_near_field
-            
+
+        if method == "farfield":
+            spectra.calc.method = (
+                spectra.calc.CalcConfigs.Method.fixedpoint_far_field
+            )
+        elif method == "nearfield":
+            spectra.calc.method = (
+                spectra.calc.CalcConfigs.Method.fixedpoint_near_field
+            )
+
         spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.flux
-        
-        if slit_shape == 'retslit':
-            spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.rectangular
-        elif slit_shape == 'circslit':
-            spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.circular
+
+        if slit_shape == "retslit":
+            spectra.calc.slit_shape = (
+                spectra.calc.CalcConfigs.SlitShape.rectangular
+            )
+        elif slit_shape == "circslit":
+            spectra.calc.slit_shape = (
+                spectra.calc.CalcConfigs.SlitShape.circular
+            )
 
         spectra.calc.target_energy = self._target_energy
         spectra.calc.distance_from_source = distance_from_the_source
         spectra.calc.observation_angle = [0, 0]
         spectra.calc.slit_acceptance = slit_acceptance
-        
-        ## Spectra calculation
+
+        # Spectra calculation
         spectra.calc.period = source_period
         spectra.calc.length = source_length
         spectra.calc.set_config()
         spectra.calc.run_calculation()
         if und.add_phase_errors:
             rec_param = und.use_recovery_params
-            flux = spectra.apply_phase_error_matrix(_np.max(spectra.calc.flux), n_harmonic, rec_param=rec_param)
+            flux = spectra.apply_phase_error_matrix(
+                _np.max(spectra.calc.flux), n_harmonic, rec_param=rec_param
+            )
         else:
             flux = _np.max(spectra.calc.flux)
         return flux
 
     def _parallel_calc_flux(self, args):
-        target_k, period, length, n_harmonic, distance_from_the_source, slit_x, slit_y, method, gap, slit_shape, ky, kx = args
+        (
+            target_k,
+            period,
+            length,
+            n_harmonic,
+            distance_from_the_source,
+            slit_x,
+            slit_y,
+            method,
+            _,
+            slit_shape,
+            *_
+        ) = args
         slit_acceptance = [slit_x, slit_y]
-        return self._calc_flux(self._target_energy, period, length, target_k, slit_shape, slit_acceptance, distance_from_the_source, method, n_harmonic)
-    
-    def calc_flux_matrix(
+        return self._calc_flux(
+            self._target_energy,
+            period,
+            length,
+            target_k,
+            slit_shape,
+            slit_acceptance,
+            distance_from_the_source,
+            method,
+            n_harmonic,
+        )
+
+    def calc_flux_matrix(  # noqa: C901
         self,
-        target_energy:float,
+        target_energy: float,
         und: Undulator,
-        period_range:tuple=(18,30),
-        nr_pts_period:int=20,
-        length_range:tuple=(1,3),
-        nr_pts_length:int=20,
-        n_harmonic_truc:int=15,
-        slit_shape:str='retslit',
-        slit_acceptance:list=[0.230, 0.230],
-        distance_from_the_source:float=23,
-        method:str='farfield',
-        nr_pts_k:int=1
+        period_range: tuple = (18, 30),
+        nr_pts_period: int = 20,
+        length_range: tuple = (1, 3),
+        nr_pts_length: int = 20,
+        n_harmonic_truc: int = 15,
+        slit_shape: str = "retslit",
+        slit_acceptance: list = [0.230, 0.230],
+        distance_from_the_source: float = 23,
+        method: str = "farfield",
+        nr_pts_k: int = 1,
     ):
         """Calc flux matrix.
 
@@ -2470,7 +2534,7 @@ class SpectraInterface:
                 Defaults to 23
             method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
                 Defaults to 'farfield'
-                
+            nr_pts_k (int): number to otimize the tuned beam 
         Returns:
             numpy array: Flux matrix.
             numpy array: Undulators information.
@@ -2480,7 +2544,7 @@ class SpectraInterface:
         self._und = und
         periods = _np.linspace(period_range[0], period_range[1], nr_pts_period)
         lengths = _np.linspace(length_range[0], length_range[1], nr_pts_length)
-        
+
         # Arglist assembly
         arglist = []
         for length in lengths:
@@ -2491,14 +2555,16 @@ class SpectraInterface:
                 k_max = self._und.calc_max_k(self.accelerator)
                 kx = 0
                 ky = 0
-                
+
                 n = 1
-                en = self._und.get_harmonic_energy(n, gamma, 0, self._und.period, k_max)
-                while (
-                    en < self._target_energy
-                ):
+                en = self._und.get_harmonic_energy(
+                    n, gamma, 0, self._und.period, k_max
+                )
+                while en < self._target_energy:
                     n += 2
-                    en = self._und.get_harmonic_energy(n, gamma, 0, self._und.period, k_max)
+                    en = self._und.get_harmonic_energy(
+                        n, gamma, 0, self._und.period, k_max
+                    )
                 if n > 2:
                     n -= 2
 
@@ -2506,68 +2572,76 @@ class SpectraInterface:
 
                 if n > n_truc:
                     n = n_truc
-                
-                ns = _np.linspace(1, n, int(n/2 + 1))
-             
+
+                ns = _np.linspace(1, n, int(n / 2 + 1))
+
                 target_ks = self.calc_k_target(
                     ns, self._und.period, self._target_energy
                 )
-                if target_ks[0] > k_max:
-                    target_ks[0] = 0
+
+                target_ks[_np.where(target_ks > k_max)[0]] = 0
+                # if target_ks[0] > k_max:
+                #     target_ks[0] = 0
                 idx = _np.isnan(target_ks)
-                idx = _np.where(idx == True)
+                idx = _np.where(idx)
 
                 target_ks[idx] = 0
-                
+
                 for i, target_k in enumerate(target_ks):
-                    
                     ks = _np.linspace(target_k, target_k - 0.01, nr_pts_k)
                     # k = target_k
                     ks = _np.delete(ks, _np.where(ks < 0)[0])
-                    
+
                     for k in ks:
                         gap = self._und.undulator_k_to_gap(
                             k=k,
                             period=self._und.period,
                             br=self._und.br,
-                            a=self._und.halbach_coef[self._und.polarization]['a'],
-                            b=self._und.halbach_coef[self._und.polarization]['b'],
-                            c=self._und.halbach_coef[self._und.polarization]['c']
+                            a=self._und.halbach_coef[self._und.polarization][
+                                "a"
+                            ],
+                            b=self._und.halbach_coef[self._und.polarization][
+                                "b"
+                            ],
+                            c=self._und.halbach_coef[self._und.polarization][
+                                "c"
+                            ],
                         )
-                        if self._und.polarization == 'hp':
+                        if self._und.polarization == "hp":
                             ky = k
-                        elif self._und.polarization == 'vp':
+                        elif self._und.polarization == "vp":
                             kx = k
-                        elif self._und.polarization == 'cp':
+                        elif self._und.polarization == "cp":
                             kx = k / _np.sqrt(1 + self._und.fields_ratio**2)
                             ky = kx * self._und.fields_ratio
-                            
-                        arglist += [(
-                            k,
-                            period,
-                            length,
-                            ns[i],
-                            distance_from_the_source, 
-                            slit_acceptance[0],
-                            slit_acceptance[1],
-                            method,
-                            gap,
-                            slit_shape,
-                            ky,
-                            kx
-                        )]
-        
-        
+
+                        arglist += [
+                            (
+                                k,
+                                period,
+                                length,
+                                ns[i],
+                                distance_from_the_source,
+                                slit_acceptance[0],
+                                slit_acceptance[1],
+                                method,
+                                gap,
+                                slit_shape,
+                                ky,
+                                kx,
+                            )
+                        ]
+
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
         data = []
-        with multiprocessing.Pool(processes=num_processes-1) as parallel:
+        with multiprocessing.Pool(processes=num_processes - 1) as parallel:
             data = parallel.map(self._parallel_calc_flux, arglist)
 
-        arglist = _np.array(arglist, dtype='object')
-        arglist = arglist[:,[0,1,2,3,8,10,11]]
+        arglist = _np.array(arglist, dtype="object")
+        arglist = arglist[:, [0, 1, 2, 3, 8, 10, 11]]
         result = _np.array(data)
-        
+
         # Identification of breaks with equal length and equal periods
         idx_broke = list(
             _np.where(
@@ -2590,7 +2664,7 @@ class SpectraInterface:
             i_start = i + 1
             filter_arglist.append(collection_arg)
             filter_result.append(collection_result)
-        
+
         # Selection of the best results for a given period and length
         best_result = []
         info_unds = []
@@ -2602,7 +2676,7 @@ class SpectraInterface:
 
         best_result = _np.array(best_result)
         info_unds = _np.array(info_unds)
-        
+
         # Flux Matrix Reassembly
         flux_matrix = best_result
         flux_matrix = flux_matrix.reshape(
@@ -2614,14 +2688,14 @@ class SpectraInterface:
         self._info_matrix_flux = info_unds
 
         return flux_matrix, info_unds
-    
+
     def _calc_brilliance(
         self,
-        target_harmonic:float,
-        source_period:float,
-        source_length:float,
-        target_k:float,
-        flag_fix_point_method:int,
+        target_harmonic: float,
+        source_period: float,
+        source_length: float,
+        target_k: float,
+        flag_fix_point_method: int,
     ):
         """Calculate brilliance for one k value.
 
@@ -2630,83 +2704,108 @@ class SpectraInterface:
             source_period (float): undulator period [mm].
             source_length (float): undulator length [m].
             target_k (float): K value.
-            flag_fix_point_method (int)
+            flag_fix_point_method (int): flag to select method
         Returns:
             _type_: _description_
         """
         und: Undulator = self._und
-        
-        ## Spectra Initialization
+
+        # Spectra Initialization
         spectra = SpectraInterface()
         spectra.accelerator.set_bsc_with_ivu18()
-        if self.accelerator.beta_section == 'low':
+        if self.accelerator.beta_section == "low":
             spectra.accelerator.set_low_beta_section()
         else:
             spectra.accelerator.set_high_beta_section()
-        
-        ## Spectra Configuration
+
+        # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
-        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
-        
+        spectra.accelerator.zero_energy_spread = (
+            self.accelerator.zero_emittance
+        )
+
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.brilliance
         if flag_fix_point_method == 1:
-            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_wigner
+            spectra.calc.method = (
+                spectra.calc.CalcConfigs.Method.fixedpoint_wigner
+            )
             spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
         else:
             spectra.calc.method = spectra.calc.CalcConfigs.Method.wigner
             spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.k
-            
+
         if und.polarization == "hp":
-            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.horizontal_undulator
+            )
             spectra.calc.ky = target_k
         elif und.polarization == "vp":
-            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.vertical_undulator
+            )
             spectra.calc.kx = target_k
         else:
-            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.elliptic_undulator
+            )
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
-        
+
         if flag_fix_point_method == 1:
             spectra.calc.target_harmonic = int(target_harmonic)
         else:
             spectra.calc.harmonic_range = [target_harmonic, target_harmonic]
             spectra.calc.k_range = [0, target_k]
             spectra.calc.k_nr_pts = 2
-        
+
         spectra.calc.slice_x = 0
         spectra.calc.slice_px = 0
         spectra.calc.slice_y = 0
         spectra.calc.slice_py = 0
-        
-        ## Spectra calculation
+
+        # Spectra calculation
         spectra.calc.period = source_period
         spectra.calc.length = source_length
-        
+
         spectra.calc.set_config()
         spectra.calc.run_calculation()
         if und.add_phase_errors:
             rec_param = und.use_recovery_params
-            brilliance = spectra.apply_phase_error_matrix(_np.max(spectra.calc.brilliance), target_harmonic, rec_param=rec_param)
+            brilliance = spectra.apply_phase_error_matrix(
+                _np.max(spectra.calc.brilliance),
+                target_harmonic,
+                rec_param=rec_param,
+            )
         else:
             brilliance = _np.max(spectra.calc.brilliance)
-        
+
         return brilliance
-    
+
     def _parallel_calc_brilliance(self, args):
-        target_k, period, length, n_harmonic, flag_fix_point_method, gap, ky, kx = args
-        return self._calc_brilliance(n_harmonic, period, length, target_k, flag_fix_point_method)
-    
-    def calc_brilliance_matrix(
+        (
+            target_k,
+            period,
+            length,
+            n_harmonic,
+            flag_fix_point_method,
+            gap,
+            ky,
+            kx,
+        ) = args
+        return self._calc_brilliance(
+            n_harmonic, period, length, target_k, flag_fix_point_method
+        )
+
+    def calc_brilliance_matrix(  # noqa: C901
         self,
-        target_energy:float,
+        target_energy: float,
         und: Undulator,
-        period_range:tuple=(18,30),
-        nr_pts_period:int=20,
-        length_range:tuple=(1,3),
-        nr_pts_length:int=20,
-        n_harmonic_truc:int=15,
-        fixed_point_method:bool=False
+        period_range: tuple = (18, 30),
+        nr_pts_period: int = 20,
+        length_range: tuple = (1, 3),
+        nr_pts_length: int = 20,
+        n_harmonic_truc: int = 15,
+        fixed_point_method: bool = False,
     ):
         """Calc brilliance matrix.
 
@@ -2715,8 +2814,10 @@ class SpectraInterface:
             und (Undulator object): Must be an object from undulator class.
             nr_pts_period (int, optional): Number of period points.
                 Defaults to 20.
+            period_range (tuple): length range to use in the calculation
             nr_pts_length (int, optional): Number of length points.
                 Defaults to 20.
+            length_range (tuple): length range to use in the calculation
             n_harmonic_truc (int, optional): Harmonic number to truncate
                 the calculation. Defaults to 15.
             fixed_point_method (bool): Fixed Point Calculation method with wigner function.
@@ -2733,7 +2834,7 @@ class SpectraInterface:
         lengths = _np.linspace(length_range[0], length_range[1], nr_pts_length)
 
         flag_fix_point_method = 1 if fixed_point_method else 0
-        
+
         # Arglist assembly
         arglist = []
         for length in lengths:
@@ -2744,7 +2845,7 @@ class SpectraInterface:
                 k_max = und.calc_max_k(self.accelerator)
                 ky = 0
                 kx = 0
-                
+
                 n = 1
                 while (
                     self._und.get_harmonic_energy(
@@ -2761,57 +2862,59 @@ class SpectraInterface:
                 if n > n_truc:
                     n = n_truc
 
-                ns = _np.linspace(1, n, int(n/2 + 1))
+                ns = _np.linspace(1, n, int(n / 2 + 1))
 
                 target_ks = self.calc_k_target(
                     ns, self._und.period, self._target_energy
                 )
-                
+
                 if target_ks[0] > k_max:
                     target_ks[0] = 0
-                    
+
                 idx = _np.isnan(target_ks)
                 idx = _np.where(idx == True)
 
                 target_ks[idx] = 0
                 for i, target_k in enumerate(target_ks):
-                    if self._und.polarization == 'hp':
+                    if self._und.polarization == "hp":
                         ky = target_k
-                    elif self._und.polarization == 'vp':
+                    elif self._und.polarization == "vp":
                         kx = target_k
-                    elif self._und.polarization == 'cp':
+                    elif self._und.polarization == "cp":
                         kx = target_k / _np.sqrt(1 + self._und.fields_ratio**2)
                         ky = kx * self._und.fields_ratio
-                        
+
                     gap = self._und.undulator_k_to_gap(
                         k=target_k,
                         period=self._und.period,
                         br=self._und.br,
-                        a=self._und.halbach_coef[self._und.polarization]['a'],
-                        b=self._und.halbach_coef[self._und.polarization]['b'],
-                        c=self._und.halbach_coef[self._und.polarization]['c']
+                        a=self._und.halbach_coef[self._und.polarization]["a"],
+                        b=self._und.halbach_coef[self._und.polarization]["b"],
+                        c=self._und.halbach_coef[self._und.polarization]["c"],
                     )
-                    arglist += [(
-                        target_k,
-                        period,
-                        length,
-                        ns[i],
-                        flag_fix_point_method,
-                        gap,
-                        ky,
-                        kx
-                    )]
-        
+                    arglist += [
+                        (
+                            target_k,
+                            period,
+                            length,
+                            ns[i],
+                            flag_fix_point_method,
+                            gap,
+                            ky,
+                            kx,
+                        )
+                    ]
+
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
         data = []
-        with multiprocessing.Pool(processes=num_processes-1) as parallel:
+        with multiprocessing.Pool(processes=num_processes - 1) as parallel:
             data = parallel.map(self._parallel_calc_brilliance, arglist)
 
-        arglist = _np.array(arglist, dtype='object')
-        arglist = arglist[:,[0,1,2,3,5,6,7]]
+        arglist = _np.array(arglist, dtype="object")
+        arglist = arglist[:, [0, 1, 2, 3, 5, 6, 7]]
         result = _np.array(data)
-        
+
         # Identification of breaks with equal length and equal periods
         idx_broke = list(
             _np.where(
@@ -2834,7 +2937,7 @@ class SpectraInterface:
             i_start = i + 1
             filter_arglist.append(collection_arg)
             filter_result.append(collection_result)
-        
+
         # Selection of the best results for a given period and length
         best_result = []
         info_unds = []
@@ -2846,27 +2949,27 @@ class SpectraInterface:
 
         best_result = _np.array(best_result)
         info_unds = _np.array(info_unds)
-        
+
         # Brilliance Matrix Reassembly
         brilliance_matrix = best_result
         brilliance_matrix = brilliance_matrix.reshape(
             len(periods), len(lengths), order="F"
         )
         brilliance_matrix = brilliance_matrix.transpose()
-        
+
         self._brilliance_matrix = brilliance_matrix
         self._info_matrix_brilliance = info_unds
 
         return brilliance_matrix, info_unds
-    
+
     def _calc_partial_power(
         self,
-        source_period:float,
-        source_length:float,
-        target_k:float,
-        slit_acceptance:list,
-        distance_from_the_source:float,
-        calcfarfield:int
+        source_period: float,
+        source_length: float,
+        target_k: float,
+        slit_acceptance: list,
+        distance_from_the_source: float,
+        calcfarfield: int,
     ):
         """Calculate partial power for one k value.
 
@@ -2883,63 +2986,92 @@ class SpectraInterface:
             _type_: _description_
         """
         und: Undulator = self._und
-        
-        ## Spectra Initialization
+
+        # Spectra Initialization
         spectra = SpectraInterface()
         spectra.accelerator.set_bsc_with_ivu18()
-        if self.accelerator.beta_section == 'low':
+        if self.accelerator.beta_section == "low":
             spectra.accelerator.set_low_beta_section()
         else:
             spectra.accelerator.set_high_beta_section()
-        
-        ## Spectra Configuration
+
+        # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
-        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
-        
+        spectra.accelerator.zero_energy_spread = (
+            self.accelerator.zero_emittance
+        )
+
         if und.polarization == "hp":
-            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.horizontal_undulator
+            )
             spectra.calc.ky = target_k
         elif und.polarization == "vp":
-            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.vertical_undulator
+            )
             spectra.calc.kx = target_k
         else:
-            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
+            spectra.calc.source_type = (
+                spectra.calc.SourceType.elliptic_undulator
+            )
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
-        
+
         if calcfarfield == 1:
-            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_far_field
+            spectra.calc.method = (
+                spectra.calc.CalcConfigs.Method.fixedpoint_far_field
+            )
         elif calcfarfield == 0:
-            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_near_field
-            
+            spectra.calc.method = (
+                spectra.calc.CalcConfigs.Method.fixedpoint_near_field
+            )
+
         spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.power
-        spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.rectangular
+        spectra.calc.slit_shape = (
+            spectra.calc.CalcConfigs.SlitShape.rectangular
+        )
 
         spectra.calc.target_energy = self._target_energy
         spectra.calc.distance_from_source = distance_from_the_source
         spectra.calc.observation_angle = [0, 0]
         spectra.calc.slit_acceptance = slit_acceptance
-        
-        ## Spectra calculation
+
+        # Spectra calculation
         spectra.calc.period = source_period
         spectra.calc.length = source_length
         spectra.calc.set_config()
         spectra.calc.run_calculation()
-        
+
         return spectra.calc.power
-    
+
     def _parallel_calc_partial_power(self, args):
-        target_k, period, length, distance_from_the_source, slit_x, slit_y, method = args
+        (
+            target_k,
+            period,
+            length,
+            distance_from_the_source,
+            slit_x,
+            slit_y,
+            method,
+        ) = args
         slit_acceptance = [slit_x, slit_y]
-        return self._calc_partial_power(period, length, target_k, slit_acceptance, distance_from_the_source, method)
-    
+        return self._calc_partial_power(
+            period,
+            length,
+            target_k,
+            slit_acceptance,
+            distance_from_the_source,
+            method,
+        )
+
     def calc_partial_power_from_matrix(
         self,
-        data:tuple,
-        slit_acceptance:list=[0.230, 0.230],
-        distance_from_the_source:float=30,
-        method:str='farfield',
+        data: tuple,
+        slit_acceptance: list = [0.230, 0.230],  # noqa: B006
+        distance_from_the_source: float = 30,
+        method: str = "farfield",
     ):
         """Calc partial power from matrix.
 
@@ -2957,47 +3089,53 @@ class SpectraInterface:
             numpy array: partial power matrix.
         """
         if data is None:
-            raise ValueError(
-                "'data' parameter has to be defined"
-            )
-            
+            raise ValueError("'data' parameter has to be defined")
+
         unds_matrix = data[1]
         info_unds_matrix = unds_matrix
-        
-        calcfarfield = 1 if method == 'farfield' else 0
-        
+
+        calcfarfield = 1 if method == "farfield" else 0
+
         # Arglist assembly
-        arglist = info_unds_matrix[:,[0,1,2]]
-        
+        arglist = info_unds_matrix[:, [0, 1, 2]]
+
         # Add distance from the source
-        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * distance_from_the_source]
+        arglist = _np.c_[
+            arglist, _np.ones((arglist.shape[0], 1)) * distance_from_the_source
+        ]
         # Add slit x
-        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[0]]
+        arglist = _np.c_[
+            arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[0]
+        ]
         # Add slit y
-        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[1]]
+        arglist = _np.c_[
+            arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[1]
+        ]
         # Add method farfield or nearfield
-        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * calcfarfield]
+        arglist = _np.c_[
+            arglist, _np.ones((arglist.shape[0], 1)) * calcfarfield
+        ]
 
         arglist = list(arglist)
-        
+
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
         data = []
-        with multiprocessing.Pool(processes=num_processes-1) as parallel:
+        with multiprocessing.Pool(processes=num_processes - 1) as parallel:
             data = parallel.map(self._parallel_calc_partial_power, arglist)
 
         arglist = _np.array(arglist)
         result = _np.array(data)
-        
+
         # Partial power Matrix Reassembly
-        pts_period = len(_np.where(arglist[:,2] == arglist[0,2])[0])
-        pts_length = len(_np.where(arglist[:,1] == arglist[0,1])[0])
-        
+        pts_period = len(_np.where(arglist[:, 2] == arglist[0, 2])[0])
+        pts_length = len(_np.where(arglist[:, 1] == arglist[0, 1])[0])
+
         partial_power_matrix = result.reshape(pts_length, pts_period)
-        
+
         return partial_power_matrix
-        
-    def plot_brilliance_curve(
+
+    def plot_brilliance_curve(  # noqa: C901
         self,
         process_curves=True,
         superp_value=250,
@@ -3150,7 +3288,7 @@ class SpectraInterface:
         else:
             _plt.show()
 
-    def plot_flux_curve(
+    def plot_flux_curve(  # noqa: C901
         self,
         process_curves=True,
         superp_value=250,
@@ -3294,17 +3432,17 @@ class SpectraInterface:
             _plt.show()
 
     def plot_flux_density_matrix(
-            self,
-            title=None,
-            clim=(None, None),
-            cscale='linear',
-            savefig=False,
-            figsize=(5, 4),
-            figname="flux_density_matrix.png",
-            dpi=400,
-        ):
+        self,
+        title=None,
+        clim=(None, None),
+        cscale="linear",
+        savefig=False,
+        figsize=(5, 4),
+        figname="flux_density_matrix.png",
+        dpi=400,
+    ):
         """Plot Flux Density Matrix (period x length).
-        
+
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
@@ -3321,7 +3459,9 @@ class SpectraInterface:
              figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
-        info = self._info_matrix_flux_density[_np.argmax(self._flux_density_matrix.ravel())]
+        info = self._info_matrix_flux_density[
+            _np.argmax(self._flux_density_matrix.ravel())
+        ]
 
         period_number = info[1]
         length_number = info[2]
@@ -3340,27 +3480,37 @@ class SpectraInterface:
         label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
             period_number, length_number
         )
-        label += "Flux density: {:.2e} ph/s/mrad²/0.1%/100mA".format(self._flux_density_matrix[j, i])
+        label += "Flux density: {:.2e} ph/s/mrad²/0.1%/100mA".format(
+            self._flux_density_matrix[j, i]
+        )
 
         fig, ax = _plt.subplots(figsize=figsize)
         ax.set_title(label if title == None else title)
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
-        
-        vmin=clim[0]
-        vmax=clim[1]
-        
-        if vmin == None:
+
+        vmin = clim[0]
+        vmax = clim[1]
+
+        if vmin is None:
             vmin = _np.min(self._flux_density_matrix)
-        if vmax == None:
+        if vmax is None:
             vmax = _np.max(self._flux_density_matrix)
-        
-        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
-        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
-        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
-        fm = self._flux_density_matrix if cscale == 'linear' else _np.log10(self._flux_density_matrix)
-        
-        im = ax.imshow(
+
+        step = (
+            5
+            if cscale == "linear"
+            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
+        )
+        vmin = vmin if cscale == "linear" else _np.log10(vmin)
+        vmax = vmax if cscale == "linear" else _np.log10(vmax)
+        fm = (
+            self._flux_density_matrix
+            if cscale == "linear"
+            else _np.log10(self._flux_density_matrix)
+        )
+
+        ax.imshow(
             fm,
             extent=[
                 self._info_matrix_flux_density[0, 1],
@@ -3369,16 +3519,18 @@ class SpectraInterface:
                 self._info_matrix_flux_density[-1, 2],
             ],
             aspect="auto",
-            origin='lower',
-            norm= colors.Normalize(vmin=vmin, vmax=vmax) if cscale == 'linear' else colors.LogNorm(vmin=vmin, vmax=vmax)
+            origin="lower",
+            norm=colors.Normalize(vmin=vmin, vmax=vmax)
+            if cscale == "linear"
+            else colors.LogNorm(vmin=vmin, vmax=vmax),
         )
         sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
         sm.set_array(fm)
         cbar = fig.colorbar(
             sm,
             ax=ax,
-            label='Flux density [ph/s/mrad²/0.1%/100mA]',
-            format='%.1e' if cscale == 'linear' else '%.0i'
+            label="Flux density [ph/s/mrad²/0.1%/100mA]",
+            format="%.1e" if cscale == "linear" else "%.0i",
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
         fig.tight_layout()
@@ -3388,17 +3540,17 @@ class SpectraInterface:
             _plt.show()
 
     def plot_flux_matrix(
-            self,
-            title=None,
-            clim=(None, None),
-            cscale='linear',
-            savefig=False,
-            figsize=(5, 4),
-            figname="flux_matrix.png",
-            dpi=400,
-        ):
+        self,
+        title=None,
+        clim=(None, None),
+        cscale="linear",
+        savefig=False,
+        figsize=(5, 4),
+        figname="flux_matrix.png",
+        dpi=400,
+    ):
         """Plot Flux Matrix (period x length).
-        
+
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
@@ -3428,7 +3580,7 @@ class SpectraInterface:
         i = _np.argmax(self._flux_matrix.ravel()) % len(
             self._flux_matrix[0, :]
         )
-        
+
         # Label creation
         label = "Target Energy: {:.2f} KeV\n".format(self._target_energy / 1e3)
         label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
@@ -3440,21 +3592,29 @@ class SpectraInterface:
         ax.set_title(label if title == None else title)
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
-        
-        vmin=clim[0]
-        vmax=clim[1]
-        
-        if vmin == None:
+
+        vmin = clim[0]
+        vmax = clim[1]
+
+        if vmin is None:
             vmin = _np.min(self._flux_matrix)
-        if vmax == None:
+        if vmax is None:
             vmax = _np.max(self._flux_matrix)
-        
-        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
-        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
-        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
-        fm = self._flux_matrix if cscale == 'linear' else _np.log10(self._flux_matrix)
-        
-        im = ax.imshow(
+
+        step = (
+            5
+            if cscale == "linear"
+            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
+        )
+        vmin = vmin if cscale == "linear" else _np.log10(vmin)
+        vmax = vmax if cscale == "linear" else _np.log10(vmax)
+        fm = (
+            self._flux_matrix
+            if cscale == "linear"
+            else _np.log10(self._flux_matrix)
+        )
+
+        ax.imshow(
             fm,
             extent=[
                 self._info_matrix_flux[0, 1],
@@ -3463,16 +3623,18 @@ class SpectraInterface:
                 self._info_matrix_flux[-1, 2],
             ],
             aspect="auto",
-            origin='lower',
-            norm= colors.Normalize(vmin=vmin, vmax=vmax) if cscale == 'linear' else colors.LogNorm(vmin=vmin, vmax=vmax)
+            origin="lower",
+            norm=colors.Normalize(vmin=vmin, vmax=vmax)
+            if cscale == "linear"
+            else colors.LogNorm(vmin=vmin, vmax=vmax),
         )
         sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
         sm.set_array(fm)
         cbar = fig.colorbar(
             sm,
             ax=ax,
-            label='Flux [ph/s/0.1%/100mA]',
-            format='%.1e' if cscale == 'linear' else '%.0i'
+            label="Flux [ph/s/0.1%/100mA]",
+            format="%.1e" if cscale == "linear" else "%.0i",
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
         fig.tight_layout()
@@ -3482,17 +3644,17 @@ class SpectraInterface:
             _plt.show()
 
     def plot_brilliance_matrix(
-            self,
-            title=None,
-            clim=(None, None),
-            cscale='linear',
-            savefig=False,
-            figsize=(5, 4),
-            figname="brilliance_matrix.png",
-            dpi=400,
-        ):
+        self,
+        title=None,
+        clim=(None, None),
+        cscale="linear",
+        savefig=False,
+        figsize=(5, 4),
+        figname="brilliance_matrix.png",
+        dpi=400,
+    ):
         """Plot Brilliance Matrix (period x length).
-        
+
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
@@ -3509,7 +3671,9 @@ class SpectraInterface:
              figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
-        info = self._info_matrix_brilliance[_np.argmax(self._brilliance_matrix.ravel())]
+        info = self._info_matrix_brilliance[
+            _np.argmax(self._brilliance_matrix.ravel())
+        ]
 
         period_number = info[1]
         length_number = info[2]
@@ -3528,27 +3692,37 @@ class SpectraInterface:
         label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
             period_number, length_number
         )
-        label += "Brilliance: {:.2e} ph/s/0.1%/mm²/mrad²/100mA".format(self._brilliance_matrix[j, i])
+        label += "Brilliance: {:.2e} ph/s/0.1%/mm²/mrad²/100mA".format(
+            self._brilliance_matrix[j, i]
+        )
 
         fig, ax = _plt.subplots(figsize=figsize)
-        ax.set_title(label if title == None else title)
+        ax.set_title(label if title is None else title)
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
-        
-        vmin=clim[0]
-        vmax=clim[1]
-        
-        if vmin == None:
+
+        vmin = clim[0]
+        vmax = clim[1]
+
+        if vmin is None:
             vmin = _np.min(self._brilliance_matrix)
-        if vmax == None:
+        if vmax is None:
             vmax = _np.max(self._brilliance_matrix)
-        
-        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
-        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
-        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
-        bm = self._brilliance_matrix if cscale == 'linear' else _np.log10(self._brilliance_matrix)
-        
-        im = ax.imshow(
+
+        step = (
+            5
+            if cscale == "linear"
+            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
+        )
+        vmin = vmin if cscale == "linear" else _np.log10(vmin)
+        vmax = vmax if cscale == "linear" else _np.log10(vmax)
+        bm = (
+            self._brilliance_matrix
+            if cscale == "linear"
+            else _np.log10(self._brilliance_matrix)
+        )
+
+        ax.imshow(
             bm,
             extent=[
                 self._info_matrix_brilliance[0, 1],
@@ -3557,16 +3731,18 @@ class SpectraInterface:
                 self._info_matrix_brilliance[-1, 2],
             ],
             aspect="auto",
-            origin='lower',
-            norm= colors.Normalize(vmin=vmin, vmax=vmax) if cscale == 'linear' else colors.LogNorm(vmin=vmin, vmax=vmax)
+            origin="lower",
+            norm=colors.Normalize(vmin=vmin, vmax=vmax)
+            if cscale == "linear"
+            else colors.LogNorm(vmin=vmin, vmax=vmax),
         )
         sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
         sm.set_array(bm)
         cbar = fig.colorbar(
             sm,
             ax=ax,
-            label='Brilliance [ph/s/0.1%/mm²/mrad²/100mA]',
-            format='%.1e' if cscale == 'linear' else '%.0i'
+            label="Brilliance [ph/s/0.1%/mm²/mrad²/100mA]",
+            format="%.1e" if cscale == "linear" else "%.0i",
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
         fig.tight_layout()
@@ -3577,18 +3753,17 @@ class SpectraInterface:
 
     def plot_total_power_matrix(
         self,
-        data:tuple,
-        title:str='Total Power of Undulators',
-        clim:tuple=(None, None),
-        cscale:str='linear',
-        savefig:bool=False,
-        figsize:tuple=(5, 4),
-        figname:str="total_power_matrix.png",
-        dpi:int=400
-        
+        data: tuple,
+        title: str = "Total Power of Undulators",
+        clim: tuple = (None, None),
+        cscale: str = "linear",
+        savefig: bool = False,
+        figsize: tuple = (5, 4),
+        figname: str = "total_power_matrix.png",
+        dpi: int = 400,
     ):
         """Plot Total Power Matrix (period x length).
-        
+
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
@@ -3603,53 +3778,63 @@ class SpectraInterface:
              figname. Defalts to 'total_power_matrix.png'
             dpi (int, optional): Image resolution
              dpi. Defalts to 400.
-            data (tuple): data especified 
+            data (tuple): data especified
              First position 'flux matrix' or 'flux density matrix' or 'brilliance matrix'
              Second position unds matrix
         """
         if data is None:
-            raise ValueError(
-                "'unds_matrix' parameter has to be defined"
-            )
-        
-        vmin=clim[0]
-        vmax=clim[1]
-        
+            raise ValueError("'unds_matrix' parameter has to be defined")
+
+        vmin = clim[0]
+        vmax = clim[1]
+
         info_unds_matrix = data[1]
-        
+
         current = 100
-        ks = info_unds_matrix[:,0]
-        periods = info_unds_matrix[:,1]
-        lengths = info_unds_matrix[:,2]
-        
+        ks = info_unds_matrix[:, 0]
+        periods = info_unds_matrix[:, 1]
+        lengths = info_unds_matrix[:, 2]
+
         # Calc Fields
-        bs = (ks * EMASS * LSPEED * 2 * PI) / ( ECHARGE * periods * 1e-3)
-        
+        bs = (ks * EMASS * LSPEED * 2 * PI) / (ECHARGE * periods * 1e-3)
+
         # Calc total power
-        const = ( (ECHARGE**4) * (self.accelerator.gamma**2)) / (12 * PI * VACUUM_PERMITTICITY * (EMASS**2) * (LSPEED**2))
-        total_powers = const * (bs**2) * lengths * (current*1e-3) / (1e3 * ECHARGE)
-        
-        pts_period = len(_np.where(info_unds_matrix[:,2] == info_unds_matrix[0,2])[0])
-        pts_length = len(_np.where(info_unds_matrix[:,1] == info_unds_matrix[0,1])[0])
-        
-        total_powers = total_powers.reshape(pts_length,pts_period)
-        
-        if vmin == None:
+        const = ((ECHARGE**4) * (self.accelerator.gamma**2)) / (
+            12 * PI * VACUUM_PERMITTICITY * (EMASS**2) * (LSPEED**2)
+        )
+        total_powers = (
+            const * (bs**2) * lengths * (current * 1e-3) / (1e3 * ECHARGE)
+        )
+
+        pts_period = len(
+            _np.where(info_unds_matrix[:, 2] == info_unds_matrix[0, 2])[0]
+        )
+        pts_length = len(
+            _np.where(info_unds_matrix[:, 1] == info_unds_matrix[0, 1])[0]
+        )
+
+        total_powers = total_powers.reshape(pts_length, pts_period)
+
+        if vmin is None:
             vmin = _np.min(total_powers)
-        if vmax == None:
+        if vmax is None:
             vmax = _np.max(total_powers)
-        
+
         fig, ax = _plt.subplots(figsize=(figsize))
         ax.set_title(title)
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
 
-        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
-        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
-        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
-        pm = total_powers if cscale == 'linear' else _np.log10(total_powers)
+        step = (
+            5
+            if cscale == "linear"
+            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
+        )
+        vmin = vmin if cscale == "linear" else _np.log10(vmin)
+        vmax = vmax if cscale == "linear" else _np.log10(vmax)
+        pm = total_powers if cscale == "linear" else _np.log10(total_powers)
 
-        im = ax.imshow(
+        ax.imshow(
             pm,
             extent=[
                 _np.min(periods),
@@ -3658,18 +3843,20 @@ class SpectraInterface:
                 _np.max(lengths),
             ],
             aspect="auto",
-            origin='lower',
-            norm= colors.Normalize(vmin=vmin, vmax=vmax) if cscale == 'linear' else colors.LogNorm(vmin=vmin, vmax=vmax)
+            origin="lower",
+            norm=colors.Normalize(vmin=vmin, vmax=vmax)
+            if cscale == "linear"
+            else colors.LogNorm(vmin=vmin, vmax=vmax),
         )
 
         sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
         sm.set_array(pm)
-        
+
         cbar = fig.colorbar(
             sm,
             ax=ax,
-            label='Total Power [kW]',
-            format='%.2f' if cscale == 'linear' else '%.0i'
+            label="Total Power [kW]",
+            format="%.2f" if cscale == "linear" else "%.0i",
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
         fig.tight_layout()
@@ -3677,21 +3864,20 @@ class SpectraInterface:
             _plt.savefig(figname, dpi=dpi)
         else:
             _plt.show()
-    
+
     def plot_partial_power_matrix(
         self,
-        title:str='Partial Power of Undulators',
-        clim:tuple=(None, None),
-        cscale:str='linear',
-        savefig:bool=False,
-        figsize:tuple=(5, 4),
-        figname:str="partial_power_matrix.png",
-        dpi:int=400,
-        partial_power_matrix=None
-        
+        title: str = "Partial Power of Undulators",
+        clim: tuple = (None, None),
+        cscale: str = "linear",
+        savefig: bool = False,
+        figsize: tuple = (5, 4),
+        figname: str = "partial_power_matrix.png",
+        dpi: int = 400,
+        partial_power_matrix=None,
     ):
         """Plot Partial Power Matrix (period x length).
-        
+
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
@@ -3712,36 +3898,44 @@ class SpectraInterface:
             raise ValueError(
                 "'partial_power_matrix' parameter has to be defined"
             )
-        
+
         if self._info_matrix_flux is not None:
             info_unds_matrix = self._info_matrix_flux
         elif self._info_matrix_flux_density is not None:
             info_unds_matrix = self._info_matrix_flux_density
         elif self._info_matrix_brilliance is not None:
             info_unds_matrix = self._info_matrix_brilliance
-        
-        periods = info_unds_matrix[:,1]
-        lengths = info_unds_matrix[:,2]
-        
-        vmin=clim[0]
-        vmax=clim[1]
-        
-        if vmin == None:
+
+        periods = info_unds_matrix[:, 1]
+        lengths = info_unds_matrix[:, 2]
+
+        vmin = clim[0]
+        vmax = clim[1]
+
+        if vmin is None:
             vmin = _np.min(partial_power_matrix)
-        if vmax == None:
+        if vmax is None:
             vmax = _np.max(partial_power_matrix)
-        
+
         fig, ax = _plt.subplots(figsize=(figsize))
         ax.set_title(title)
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
-        
-        step = 5 if cscale == 'linear' else int(_np.log10(vmax) - _np.log10(vmin)  + 1)
-        vmin=vmin if cscale == 'linear' else _np.log10(vmin)
-        vmax=vmax if cscale == 'linear' else _np.log10(vmax)
-        partial_power_matrix = partial_power_matrix if cscale == 'linear' else _np.log10(partial_power_matrix)
 
-        im = ax.imshow(
+        step = (
+            5
+            if cscale == "linear"
+            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
+        )
+        vmin = vmin if cscale == "linear" else _np.log10(vmin)
+        vmax = vmax if cscale == "linear" else _np.log10(vmax)
+        partial_power_matrix = (
+            partial_power_matrix
+            if cscale == "linear"
+            else _np.log10(partial_power_matrix)
+        )
+
+        ax.imshow(
             partial_power_matrix,
             extent=[
                 _np.min(periods),
@@ -3750,18 +3944,20 @@ class SpectraInterface:
                 _np.max(lengths),
             ],
             aspect="auto",
-            origin='lower',
-            norm= colors.Normalize(vmin=vmin, vmax=vmax) if cscale == 'linear' else colors.LogNorm(vmin=vmin, vmax=vmax)
+            origin="lower",
+            norm=colors.Normalize(vmin=vmin, vmax=vmax)
+            if cscale == "linear"
+            else colors.LogNorm(vmin=vmin, vmax=vmax),
         )
 
         sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
         sm.set_array(partial_power_matrix)
-        
+
         cbar = fig.colorbar(
             sm,
             ax=ax,
-            label='Partial Power [kW]',
-            format='%.3f' if cscale == 'linear' else '%.0i'
+            label="Partial Power [kW]",
+            format="%.3f" if cscale == "linear" else "%.0i",
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
         fig.tight_layout()
@@ -3771,10 +3967,7 @@ class SpectraInterface:
             _plt.show()
 
     def get_undulator_from_matrix(
-        self,
-        target_period:float,
-        target_length:float,
-        data:tuple
+        self, target_period: float, target_length: float, data: tuple
     ):
         """Get information about the target point in matrix.
 
@@ -3782,81 +3975,81 @@ class SpectraInterface:
             target_period (float): Undulator period [mm]
             target_length (float): Undulator length [m]
             data (tuple): data especified to use in calculation
-             First position 'flux matrix' or 'flux density matrix' or 'brilliance matrix'
-             Second position unds matrix
-        """
-        
+                First position 'flux matrix' or 'flux density matrix' or 'brilliance matrix'
+                Second position unds matrix
+        """  # noqa: E501, D202
+
         if data is None:
-            raise ValueError(
-                "'data' parameter has to be defined"
-            )
-            
+            raise ValueError("'data' parameter has to be defined")
+
         result_matrix = data[0]
         info_unds_matrix = data[1]
-        
-        pts_period = len(result_matrix[0,:])
-        pts_length = len(result_matrix[:,0])
-        
-        max_period = _np.max(info_unds_matrix[:,1])
-        min_period = _np.min(info_unds_matrix[:,1])
-        
-        max_length = _np.max(info_unds_matrix[:,2])
-        min_length = _np.min(info_unds_matrix[:,2])
-        
-        rtol_length = 0.6*(max_length - min_length)/pts_length
-        rtol_period = 0.6*(max_period - min_period)/pts_period
-     
+
+        pts_period = len(result_matrix[0, :])
+        pts_length = len(result_matrix[:, 0])
+
+        max_period = _np.max(info_unds_matrix[:, 1])
+        min_period = _np.min(info_unds_matrix[:, 1])
+
+        max_length = _np.max(info_unds_matrix[:, 2])
+        min_length = _np.min(info_unds_matrix[:, 2])
+
+        rtol_length = 0.6 * (max_length - min_length) / pts_length
+        rtol_period = 0.6 * (max_period - min_period) / pts_period
+
         idcs_period = _np.isclose(
             info_unds_matrix[:, 1], target_period, atol=rtol_period
         )
-        idcs_p = _np.where(idcs_period == True)[0]
+        idcs_p = _np.where(idcs_period is True)[0]
 
         idcs_length = _np.isclose(
             info_unds_matrix[idcs_p, 2], target_length, atol=rtol_length
         )
-        idcs_l = _np.where(idcs_length == True)[0]
-        
+        idcs_l = _np.where(idcs_length is True)[0]
+
         idxs = idcs_p[idcs_l]
-        
-        gap = 0
-        
-        print("{:}{:<2}{:}{:<5}{:}{:<7}{:}{:<7}{:}{:<3}{:}{:<2}{:}{:<2}{:}{:<2}{:}".format(
-            'Und',
-            '',
-            'Keff',
-            '',
-            'Ky',
-            '',
-            'Kx',
-            '',
-            'Gap',
-            '',
-            'Period',
-            '',
-            'Length',
-            '',
-            'H Number',
-            '',
-            'Result',
-        ))        
-        
+
+        print(
+            "{:}{:<2}{:}{:<5}{:}{:<7}{:}{:<7}{:}{:<3}{:}{:<2}{:}{:<2}{:}{:<2}{:}".format(
+                "Und",
+                "",
+                "Keff",
+                "",
+                "Ky",
+                "",
+                "Kx",
+                "",
+                "Gap",
+                "",
+                "Period",
+                "",
+                "Length",
+                "",
+                "H Number",
+                "",
+                "Result",
+            )
+        )
+
         for i, idx in enumerate(idxs):
-            print("{:}{:<4}{:.5f}{:<2}{:.5f}{:<2}{:.5f}{:<2}{:.2f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}".format(
-                i,
-                '',
-                info_unds_matrix[idx][0],
-                '',
-                info_unds_matrix[idx][5],
-                '',
-                info_unds_matrix[idx][6],
-                '',
-                info_unds_matrix[idx][4],
-                '',
-                info_unds_matrix[idx][1],
-                '',
-                info_unds_matrix[idx][2],
-                '',
-                int(info_unds_matrix[idx][3]),
-                '',
-                result_matrix.ravel()[idx],
-            ))
+            print(
+                "{:}{:<4}{:.5f}{:<2}{:.5f}{:<2}{:.5f}{:<2}{:.2f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}".format(
+                    i,
+                    "",
+                    info_unds_matrix[idx][0],
+                    "",
+                    info_unds_matrix[idx][5],
+                    "",
+                    info_unds_matrix[idx][6],
+                    "",
+                    info_unds_matrix[idx][4],
+                    "",
+                    info_unds_matrix[idx][1],
+                    "",
+                    info_unds_matrix[idx][2],
+                    "",
+                    int(info_unds_matrix[idx][3]),
+                    "",
+                    result_matrix.ravel()[idx],
+                )
+            )
