@@ -85,7 +85,6 @@ class BendingMagnet(SourceFunctions):
         field[:, 2] = by
         return field
 
-
     def calc_total_power(self, gamma, acceptance=0.230, current=100):
         """Calculate total power from bending magnet.
 
@@ -96,9 +95,17 @@ class BendingMagnet(SourceFunctions):
         Returns:
             float: Total power of source light [kW]
         """
-        const = ((ECHARGE**3) * (gamma**3)) / (6 * PI * VACUUM_PERMITTICITY * EMASS * LSPEED)
+        const = ((ECHARGE**3) * (gamma**3)) / (
+            6 * PI * VACUUM_PERMITTICITY * EMASS * LSPEED
+        )
 
-        total_power = const * self._b_peak * (acceptance*1e-3) * (current * 1e-3) / (1e3 * ECHARGE)
+        total_power = (
+            const
+            * self._b_peak
+            * (acceptance * 1e-3)
+            * (current * 1e-3)
+            / (1e3 * ECHARGE)
+        )
 
         return total_power
 
@@ -536,7 +543,6 @@ class Undulator(SourceFunctions):
 
         return br2 ** (1 / n) if br2 != 1 else br0
 
-
     def calc_total_power(self, gamma, b, current=100):
         """Calculate total power from an source light.
 
@@ -548,11 +554,19 @@ class Undulator(SourceFunctions):
             float: Total power of source light [kW]
         """
 
-        b = _np.sqrt(2*b**2) if self._polarization == 'cp' else b
+        b = _np.sqrt(2 * b**2) if self._polarization == "cp" else b
 
-        const = ( (ECHARGE**4) * (gamma**2)) / (12 * PI * VACUUM_PERMITTICITY * (EMASS**2) * (LSPEED**2))
+        const = ((ECHARGE**4) * (gamma**2)) / (
+            12 * PI * VACUUM_PERMITTICITY * (EMASS**2) * (LSPEED**2)
+        )
 
-        total_power = const * (b**2) * self._source_length * (current*1e-3) / (1e3 * ECHARGE)
+        total_power = (
+            const
+            * (b**2)
+            * self._source_length
+            * (current * 1e-3)
+            / (1e3 * ECHARGE)
+        )
 
         return total_power
 
@@ -737,7 +751,7 @@ class Delta(Elliptic):
             vc_tolerance = self.vc_tolerance
 
         bsch, bscv = acc.calc_beam_stay_clear(pos)
-        gap = _np.sqrt(2*(bsch**2 + bscv**2))
+        gap = _np.sqrt(2 * (bsch**2 + bscv**2))
         gap = gap + vc_thickness + vc_tolerance
 
         return gap, gap
@@ -930,3 +944,20 @@ class Epu50_uvx(Apple2):
         self._label = "Epu50 (UVX)"
         self._br = 1.135
         self._gap = 22
+
+
+class IVU18_2(Hybrid):
+    """IVU18 class."""
+
+    def __init__(self, period=18.5, length=2):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._label = "IVU18"
+        self._br = 1.24
+        self._gap = 4.5
+        self.vc_thickness = 0
+        self.vc_tolerance = 0.1
+        self._polarization = "hp"
+        self._halbach_coef = {
+            "hp": {"a": 2.4358291, "b": -3.70664776, "c": 0.32867211},
+        }
