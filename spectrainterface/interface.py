@@ -985,11 +985,11 @@ class Calc(GeneralConfigs, SpectraTools):
                 self._target_harmonic = value
             else:
                 raise ValueError(
-                    "Harmonic number can only be defined if the method is fixed point wigner."
+                    "Harmonic number can only be defined if the method is fixed point wigner."  # noqa: E501
                 )
         else:
             raise ValueError(
-                "Harmonic number can only be defined if the variable is energy."
+                "Harmonic number can only be defined if the variable is energy."  # noqa: E501
             )
 
     @k_range.setter
@@ -1019,7 +1019,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 self._slice_x = value
             else:
                 raise ValueError(
-                    "Slice x can only be defined if the method is fixed point wigner."
+                    "Slice x can only be defined if the method is fixed point wigner."  # noqa: E501
                 )
         else:
             raise ValueError(
@@ -1035,7 +1035,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 self._slice_y = value
             else:
                 raise ValueError(
-                    "Slice y can only be defined if the method is fixed point wigner."
+                    "Slice y can only be defined if the method is fixed point wigner."  # noqa: E501
                 )
         else:
             raise ValueError(
@@ -1051,7 +1051,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 self._slice_px = value
             else:
                 raise ValueError(
-                    "Slice x' can only be defined if the method is fixed point wigner."
+                    "Slice x' can only be defined if the method is fixed point wigner."  # noqa: E501
                 )
         else:
             raise ValueError(
@@ -1067,7 +1067,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 self._slice_py = value
             else:
                 raise ValueError(
-                    "Slice y' can only be defined if the method is fixed point wigner."
+                    "Slice y' can only be defined if the method is fixed point wigner."  # noqa: E501
                 )
         else:
             raise ValueError(
@@ -1523,7 +1523,7 @@ class Calc(GeneralConfigs, SpectraTools):
         """
         fname = REPOS_PATH + "/files/phase_errors_fit.txt"
         data = _np.genfromtxt(fname, unpack=True, skip_header=1)
-        h = data[:, 0]
+        # h = data[:, 0]
         ph_err1 = data[:, 1]
         ph_err2 = data[:, 2]
         harm0 = self.harmonic_range[0]
@@ -1775,7 +1775,8 @@ class SpectraInterface:
 
     @property
     def info_matrix_flux_density(self):
-        """Information about the respective undulators in the flux density matrix.
+        """Information about the respective undulators in
+                the flux density matrix.
 
         Returns:
             Array: Undulators information to analyse.
@@ -2376,7 +2377,7 @@ class SpectraInterface:
         target_k: float,
         slit_shape: str,
         slit_acceptance: list,
-        distance_from_the_source: float,
+        distance_from_source: float,
         method: str,
         n_harmonic: int,
     ):
@@ -2389,7 +2390,7 @@ class SpectraInterface:
             target_k (float): K value.
             slit_shape (str): shape of slit acceptance 'retslit' or 'circslit'.
             slit_acceptance (list): slit aceeptance [mrad, mrad].
-            distance_from_the_source (float): distance from the source [m]
+            distance_from_source (float): distance from the source [m]
             method (int): method to use in fixed point calculation 'farfield' or 'nearfield'
             n_harmonic (int): harmonic number to used in the calculation
         Returns:
@@ -2451,7 +2452,7 @@ class SpectraInterface:
             )
 
         spectra.calc.target_energy = self._target_energy
-        spectra.calc.distance_from_source = distance_from_the_source
+        spectra.calc.distance_from_source = distance_from_source
         spectra.calc.observation_angle = [0, 0]
         spectra.calc.slit_acceptance = slit_acceptance
 
@@ -2475,13 +2476,13 @@ class SpectraInterface:
             period,
             length,
             n_harmonic,
-            distance_from_the_source,
+            distance_from_source,
             slit_x,
             slit_y,
             method,
             _,
             slit_shape,
-            *_
+            *_,
         ) = args
         slit_acceptance = [slit_x, slit_y]
         return self._calc_flux(
@@ -2491,7 +2492,7 @@ class SpectraInterface:
             target_k,
             slit_shape,
             slit_acceptance,
-            distance_from_the_source,
+            distance_from_source,
             method,
             n_harmonic,
         )
@@ -2507,7 +2508,7 @@ class SpectraInterface:
         n_harmonic_truc: int = 15,
         slit_shape: str = "retslit",
         slit_acceptance: list = [0.230, 0.230],
-        distance_from_the_source: float = 23,
+        distance_from_source: float = 23,
         method: str = "farfield",
         nr_pts_k: int = 1,
     ):
@@ -2530,11 +2531,11 @@ class SpectraInterface:
                 Defaults to 'retslit'.
             slit_acceptance (list): Slit acceptance [mrad, mrad].
                 Defaults to [0.230, 0.230]
-            distance_from_the_source (float): Distance from the source [m]
+            distance_from_source (float): Distance from the source [m]
                 Defaults to 23
             method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
                 Defaults to 'farfield'
-            nr_pts_k (int): number to otimize the tuned beam 
+            nr_pts_k (int): number to otimize the tuned beam
         Returns:
             numpy array: Flux matrix.
             numpy array: Undulators information.
@@ -2621,7 +2622,7 @@ class SpectraInterface:
                                 period,
                                 length,
                                 ns[i],
-                                distance_from_the_source,
+                                distance_from_source,
                                 slit_acceptance[0],
                                 slit_acceptance[1],
                                 method,
@@ -2968,7 +2969,7 @@ class SpectraInterface:
         source_length: float,
         target_k: float,
         slit_acceptance: list,
-        distance_from_the_source: float,
+        distance_from_source: float,
         calcfarfield: int,
     ):
         """Calculate partial power for one k value.
@@ -2979,7 +2980,7 @@ class SpectraInterface:
             source_length (float): undulator length [m].
             target_k (float): K value.
             slit_acceptance (list): slit aceeptance [mrad, mrad].
-            distance_from_the_source (float): distance from the source [m]
+            distance_from_source (float): distance from the source [m]
             calcfarfield (int): method to use in fixed point calculation 'farfield' 1 or 'nearfield' 0
 
         Returns:
@@ -3034,7 +3035,7 @@ class SpectraInterface:
         )
 
         spectra.calc.target_energy = self._target_energy
-        spectra.calc.distance_from_source = distance_from_the_source
+        spectra.calc.distance_from_source = distance_from_source
         spectra.calc.observation_angle = [0, 0]
         spectra.calc.slit_acceptance = slit_acceptance
 
@@ -3051,7 +3052,7 @@ class SpectraInterface:
             target_k,
             period,
             length,
-            distance_from_the_source,
+            distance_from_source,
             slit_x,
             slit_y,
             method,
@@ -3062,7 +3063,7 @@ class SpectraInterface:
             length,
             target_k,
             slit_acceptance,
-            distance_from_the_source,
+            distance_from_source,
             method,
         )
 
@@ -3070,7 +3071,7 @@ class SpectraInterface:
         self,
         data: tuple,
         slit_acceptance: list = [0.230, 0.230],  # noqa: B006
-        distance_from_the_source: float = 30,
+        distance_from_source: float = 30,
         method: str = "farfield",
     ):
         """Calc partial power from matrix.
@@ -3078,7 +3079,7 @@ class SpectraInterface:
         Args:
             slit_acceptance (list): Slit acceptance [mrad, mrad].
              Defaults to [0.230, 0.230]
-            distance_from_the_source (float): Distance from the source [m]
+            distance_from_source (float): Distance from the source [m]
              Defaults to 10
             method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
              Defaults to 'farfield'
@@ -3101,7 +3102,7 @@ class SpectraInterface:
 
         # Add distance from the source
         arglist = _np.c_[
-            arglist, _np.ones((arglist.shape[0], 1)) * distance_from_the_source
+            arglist, _np.ones((arglist.shape[0], 1)) * distance_from_source
         ]
         # Add slit x
         arglist = _np.c_[
@@ -4000,12 +4001,12 @@ class SpectraInterface:
         idcs_period = _np.isclose(
             info_unds_matrix[:, 1], target_period, atol=rtol_period
         )
-        idcs_p = _np.where(idcs_period is True)[0]
+        idcs_p = _np.where(idcs_period == True)[0]
 
         idcs_length = _np.isclose(
             info_unds_matrix[idcs_p, 2], target_length, atol=rtol_length
         )
-        idcs_l = _np.where(idcs_length is True)[0]
+        idcs_l = _np.where(idcs_length == True)[0]
 
         idxs = idcs_p[idcs_l]
 
