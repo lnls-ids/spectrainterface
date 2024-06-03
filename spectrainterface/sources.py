@@ -953,11 +953,28 @@ class IVU18_2(Hybrid):
         """Class constructor."""
         super().__init__(period, length)
         self._label = "IVU18"
-        self._br = 1.24
+        self._br = 1.27
         self._gap = 4.5
         self.vc_thickness = 0
         self.vc_tolerance = 0.1
         self._polarization = "hp"
         self._halbach_coef = {
-            "hp": {"a": 2.4358291, "b": -3.70664776, "c": 0.32867211},
+            "hp": {"a": 2.26223181, "b": -3.69776472, "c": 0.32867209},
+        }
+
+
+class IVU18_1(Hybrid):
+    """IVU18 class."""
+
+    def __init__(self, period=18.5, length=2):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._label = "IVU18"
+        self._br = 1.27
+        self._gap = 4.5
+        self.vc_thickness = 0
+        self.vc_tolerance = 0.1
+        self._polarization = "hp"
+        self._halbach_coef = {
+            "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
         }
