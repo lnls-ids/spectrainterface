@@ -2511,6 +2511,7 @@ class SpectraInterface:
         distance_from_source: float = 23,
         method: str = "farfield",
         nr_pts_k: int = 1,
+        delta_k_range = []
     ):
         """Calc flux matrix.
 
@@ -2589,7 +2590,10 @@ class SpectraInterface:
                 target_ks[idx] = 0
 
                 for i, target_k in enumerate(target_ks):
-                    ks = _np.linspace(target_k, target_k - 0.01, nr_pts_k)
+                    if i < len(delta_k_range):
+                        ks = _np.linspace(target_k, target_k + delta_k_range[i], nr_pts_k)
+                    else:
+                        ks = _np.linspace(target_k, target_k + delta_k_range[-1], nr_pts_k)
                     # k = target_k
                     ks = _np.delete(ks, _np.where(ks < 0)[0])
 
