@@ -4005,12 +4005,12 @@ class SpectraInterface:
         idcs_period = _np.isclose(
             info_unds_matrix[:, 1], target_period, atol=rtol_period
         )
-        idcs_p = _np.where(idcs_period == True)[0]
+        idcs_p = _np.where(idcs_period)[0]
 
         idcs_length = _np.isclose(
             info_unds_matrix[idcs_p, 2], target_length, atol=rtol_length
         )
-        idcs_l = _np.where(idcs_length == True)[0]
+        idcs_l = _np.where(idcs_length)[0]
 
         idxs = idcs_p[idcs_l]
 
