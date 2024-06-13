@@ -890,6 +890,32 @@ class Cpmu_pr(Undulator):
         self._source_type = "linearundulator"
 
 
+class Cpmu_pr_feb(Undulator):
+    """Cpmu PrFeB Undulator class (HEPS).
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm]
+            length (float, optional): Undulator length [m]
+        """
+        super().__init__()
+        self._undulator_type = "cpmu_pr_feb"
+        self._label = "CPMU (PrFeB)"
+        self._br = 1.71
+        self._polarization = "hp"
+        self._efficiency = 1.0
+        self._halbach_coef = {"hp": {"a": 3.0877, "b": -4.396, "c": 1.62}}
+        self._period = period
+        self._source_length = length
+        self._source_type = "linearundulator"
+
+
 class Ue44(Apple2):
     """Ue44  class."""
 
