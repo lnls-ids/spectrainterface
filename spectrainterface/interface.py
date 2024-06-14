@@ -466,7 +466,7 @@ class Calc(GeneralConfigs, SpectraTools):
 
         #  Phase error
         self._add_phase_errors = False
-        self._user_recovery_params = True
+        self._use_recovery_params = True
 
         # Output
         self._output_captions = None
@@ -710,15 +710,6 @@ class Calc(GeneralConfigs, SpectraTools):
             dict: Variables from spectra
         """
         return self._output_variables
-
-    @property
-    def add_phase_errors(self):
-        """Add phase error.
-
-        Returns:
-            bool: If true user can set phase errors.
-        """
-        return self._add_phase_errors
 
     @property
     def flux(self):
@@ -1074,15 +1065,6 @@ class Calc(GeneralConfigs, SpectraTools):
                 "Slice y' can only be defined if the variable is k or energy."
             )
 
-    @add_phase_errors.setter
-    def add_phase_errors(self, value):
-        if type(value) is not bool:
-            raise ValueError(
-                "Add phase error must be a boolean"  # noqa: E501
-            )
-        else:
-            self._add_phase_errors = value
-
     def set_config(self):  # noqa: C901
         """Set calc config."""
         config_name = REPOS_PATH + "/calculation_parameters/"
@@ -1429,7 +1411,7 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._k = data[:, 0, :]
                     self._brilliance = data[:, 1, :]
                     self._energies = variables[:, :]
-                    if self.add_phase_errors is True:
+                    if self._add_phase_errors is True:
                         self._brilliance = self.apply_phase_errors(
                             self._brilliance, self._use_recovery_params
                         )
@@ -1449,7 +1431,7 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._k = data[:, 1, :]
                     self._flux = data[:, 2, :]
                     self._energies = variables[:, :]
-                    if self.add_phase_errors is True:
+                    if self._add_phase_errors is True:
                         self._flux = self.apply_phase_errors(
                             self._flux, self._use_recovery_params
                         )
@@ -1890,7 +1872,7 @@ class SpectraInterface:
                     self.calc.output_type = (
                         self.calc.CalcConfigs.Output.brilliance
                     )
-                    self.calc.add_phase_errors = source.add_phase_errors
+                    self.calc._add_phase_errors = source.add_phase_errors
                     self.calc._use_recovery_params = source.use_recovery_params
                     self.calc.indep_var = self.calc.CalcConfigs.Variable.k
                     self.calc.method = self.calc.CalcConfigs.Method.wigner
@@ -2037,7 +2019,7 @@ class SpectraInterface:
                     self.calc.energy_range = energy_range
                     self.calc.energy_step = 1
                 else:
-                    self.calc.add_phase_errors = source.add_phase_errors
+                    self.calc._add_phase_errors = source.add_phase_errors
                     self.calc._use_recovery_params = source.use_recovery_params
                     self.calc.output_type = self.calc.CalcConfigs.Output.flux
                     self.calc.indep_var = self.calc.CalcConfigs.Variable.k
