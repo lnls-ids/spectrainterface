@@ -2511,7 +2511,7 @@ class SpectraInterface:
         distance_from_source: float = 23,
         method: str = "farfield",
         nr_pts_k: int = 1,
-        delta_k_range = []
+        delta_k_range=_np.array([0.0001])
     ):
         """Calc flux matrix.
 
@@ -2537,6 +2537,7 @@ class SpectraInterface:
             method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
                 Defaults to 'farfield'
             nr_pts_k (int): number to otimize the tuned beam
+            delta_k_range (array): k range for detuning
         Returns:
             numpy array: Flux matrix.
             numpy array: Undulators information.
@@ -2591,9 +2592,13 @@ class SpectraInterface:
 
                 for i, target_k in enumerate(target_ks):
                     if i < len(delta_k_range):
-                        ks = _np.linspace(target_k, target_k + delta_k_range[i], nr_pts_k)
+                        ks = _np.linspace(
+                            target_k, target_k + delta_k_range[i], nr_pts_k
+                        )
                     else:
-                        ks = _np.linspace(target_k, target_k + delta_k_range[-1], nr_pts_k)
+                        ks = _np.linspace(
+                            target_k, target_k + delta_k_range[-1], nr_pts_k
+                        )
                     # k = target_k
                     ks = _np.delete(ks, _np.where(ks < 0)[0])
 
