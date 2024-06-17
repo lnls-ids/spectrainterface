@@ -2593,11 +2593,11 @@ class SpectraInterface:
                 for i, target_k in enumerate(target_ks):
                     if i < len(delta_k_range):
                         ks = _np.linspace(
-                            target_k, target_k + delta_k_range[i], nr_pts_k
+                            target_k, target_k * delta_k_range[i], nr_pts_k
                         )
                     else:
                         ks = _np.linspace(
-                            target_k, target_k + delta_k_range[-1], nr_pts_k
+                            target_k, target_k * delta_k_range[-1], nr_pts_k
                         )
                     # k = target_k
                     ks = _np.delete(ks, _np.where(ks < 0)[0])
