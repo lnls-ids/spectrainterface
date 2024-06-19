@@ -2493,7 +2493,7 @@ class SpectraInterface:
         distance_from_source: float = 23,
         method: str = "farfield",
         nr_pts_k: int = 1,
-        delta_k_range=_np.array([0.0001]),
+        delta_k_range=_np.array([0.99]),
         min_k_max: float = 0.1,
     ):
         """Calc flux matrix.
@@ -2520,7 +2520,9 @@ class SpectraInterface:
             method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
                 Defaults to 'farfield'
             nr_pts_k (int): number to otimize the tuned beam
-            delta_k_range (array): k range for detuning,
+            delta_k_range (array): multiplicative factor for the K-value at resonance. 
+                Defines the lowest K-value. Each element will be applied to the respective harmonic number.
+                If n_harmonic > len(delta_k_range), the last value will be used for the next harmonics. 
             min_k_max (float): min k max to remove the holes in the flux curve
         Returns:
             numpy array: Flux matrix.
