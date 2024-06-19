@@ -2493,6 +2493,8 @@ class SpectraInterface:
         distance_from_source: float = 23,
         method: str = "farfield",
         nr_pts_k: int = 1,
+        delta_k_range=_np.array([0.99]),
+        min_k_max: float = 0.1,
     ):
         """Calc flux matrix.
 
@@ -2518,6 +2520,10 @@ class SpectraInterface:
             method (str): method to use in fixed point calculation 'farfield' or 'nearfield'
                 Defaults to 'farfield'
             nr_pts_k (int): number to otimize the tuned beam
+            delta_k_range (array): multiplicative factor for the K-value at resonance. 
+                Defines the lowest K-value. Each element will be applied to the respective harmonic number.
+                If n_harmonic > len(delta_k_range), the last value will be used for the next harmonics. 
+            min_k_max (float): min k max to remove the holes in the flux curve
         Returns:
             numpy array: Flux matrix.
             numpy array: Undulators information.
@@ -2536,84 +2542,113 @@ class SpectraInterface:
                 self._und.source_length = length
 
                 k_max = self._und.calc_max_k(self.accelerator)
-                kx = 0
-                ky = 0
 
-                n = 1
-                en = self._und.get_harmonic_energy(
-                    n, gamma, 0, self._und.period, k_max
-                )
-                while en < self._target_energy:
-                    n += 2
+                if k_max >= min_k_max:
+                    kx = 0
+                    ky = 0
+
+                    n = 1
                     en = self._und.get_harmonic_energy(
                         n, gamma, 0, self._und.period, k_max
                     )
-                if n > 2:
-                    n -= 2
-
-                n_truc = n_harmonic_truc
-
-                if n > n_truc:
-                    n = n_truc
-
-                ns = _np.linspace(1, n, int(n / 2 + 1))
-
-                target_ks = self.calc_k_target(
-                    ns, self._und.period, self._target_energy
-                )
-
-                target_ks[_np.where(target_ks > k_max)[0]] = 0
-                # if target_ks[0] > k_max:
-                #     target_ks[0] = 0
-                idx = _np.isnan(target_ks)
-                idx = _np.where(idx)
-
-                target_ks[idx] = 0
-
-                for i, target_k in enumerate(target_ks):
-                    ks = _np.linspace(target_k, target_k - 0.01, nr_pts_k)
-                    # k = target_k
-                    ks = _np.delete(ks, _np.where(ks < 0)[0])
-
-                    for k in ks:
-                        gap = self._und.undulator_k_to_gap(
-                            k=k,
-                            period=self._und.period,
-                            br=self._und.br,
-                            a=self._und.halbach_coef[self._und.polarization][
-                                "a"
-                            ],
-                            b=self._und.halbach_coef[self._und.polarization][
-                                "b"
-                            ],
-                            c=self._und.halbach_coef[self._und.polarization][
-                                "c"
-                            ],
+                    while en < self._target_energy:
+                        n += 2
+                        en = self._und.get_harmonic_energy(
+                            n, gamma, 0, self._und.period, k_max
                         )
-                        if self._und.polarization == "hp":
-                            ky = k
-                        elif self._und.polarization == "vp":
-                            kx = k
-                        elif self._und.polarization == "cp":
-                            kx = k / _np.sqrt(1 + self._und.fields_ratio**2)
-                            ky = kx * self._und.fields_ratio
+                    if n > 2:
+                        n -= 2
 
-                        arglist += [
-                            (
-                                k,
-                                period,
-                                length,
-                                ns[i],
-                                distance_from_source,
-                                slit_acceptance[0],
-                                slit_acceptance[1],
-                                method,
-                                gap,
-                                slit_shape,
-                                ky,
-                                kx,
+                    n_truc = n_harmonic_truc
+
+                    if n > n_truc:
+                        n = n_truc
+
+                    ns = _np.linspace(1, n, int(n / 2 + 1))
+
+                    target_ks = self.calc_k_target(
+                        ns, self._und.period, self._target_energy
+                    )
+
+                    target_ks[_np.where(target_ks > k_max)[0]] = 0
+                    idx = _np.isnan(target_ks)
+                    idx = _np.where(idx)
+                    target_ks[idx[-1]] = 0
+                    new_idx = _np.delete(idx, [-1])
+                    target_ks = _np.delete(target_ks, new_idx)
+
+                    for i, target_k in enumerate(target_ks):
+                        if i < len(delta_k_range):
+                            ks = _np.linspace(
+                                target_k, target_k * delta_k_range[i], nr_pts_k
                             )
-                        ]
+                        else:
+                            ks = _np.linspace(
+                                target_k,
+                                target_k * delta_k_range[-1],
+                                nr_pts_k,
+                            )
+                        # k = target_k
+                        ks = _np.delete(ks, _np.where(ks < 0)[0])
+
+                        for k in ks:
+                            gap = self._und.undulator_k_to_gap(
+                                k=k,
+                                period=self._und.period,
+                                br=self._und.br,
+                                a=self._und.halbach_coef[
+                                    self._und.polarization
+                                ]["a"],
+                                b=self._und.halbach_coef[
+                                    self._und.polarization
+                                ]["b"],
+                                c=self._und.halbach_coef[
+                                    self._und.polarization
+                                ]["c"],
+                            )
+                            if self._und.polarization == "hp":
+                                ky = k
+                            elif self._und.polarization == "vp":
+                                kx = k
+                            elif self._und.polarization == "cp":
+                                kx = k / _np.sqrt(
+                                    1 + self._und.fields_ratio**2
+                                )
+                                ky = kx * self._und.fields_ratio
+
+                            arglist += [
+                                (
+                                    k,
+                                    period,
+                                    length,
+                                    ns[i],
+                                    distance_from_source,
+                                    slit_acceptance[0],
+                                    slit_acceptance[1],
+                                    method,
+                                    gap,
+                                    slit_shape,
+                                    ky,
+                                    kx,
+                                )
+                            ]
+                else:
+                    arglist += [
+                        (
+                            0,
+                            period,
+                            length,
+                            1,
+                            distance_from_source,
+                            slit_acceptance[0],
+                            slit_acceptance[1],
+                            method,
+                            _np.inf,
+                            slit_shape,
+                            0,
+                            0,
+                        )
+                    ]
 
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
