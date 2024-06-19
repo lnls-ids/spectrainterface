@@ -3614,7 +3614,7 @@ class SpectraInterface:
             if cscale == "linear"
             else colors.LogNorm(vmin=vmin, vmax=vmax),
         )
-        sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
+        sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax), cmap=cmap)
         sm.set_array(fm)
         cbar = fig.colorbar(
             sm,
