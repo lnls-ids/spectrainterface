@@ -3527,6 +3527,7 @@ class SpectraInterface:
         title=None,
         clim=(None, None),
         cscale="linear",
+        cmap='viridis',
         savefig=False,
         figsize=(5, 4),
         figname="flux_matrix.png",
@@ -3540,6 +3541,7 @@ class SpectraInterface:
              cscale. Defalts to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
+            cmap (str): colormap.
             savefig (bool, optional): Save Figure
              savefig. Defalts to False.
             figname (str, optional): Figure name
@@ -3607,6 +3609,7 @@ class SpectraInterface:
             ],
             aspect="auto",
             origin="lower",
+            cmap=cmap,
             norm=colors.Normalize(vmin=vmin, vmax=vmax)
             if cscale == "linear"
             else colors.LogNorm(vmin=vmin, vmax=vmax),
@@ -3618,6 +3621,7 @@ class SpectraInterface:
             ax=ax,
             label="Flux [ph/s/0.1%/100mA]",
             format="%.1e" if cscale == "linear" else "%.0i",
+            cmap=cmap,
         )
         cbar.set_ticks(_np.linspace(vmin, vmax, step))
         fig.tight_layout()

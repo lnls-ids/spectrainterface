@@ -597,8 +597,8 @@ class Wiggler(Undulator):
         self._source_type = "wiggler"
 
 
-class Planar(Undulator):
-    """Planar Undulator class.
+class Halbach(Undulator):
+    """Halbach Planar Undulator class.
 
     Args:
         Undulator (Undulator class): Undulator class
@@ -612,8 +612,8 @@ class Planar(Undulator):
             length (float, optional): Undulator length [m]
         """
         super().__init__()
-        self._undulator_type = "planar"
-        self._label = "Planar"
+        self._undulator_type = "halbach"
+        self._label = "Halbach"
         self._br = 1.37
         self._polarization = "hp"
         self._efficiency = 1
@@ -786,8 +786,8 @@ class Hybrid_Nd(Undulator):
         self._source_type = "linearundulator"
 
 
-class Hybrid_smco(Undulator):
-    """Hybrid smco Undulator class.
+class Hybrid_SmCo(Undulator):
+    """Hybrid SmCo Undulator class.
 
     Args:
         Undulator (Undulator class): Undulator class
@@ -801,7 +801,7 @@ class Hybrid_smco(Undulator):
             length (float, optional): Undulator length [m]
         """
         super().__init__()
-        self._undulator_type = "hybrid_smco"
+        self._undulator_type = "Hybrid_SmCo"
         self._label = "Hybrid (SmCo)"
         self._br = 1.24
         self._polarization = "hp"
@@ -826,7 +826,7 @@ class IVU_NdFeB(Hybrid_Nd):
             period (float, optional): Undulator period [mm]
             length (float, optional): Undulator length [m]
         """
-        super().__init__()
+        super().__init__(period, length)
         self._label = "IVU (Nd)"
         self.vc_thickness = 0
         self.vc_tolerance = 0.4
@@ -846,15 +846,13 @@ class CPMU_Nd(IVU_NdFeB):
             period (float, optional): Undulator period [mm]
             length (float, optional): Undulator length [m]
         """
-        super().__init__()
+        super().__init__(period, length)
         self._undulator_type = "CPMU_Nd"
         self._label = "CPMU (Nd)"
         self._br = 1.5
         self._polarization = "hp"
         self._efficiency = 0.9
         self._halbach_coef = {"hp": {"a": 2.268, "b": -3.895, "c": 0.554}}
-        self._period = period
-        self._source_length = length
         self._source_type = "linearundulator"
 
 
@@ -872,15 +870,13 @@ class CPMU_Pr_Nd(IVU_NdFeB):
             period (float, optional): Undulator period [mm]
             length (float, optional): Undulator length [m]
         """
-        super().__init__()
+        super().__init__(period, length)
         self._undulator_type = "CPMU_PrNd"
         self._label = "CPMU (PrNd)"
         self._br = 1.62
         self._polarization = "hp"
         self._efficiency = 0.9
         self._halbach_coef = {"hp": {"a": 2.132, "b": -3.692, "c": 0.391}}
-        self._period = period
-        self._source_length = length
         self._source_type = "linearundulator"
 
 
@@ -898,15 +894,13 @@ class CPMU_Pr(IVU_NdFeB):
             period (float, optional): Undulator period [mm]
             length (float, optional): Undulator length [m]
         """
-        super().__init__()
+        super().__init__(period, length)
         self._undulator_type = "CPMU_Pr"
         self._label = "CPMU (Pr)"
         self._br = 1.67
         self._polarization = "hp"
         self._efficiency = 0.9
         self._halbach_coef = {"hp": {"a": 2.092, "b": -3.655, "c": 0.376}}
-        self._period = period
-        self._source_length = length
         self._source_type = "linearundulator"
 
 
@@ -924,15 +918,13 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
             period (float, optional): Undulator period [mm]
             length (float, optional): Undulator length [m]
         """
-        super().__init__()
+        super().__init__(period, length)
         self._undulator_type = "CPMU_Pr_feb"
         self._label = "CPMU (PrFeB)"
         self._br = 1.71
         self._polarization = "hp"
         self._efficiency = 1.0
         self._halbach_coef = {"hp": {"a": 3.0877, "b": -4.396, "c": 1.62}}
-        self._period = period
-        self._source_length = length
         self._source_type = "linearundulator"
 
 
@@ -959,7 +951,7 @@ class VPU(Hybrid_Nd):
         self._gap = 9.7
 
 
-class APU58(Planar):
+class APU58(Halbach):
     """APU58 class."""
 
     def __init__(self, period=58, length=1):
@@ -981,8 +973,8 @@ class EPU50(APPLE2):
         self._gap = 10.3
 
 
-class EPU50_uvx(APPLE2):
-    """EPU50 uvx class."""
+class EPU50_UVX(APPLE2):
+    """EPU50 UVX class."""
 
     def __init__(self, period=50, length=2.7):
         """Class constructor."""
@@ -1002,7 +994,7 @@ class IVU18_2(IVU_NdFeB):
         self._br = 1.27
         self._gap = 4.5
         self.vc_thickness = 0
-        self.vc_tolerance = 0.0
+        self.vc_tolerance = 0.7
         self._polarization = "hp"
         self._halbach_coef = {
             "hp": {"a": 2.26223181, "b": -3.69776472, "c": 0.32867209},
@@ -1018,8 +1010,8 @@ class IVU18_1(IVU_NdFeB):
         self._label = "IVU18-1"
         self._br = 1.27
         self._gap = 4.5
-        self.vc_thickness = 0
-        self.vc_tolerance = 0.0
+        self._vc_thickness = 0
+        self._vc_tolerance = 0.7
         self._polarization = "hp"
         self._halbach_coef = {
             "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
