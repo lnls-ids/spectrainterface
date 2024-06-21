@@ -1796,6 +1796,7 @@ class SpectraInterface:
 
         Args:
             values (numpy 2d array): It can be brilliance of flux
+            harm (int): Harmonic number
             rec_param (bool, optional): Use recovery params. Defaults to True.
 
         Returns:
@@ -2486,12 +2487,35 @@ class SpectraInterface:
         harmonics,
         kmin,
         slit_shape="retslit",
-        slit_acceptance=[0.230, 0.230],
+        slit_acceptance=(0.230, 0.230),
         distance_from_source=23,
         method="farfield",
         nr_pts_k=1,
         k_range=0.99,
     ):
+        """Calculate flux matrix.
+
+        Args:
+            target_energy (float): Target energy to evaluate matrix [eV]
+            und (Undulator object): Must be an object from undulator class.
+            periods (1D Numpy array): Periods to evaluate calculation.
+            lengths (1D Numpy array): Lengths to evaluate calculation.
+            harmonics (1D numpy array): Harmonics - must be an array with ints.
+            kmin (float): Minimum K allowed.
+            slit_shape (str, optional): Slit shape. Defaults to "retslit".
+            slit_acceptance (tuple, optional): Slit acceptances.
+                Defaults to (0.230, 0.230).
+            distance_from_source (float, optional): Distance from source.
+                Defaults to 23.
+            method (str, optional): Method of calc. Defaults to "farfield".
+            nr_pts_k (int, optional): Number of K points. Defaults to 1.
+            k_range (float, optional): K range to evaluate detuning.
+                Defaults to 0.99.
+
+        Returns:
+            tuple: Flux matrix, and information matrix
+                [k, period, length, n_harm].
+        """
         n = harmonics
         gamma = self.accelerator.gamma
         self._target_energy = target_energy
@@ -2528,18 +2552,18 @@ class SpectraInterface:
                 harm = n[idcs]
                 if idcs.size == 0:
                     arglist += [
-                                (
-                                    0,
-                                    period,
-                                    length,
-                                    1,
-                                    distance_from_source,
-                                    slit_acceptance[0],
-                                    slit_acceptance[1],
-                                    method,
-                                    slit_shape,
-                                )
-                            ]
+                        (
+                            0,
+                            period,
+                            length,
+                            1,
+                            distance_from_source,
+                            slit_acceptance[0],
+                            slit_acceptance[1],
+                            method,
+                            slit_shape,
+                        )
+                    ]
 
                 else:
                     for z, k in enumerate(kres):
@@ -3966,17 +3990,35 @@ class SpectraInterface:
         )
 
         for i, idx in enumerate(idxs):
+            k = info_unds_matrix[idx][0]
+            kx = 0
+            ky = 0
+            gap = self._und.undulator_k_to_gap(
+                k=k,
+                period=self._und.period,
+                br=self._und.br,
+                a=self._und.halbach_coef[self._und.polarization]["a"],
+                b=self._und.halbach_coef[self._und.polarization]["b"],
+                c=self._und.halbach_coef[self._und.polarization]["c"],
+            )
+            if self._und.polarization == "hp":
+                ky = k
+            elif self._und.polarization == "vp":
+                kx = k
+            elif self._und.polarization == "cp":
+                kx = k / _np.sqrt(1 + self._und.fields_ratio**2)
+                ky = kx * self._und.fields_ratio
             print(
                 "{:}{:<4}{:.5f}{:<2}{:.5f}{:<2}{:.5f}{:<2}{:.2f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}".format(
                     i,
                     "",
-                    info_unds_matrix[idx][0],
+                    k,
                     "",
-                    info_unds_matrix[idx][5],
+                    ky,
                     "",
-                    info_unds_matrix[idx][6],
+                    kx,
                     "",
-                    info_unds_matrix[idx][4],
+                    gap,
                     "",
                     info_unds_matrix[idx][1],
                     "",
