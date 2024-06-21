@@ -2142,7 +2142,7 @@ class SpectraInterface:
             distance_from_source (float): Distance from source.
 
         Returns:
-            _type_: _description_
+            float: Flux density value
         """
         self._target_energy = target_energy
         und: Undulator = self._und
@@ -2227,7 +2227,7 @@ class SpectraInterface:
                 Defaults to 23.
 
         Returns:
-            tuple: Flux matrix, and information matrix
+            tuple: Flux density matrix, and information matrix
                 [k, period, length, n_harm].
         """
         n = harmonics
@@ -2368,8 +2368,9 @@ class SpectraInterface:
             distance_from_source (float): distance from the source [m]
             method (int): method to use in fixed point calculation 'farfield' or 'nearfield'
             n_harmonic (int): harmonic number to used in the calculation
+
         Returns:
-            _type_: _description_
+            float: Flux value
         """  # noqa: E501
         self._target_energy = target_energy
         und: Undulator = self._und
@@ -2639,7 +2640,6 @@ class SpectraInterface:
         source_period: float,
         source_length: float,
         target_k: float,
-        distance_from_source: float,
     ):
         """Calculate brilliance for one k value.
 
@@ -2648,10 +2648,9 @@ class SpectraInterface:
             source_period (float): undulator period [mm].
             source_length (float): undulator length [m].
             target_k (float): K value.
-            distance_from_source (float): Distance from source.
 
         Returns:
-            _type_: _description_
+            float: Brilliance value
         """
         und: Undulator = self._und
 
@@ -2674,7 +2673,6 @@ class SpectraInterface:
             spectra.calc.CalcConfigs.Method.fixedpoint_wigner
         )
         spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
-        spectra.calc.distance_from_source = distance_from_source
         if und.polarization == "hp":
             spectra.calc.source_type = (
                 spectra.calc.SourceType.horizontal_undulator
@@ -2723,10 +2721,9 @@ class SpectraInterface:
             period,
             length,
             n_harmonic,
-            distance,
         ) = args
         return self._calc_brilliance(
-            n_harmonic, period, length, target_k, distance
+            n_harmonic, period, length, target_k
         )
 
     def calc_brilliance_matrix(  # noqa: C901
@@ -2737,7 +2734,6 @@ class SpectraInterface:
         lengths,
         harmonics,
         kmin,
-        distance_from_source=23,
     ):
         """Calculate brilliance matrix.
 
@@ -2748,11 +2744,9 @@ class SpectraInterface:
             lengths (1D Numpy array): Lengths to evaluate calculation.
             harmonics (1D numpy array): Harmonics - must be an array with ints.
             kmin (float): Minimum K allowed.
-            distance_from_source (float, optional): Distance from source.
-                Defaults to 23.
 
         Returns:
-            tuple: Flux matrix, and information matrix
+            tuple: Brilliance matrix, and information matrix
                 [k, period, length, n_harm].
         """
         n = harmonics
@@ -2796,7 +2790,6 @@ class SpectraInterface:
                             period,
                             length,
                             1,
-                            distance_from_source,
                         )
                     ]
 
@@ -2808,7 +2801,6 @@ class SpectraInterface:
                                 period,
                                 length,
                                 harm[z],
-                                distance_from_source,
                             )
                         ]
 
