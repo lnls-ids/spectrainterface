@@ -2180,7 +2180,7 @@ class SpectraInterface:
         spectra.calc.method = spectra.calc.CalcConfigs.Method.far_field
         spectra.calc.output_type = self.calc.output_type
 
-        spectra.calc.distance_from_source = 1
+        spectra.calc.distance_from_source = 20
         spectra.calc.observation_angle = [0, 0]
         spectra.calc.energy_range = [
             self._target_energy,
@@ -2206,94 +2206,66 @@ class SpectraInterface:
         self,
         target_energy: float,
         und,
-        period_range: tuple = (18, 30),
-        nr_pts_period: int = 20,
-        length_range: tuple = (1, 3),
-        nr_pts_length: int = 20,
-        n_harmonic_truc: int = 15,
+        periods,
+        lengths,
+        harmonics,
+        kmin,
     ):
-        """Calc flux density matrix.
 
-        Args:
-            target_energy (float): Target energy [eV]
-            und (Undulator object): Must be an object from undulator class.
-            nr_pts_period (int, optional): Number of period points.
-                Defaults to 20.
-            period_range (tuple): length range to use in the calculation
-            nr_pts_length (int, optional): Number of length points.
-                Defaults to 20.
-            length_range (tuple): length range to use in the calculation
-            n_harmonic_truc (int, optional): Harmonic number to truncate
-                the calculation. Defaults to 15.
-
-        Returns:
-            numpy array: Flux matrix.
-            numpy array: Undulators information.
-        """
+        n = harmonics
         gamma = self.accelerator.gamma
         self._target_energy = target_energy
         self._und = und
-        periods = _np.linspace(period_range[0], period_range[1], nr_pts_period)
-        lengths = _np.linspace(length_range[0], length_range[1], nr_pts_length)
 
         # Arglist assembly
         arglist = []
-        for length in lengths:
-            for period in periods:
+        for i, length in enumerate(lengths):
+            for j, period in enumerate(periods):
                 self._und.period = period
                 self._und.source_length = length
-
-                k_max = und.calc_max_k(self.accelerator)
-                ky = 0
-                kx = 0
-
-                n = 1
-                while (
-                    self._und.get_harmonic_energy(
-                        n, gamma, 0, self._und.period, k_max
+                k_max = self._und.calc_max_k(self.accelerator)
+                ks = _np.sqrt(2) * _np.sqrt(
+                    (
+                        4
+                        * n
+                        * gamma**2
+                        * PLANCK
+                        * _np.pi
+                        * LSPEED
+                        / (target_energy * ECHARGE * 1e-3 * period)
+                        - 1
                     )
-                    < self._target_energy
-                ):
-                    n += 1
-                if n > 1:
-                    n -= 1
-
-                n_truc = n_harmonic_truc
-
-                if n > n_truc:
-                    n = n_truc
-
-                ns = _np.linspace(1, n, int(n))
-
-                target_ks = self.calc_k_target(
-                    ns, self._und.period, self._target_energy
                 )
+                isnan = _np.isnan(ks)
+                idcs_nan = _np.argwhere(~isnan)
+                idcs_max = _np.argwhere(ks < k_max)
+                idcs_kmin = _np.argwhere(ks > kmin)
+                idcs = _np.intersect1d(
+                    idcs_nan.ravel(),
+                    _np.intersect1d(idcs_max.ravel(), idcs_kmin.ravel()),
+                )
+                kres = ks[idcs]
+                harm = n[idcs]
+                if idcs.size == 0:
+                    arglist += [
+                        (
+                            0,
+                            period,
+                            length,
+                            1,
+                        )
+                    ]
 
-                if target_ks[0] > k_max:
-                    target_ks[0] = 0
-
-                idx = _np.isnan(target_ks)
-                idx = _np.where(idx)
-
-                target_ks[idx] = 0
-                for i, target_k in enumerate(target_ks):
-                    if self._und.polarization == "hp":
-                        ky = target_k
-                    elif self._und.polarization == "vp":
-                        kx = target_k
-                    elif self._und.polarization == "cp":
-                        kx = target_k / _np.sqrt(1 + self._und.fields_ratio**2)
-                        ky = kx * self._und.fields_ratio
-
-                    gap = self._und.undulator_k_to_gap(
-                        k=target_k,
-                        period=self._und.period,
-                        br=self._und.br,
-                        a=self._und.halbach_coef[self._und.polarization]["a"],
-                        b=self._und.halbach_coef[self._und.polarization]["b"],
-                        c=self._und.halbach_coef[self._und.polarization]["c"],
-                    )
-                    arglist += [(target_k, period, length, ns[i], gap, ky, kx)]
+                else:
+                    for z, k in enumerate(kres):
+                        arglist += [
+                            (
+                                k,
+                                period,
+                                length,
+                                harm[z],
+                            )
+                        ]
 
         # Parallel calculations
         num_processes = multiprocessing.cpu_count()
@@ -2302,7 +2274,7 @@ class SpectraInterface:
             data = parallel.map(self._parallel_calc_flux_density, arglist)
 
         arglist = _np.array(arglist, dtype="object")
-        arglist = arglist[:, [0, 1, 2, 3, 4, 5, 6]]
+        arglist = arglist[:, [0, 1, 2, 3]]
         result = _np.array(data)
 
         # Identification of breaks with equal length and equal periods
