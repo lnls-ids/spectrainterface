@@ -66,19 +66,19 @@ class SourceFunctions:
             float: gap [mm]
         """
         beff = 2 * PI * EMASS * LSPEED * k / (ECHARGE * 1e-3 * period)
-        delta = b**2 + 4*c*_np.log(beff/ (a*br))
-        
+        delta = b**2 + 4 * c * _np.log(beff / (a * br))
+
         if c != 0:
-            gap1 = period * (-b + _np.sqrt(delta)) / (2*c)
-            gap2 = period * (-b - _np.sqrt(delta)) / (2*c)
-            
+            gap1 = period * (-b + _np.sqrt(delta)) / (2 * c)
+            gap2 = period * (-b - _np.sqrt(delta)) / (2 * c)
+
             if gap1 > 0 and gap2 > 0:
                 return _np.min([gap1, gap2])
             else:
                 return _np.max([gap1, gap2])
         else:
-            return (period/b)* _np.log(beff/(a*br))
-    
+            return (period / b) * _np.log(beff / (a * br))
+
     @staticmethod
     def _generate_field(a, peak, period, nr_periods, pts_period):
         x_1period = _np.linspace(-period / 2, period / 2, pts_period)
@@ -123,7 +123,9 @@ class SourceFunctions:
         return _np.abs(i2)
 
     @staticmethod
-    def create_field_profile(nr_periods, period, bx=None, by=None, pts_period=1001):
+    def create_field_profile(
+        nr_periods, period, bx=None, by=None, pts_period=1001
+    ):
         """Create a sinusoidal field with first and second integrals zero.
 
         Args:
@@ -200,7 +202,9 @@ class SourceFunctions:
         Returns:
             float: Harmonic energy [eV].
         """
-        lamb = SourceFunctions.get_harmonic_wavelength(n, gamma, theta, period, k)
+        lamb = SourceFunctions.get_harmonic_wavelength(
+            n, gamma, theta, period, k
+        )
         energy = PLANCK * 2 * PI * LSPEED / lamb / ECHARGE
         return energy
 
@@ -317,13 +321,11 @@ class SourceFunctions:
     @staticmethod
     def _get_list_of_pol(undulator_type):
         polarizations = dict()
-        polarizations["apple2"] = ["hp", "vp", "cp"]
-        polarizations["delta"] = ["hp", "vp", "cp"]
-        polarizations["planar"] = ["hp"]
-        polarizations["hybrid"] = ["hp", "vp"]
-        polarizations["cpmu_nd"] = ["hp"]
-        polarizations["cpmu_prnd"] = ["hp"]
-        polarizations["cpmu_pr"] = ["hp"]
+        polarizations["APPLE2"] = ["hp", "vp", "cp"]
+        polarizations["DELTA"] = ["hp", "vp", "cp"]
+        polarizations["Halbach"] = ["hp"]
+        polarizations["Hybrid"] = ["hp", "vp"]
+        polarizations["CPMU"] = ["hp"]
 
         return polarizations[undulator_type]
 
@@ -385,14 +387,19 @@ class SourceFunctions:
 
     @staticmethod
     def calc_beam_size_and_div(
-        emittance, beta, energy_spread, und_length, und_period, photon_energy, harmonic
+        emittance,
+        beta,
+        energy_spread,
+        und_length,
+        und_period,
+        photon_energy,
+        harmonic,
     ):
-        """Calculates the RMS size and divergence of the undulator radiation for given
-        electron beam parameters, taking into account the beam energy spread effect on 
-        the harmonics.
+        """Calculates the RMS size and divergence of the undulator radiation.
 
         Args:
-            emittance (float): electron beam emittance (hor. or vert.) in [m.rad].
+            emittance (float): electron beam emittance (hor. or vert.)
+                in [m.rad].
             beta (float): betraton function (hor. or vert.) in [m].
             energy_spread (float): electron beam relative energy spread.
             und_length (float): undulator length in [m].
@@ -406,10 +413,16 @@ class SourceFunctions:
         Returns:
             float, float: RMS size [m], RMS divergence [rad]
         """
-
         hc = PLANCK * 2 * PI * LSPEED / ECHARGE
 
-        x = 2 * PI * harmonic * und_length / (und_period * 1e-3) * energy_spread
+        x = (
+            2
+            * PI
+            * harmonic
+            * und_length
+            / (und_period * 1e-3)
+            * energy_spread
+        )
         a1 = _np.sqrt(2 * PI) * x * erf(_np.sqrt(2) * x)
         Qax = _np.sqrt(2 * x**2 / (-1 + _np.exp(-2 * x**2) + a1))
         div_sigma = _np.sqrt(
@@ -418,7 +431,9 @@ class SourceFunctions:
 
         a1s = _np.sqrt(2 * PI) * (x / 4) * erf(_np.sqrt(2) * (x / 4))
         Qas = (
-            _np.sqrt(2 * (x / 4) ** 2 / (-1 + _np.exp(-2 * (x / 4) ** 2) + a1s))
+            _np.sqrt(
+                2 * (x / 4) ** 2 / (-1 + _np.exp(-2 * (x / 4) ** 2) + a1s)
+            )
         ) ** (2 / 3.0)
         size_sigma = _np.sqrt(
             emittance * beta
@@ -426,41 +441,54 @@ class SourceFunctions:
         )
 
         return size_sigma, div_sigma
-    
+
     @staticmethod
-    def get_min_or_max_k(period, photon_energy, k_extreme, what_harmonic='max', si_energy=3.0):
+    def get_min_or_max_k(
+        period, photon_energy, k_extreme, what_harmonic="max", si_energy=3.0
+    ):
         """Get max or min K-value and harmonic number for a given energy.
 
         Args:
             period (float): Undulator period in [mm].
             photon_energy (float): Photon energy in [eV].
             k_extreme (float): Max. or Min. K-value
-            what_harmonic (str, optional): Either 'min', 'max' or 'first'. Defaults to 'max'.
-            si_energy (float, optional): Storage ring energy in [GeV]. Defaults to 3.0.
+            what_harmonic (str, optional): Either 'min', 'max' or 'first'.
+                Defaults to 'max'.
+            si_energy (float, optional): Storage ring energy in [GeV].
+                 Defaults to 3.0.
 
         Returns:
             int, float, float: harmonic number, K-value, B (field) in [T].
         """
-        
-        gamma = si_energy*1e9 * ECHARGE / (EMASS * LSPEED**2)
-        n = [2*i+1 for i in range(50)]
-        harmonic = _np.nan 
+        gamma = si_energy * 1e9 * ECHARGE / (EMASS * LSPEED**2)
+        n = [2 * i + 1 for i in range(50)]
+        harmonic = _np.nan
         k = _np.nan
         for h_n in n:
-            K2 = (8*h_n*PI*(PLANCK/ECHARGE)*LSPEED*(gamma**2)/(period*1e-3)/photon_energy-2)
+            K2 = (
+                8
+                * h_n
+                * PI
+                * (PLANCK / ECHARGE)
+                * LSPEED
+                * (gamma**2)
+                / (period * 1e-3)
+                / photon_energy
+                - 2
+            )
             if K2 > 0:
-                if what_harmonic == 'max':            
+                if what_harmonic == "max":
                     if K2**0.5 < k_extreme:
                         harmonic = h_n
                         k = K2**0.5
-                    else:                 
+                    else:
                         break
-                elif what_harmonic == 'min':
+                elif what_harmonic == "min":
                     if K2**0.5 > k_extreme:
                         harmonic = h_n
                         k = K2**0.5
                         break
-                elif what_harmonic == 'first':
+                elif what_harmonic == "first":
                     harmonic = h_n
                     k = K2**0.5
                     break
@@ -469,43 +497,45 @@ class SourceFunctions:
             B = _np.nan
             harmonic = _np.nan
         else:
-            B = 2*PI*EMASS*LSPEED*k/(ECHARGE*period*1e-3)
-                        
+            B = 2 * PI * EMASS * LSPEED * k / (ECHARGE * period * 1e-3)
+
         return harmonic, k, B
-    
+
     @staticmethod
     def calc_total_power(gamma, field_profile, current):
         """Calculate total power from an source light.
 
         Args:
             gamma (float): lorentz factor
-            field_profile (numpy matrix float):
-                First column contains longitudinal spatial coordinate (z) [m] (end position of each segment);
+            field_profile (numpy matrix float): First column contains
+                longitudinal spatial coordinate (z) [m]
+                (end position of each segment);
                 Second column contais vertical field [T];
                 Third column constais horizontal field [T].
             current (float): current of beam [mA]
         Ref:
-            James A. Clarke. The science and technology of undulators and wigglers. (2004), 47-48.
+            James A. Clarke. The science and technology of undulators and
+                wigglers. (2004), 47-48.
+
         Returns:
             float: Total power of source light [kW]
         """
-
-        s_f = field_profile[:,0]
-        by = field_profile[:,1]
-        bx = field_profile[:,2]
+        s_f = field_profile[:, 0]
+        by = field_profile[:, 1]
+        bx = field_profile[:, 2]
 
         s_i = _np.delete(_np.append([0], s_f), -1)
         b = _np.sqrt(by**2 + bx**2)
 
         ds = s_f - s_i
-        
-        energy = gamma * (EMASS * LSPEED**2) / ECHARGE
-        b_rho = (energy * ECHARGE)  / (LSPEED * ECHARGE)
-        const = 1e-3*(ECHARGE * gamma**4)/(6 * PI * VACUUM_PERMITTICITY)
 
-        iradius = b/b_rho
+        energy = gamma * (EMASS * LSPEED**2) / ECHARGE
+        b_rho = (energy * ECHARGE) / (LSPEED * ECHARGE)
+        const = 1e-3 * (ECHARGE * gamma**4) / (6 * PI * VACUUM_PERMITTICITY)
+
+        iradius = b / b_rho
 
         darg_integral = iradius**2 * ds
         integral = _np.sum(darg_integral)
 
-        return const*integral * (current * 1e-3)
+        return const * integral * (current * 1e-3)

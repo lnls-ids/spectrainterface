@@ -165,7 +165,7 @@ class Undulator(SourceFunctions):
     def __init__(self):
         """Class constructor."""
         super().__init__()
-        self._undulator_type = "planar"
+        self._undulator_type = "Halbach"
         self._gap = 0
         self._br = 1.37
         self._period = 50
@@ -612,7 +612,7 @@ class Halbach(Undulator):
             length (float, optional): Undulator length [m]
         """
         super().__init__()
-        self._undulator_type = "halbach"
+        self._undulator_type = "Halbach"
         self._label = "Halbach"
         self._br = 1.37
         self._polarization = "hp"
@@ -772,7 +772,7 @@ class Hybrid_Nd(Undulator):
             length (float, optional): Undulator length [m]
         """
         super().__init__()
-        self._undulator_type = "Hybrid_Nd"
+        self._undulator_type = "Hybrid"
         self._label = "Hybrid (Nd)"
         self._br = 1.24
         self._polarization = "hp"
@@ -801,7 +801,7 @@ class Hybrid_SmCo(Undulator):
             length (float, optional): Undulator length [m]
         """
         super().__init__()
-        self._undulator_type = "Hybrid_SmCo"
+        self._undulator_type = "Hybrid"
         self._label = "Hybrid (SmCo)"
         self._br = 1.24
         self._polarization = "hp"
@@ -830,7 +830,7 @@ class IVU_NdFeB(Hybrid_Nd):
         self._label = "IVU (Nd)"
         self.vc_thickness = 0
         self.vc_tolerance = 0.4
-        
+
 
 class CPMU_Nd(IVU_NdFeB):
     """Cpmu nd Undulator class.
@@ -847,7 +847,7 @@ class CPMU_Nd(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU_Nd"
+        self._undulator_type = "CPMU"
         self._label = "CPMU (Nd)"
         self._br = 1.5
         self._polarization = "hp"
@@ -871,7 +871,7 @@ class CPMU_Pr_Nd(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU_PrNd"
+        self._undulator_type = "CPMU"
         self._label = "CPMU (PrNd)"
         self._br = 1.62
         self._polarization = "hp"
@@ -919,7 +919,7 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU_Pr_feb"
+        self._undulator_type = "CPMU"
         self._label = "CPMU (PrFeB)"
         self._br = 1.71
         self._polarization = "hp"
