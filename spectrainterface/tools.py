@@ -539,3 +539,31 @@ class SourceFunctions:
         integral = _np.sum(darg_integral)
 
         return const * integral * (current * 1e-3)
+
+    @staticmethod
+    def calc_k_target(
+        gamma: float, n: int, period: float, target_energy: float
+    ):
+        """Calc k for target energy given harmonic number and period.
+
+        Args:
+            gamma (float): Lorentz factor
+            n (int): harmonic number.
+            period (float): undulator period [mm].
+            target_energy (float): target energy of radiation [eV].
+
+        Returns:
+            float: K value
+        """
+        arg = (
+            2
+            * n
+            * gamma**2
+            * PLANCK
+            * 2
+            * _np.pi
+            * LSPEED
+            / (target_energy * ECHARGE * 1e-3 * period)
+            - 1
+        )
+        return _np.sqrt(2) * _np.sqrt(arg)

@@ -2099,31 +2099,6 @@ class SpectraInterface:
         self._energies = energies
         self._fluxes = fluxes
 
-    def calc_k_target(self, n: int, period: float, target_energy: float):
-        """Calc k for target energy given harmonic number and period.
-
-        Args:
-            n (int): harmonic number.
-            period (float): undulator period [mm].
-            target_energy (float): target energy of radiation [eV].
-
-        Returns:
-            float: K value
-        """
-        gamma = self.accelerator.gamma
-        arg = (
-            2
-            * n
-            * gamma**2
-            * PLANCK
-            * 2
-            * _np.pi
-            * LSPEED
-            / (target_energy * ECHARGE * 1e-3 * period)
-            - 1
-        )
-        return _np.sqrt(2) * _np.sqrt(arg)
-
     def _calc_flux_density(
         self,
         target_energy: float,
@@ -2207,12 +2182,12 @@ class SpectraInterface:
     def calc_flux_density_matrix(  # noqa: C901
         self,
         target_energy: float,
-        und,
+        und: Undulator,
         periods,
         lengths,
         harmonics,
         kmin,
-        distance_from_source=23
+        distance_from_source=23,
     ):
         """Calc flux density matrix.
 
@@ -2242,17 +2217,8 @@ class SpectraInterface:
                 self._und.period = period
                 self._und.source_length = length
                 k_max = self._und.calc_max_k(self.accelerator)
-                ks = _np.sqrt(2) * _np.sqrt(
-                    (
-                        4
-                        * n
-                        * gamma**2
-                        * PLANCK
-                        * _np.pi
-                        * LSPEED
-                        / (target_energy * ECHARGE * 1e-3 * period)
-                        - 1
-                    )
+                ks = self._und.calc_k_target(
+                    gamma, n, period, self._target_energy
                 )
                 isnan = _np.isnan(ks)
                 idcs_nan = _np.argwhere(~isnan)
@@ -2521,17 +2487,8 @@ class SpectraInterface:
                 self._und.period = period
                 self._und.source_length = length
                 k_max = self._und.calc_max_k(self.accelerator)
-                ks = _np.sqrt(2) * _np.sqrt(
-                    (
-                        4
-                        * n
-                        * gamma**2
-                        * PLANCK
-                        * _np.pi
-                        * LSPEED
-                        / (target_energy * ECHARGE * 1e-3 * period)
-                        - 1
-                    )
+                ks = self._und.calc_k_target(
+                    gamma, n, period, self._target_energy
                 )
                 isnan = _np.isnan(ks)
                 idcs_nan = _np.argwhere(~isnan)
@@ -2669,9 +2626,7 @@ class SpectraInterface:
         )
 
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.brilliance
-        spectra.calc.method = (
-            spectra.calc.CalcConfigs.Method.fixedpoint_wigner
-        )
+        spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_wigner
         spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
         if und.polarization == "hp":
             spectra.calc.source_type = (
@@ -2722,9 +2677,7 @@ class SpectraInterface:
             length,
             n_harmonic,
         ) = args
-        return self._calc_brilliance(
-            n_harmonic, period, length, target_k
-        )
+        return self._calc_brilliance(n_harmonic, period, length, target_k)
 
     def calc_brilliance_matrix(  # noqa: C901
         self,
@@ -2761,17 +2714,8 @@ class SpectraInterface:
                 self._und.period = period
                 self._und.source_length = length
                 k_max = self._und.calc_max_k(self.accelerator)
-                ks = _np.sqrt(2) * _np.sqrt(
-                    (
-                        4
-                        * n
-                        * gamma**2
-                        * PLANCK
-                        * _np.pi
-                        * LSPEED
-                        / (target_energy * ECHARGE * 1e-3 * period)
-                        - 1
-                    )
+                ks = self._und.calc_k_target(
+                    gamma, n, period, self._target_energy
                 )
                 isnan = _np.isnan(ks)
                 idcs_nan = _np.argwhere(~isnan)
