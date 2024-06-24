@@ -3441,6 +3441,7 @@ class SpectraInterface:
 
     def plot_flux_matrix(
         self,
+        data=None,
         title=None,
         clim=(None, None),
         cscale="linear",
@@ -3469,18 +3470,20 @@ class SpectraInterface:
              figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
-        info = self._info_matrix_flux[_np.argmax(self._flux_matrix.ravel())]
+        flux_matrix = data[0]
+        info_matrix = data[1]
+        info = info_matrix[_np.argmax(flux_matrix.ravel())]
 
         period_number = info[1]
         length_number = info[2]
 
         # Getting the position of the best brilliance
         j = int(
-            _np.argmax(self._flux_matrix.ravel())
-            / len(self._flux_matrix[0, :])
+            _np.argmax(flux_matrix.ravel())
+            / len(flux_matrix[0, :])
         )
-        i = _np.argmax(self._flux_matrix.ravel()) % len(
-            self._flux_matrix[0, :]
+        i = _np.argmax(flux_matrix.ravel()) % len(
+            flux_matrix[0, :]
         )
 
         # Label creation
@@ -3488,7 +3491,7 @@ class SpectraInterface:
         label += "Best undulator: ({:.2f} mm, {:.2f} m)\n".format(
             period_number, length_number
         )
-        label += "Flux: {:.2e} ph/s/0.1%/100mA".format(self._flux_matrix[j, i])
+        label += "Flux: {:.2e} ph/s/0.1%/100mA".format(flux_matrix[j, i])
 
         fig, ax = _plt.subplots(figsize=figsize)
         ax.set_title(label if title == None else title)
@@ -3499,9 +3502,9 @@ class SpectraInterface:
         vmax = clim[1]
 
         if vmin is None:
-            vmin = _np.min(self._flux_matrix)
+            vmin = _np.min(flux_matrix)
         if vmax is None:
-            vmax = _np.max(self._flux_matrix)
+            vmax = _np.max(flux_matrix)
 
         step = (
             5
@@ -3511,18 +3514,18 @@ class SpectraInterface:
         vmin = vmin if cscale == "linear" else _np.log10(vmin)
         vmax = vmax if cscale == "linear" else _np.log10(vmax)
         fm = (
-            self._flux_matrix
+            flux_matrix
             if cscale == "linear"
-            else _np.log10(self._flux_matrix)
+            else _np.log10(flux_matrix)
         )
 
         ax.imshow(
             fm,
             extent=[
-                self._info_matrix_flux[0, 1],
-                self._info_matrix_flux[-1, 1],
-                self._info_matrix_flux[0, 2],
-                self._info_matrix_flux[-1, 2],
+                info_matrix[0, 1],
+                info_matrix[-1, 1],
+                info_matrix[0, 2],
+                info_matrix[-1, 2],
             ],
             aspect="auto",
             origin="lower",
