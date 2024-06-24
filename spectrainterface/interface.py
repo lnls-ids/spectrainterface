@@ -2308,7 +2308,7 @@ class SpectraInterface:
         self._flux_density_matrix = flux_density_matrix
         self._info_matrix_flux_density = info_unds
 
-        return flux_density_matrix, info_unds
+        return flux_density_matrix, info_unds, und
 
     def _calc_flux(
         self,
@@ -2589,7 +2589,7 @@ class SpectraInterface:
         self._flux_matrix = flux_matrix
         self._info_matrix_flux = info_unds
 
-        return flux_matrix, info_unds
+        return flux_matrix, info_unds, und
 
     def _calc_brilliance(
         self,
@@ -2803,7 +2803,7 @@ class SpectraInterface:
         self._brilliance_matrix = brilliance_matrix
         self._info_matrix_brilliance = info_unds
 
-        return brilliance_matrix, info_unds
+        return brilliance_matrix, info_unds, und
 
     def _calc_partial_power(
         self,
@@ -3837,6 +3837,7 @@ class SpectraInterface:
 
         result_matrix = data[0]
         info_unds_matrix = data[1]
+        und: Undulator = data[2]
 
         pts_period = len(result_matrix[0, :])
         pts_length = len(result_matrix[:, 0])
@@ -3888,21 +3889,21 @@ class SpectraInterface:
             k = info_unds_matrix[idx][0]
             kx = 0
             ky = 0
-            gap = self._und.undulator_k_to_gap(
+            gap = und.undulator_k_to_gap(
                 k=k,
-                period=self._und.period,
-                br=self._und.br,
-                a=self._und.halbach_coef[self._und.polarization]["a"],
-                b=self._und.halbach_coef[self._und.polarization]["b"],
-                c=self._und.halbach_coef[self._und.polarization]["c"],
+                period=info_unds_matrix[idx][1],
+                br=und.br,
+                a=und.halbach_coef[und.polarization]["a"],
+                b=und.halbach_coef[und.polarization]["b"],
+                c=und.halbach_coef[und.polarization]["c"],
             )
-            if self._und.polarization == "hp":
+            if und.polarization == "hp":
                 ky = k
-            elif self._und.polarization == "vp":
+            elif und.polarization == "vp":
                 kx = k
-            elif self._und.polarization == "cp":
-                kx = k / _np.sqrt(1 + self._und.fields_ratio**2)
-                ky = kx * self._und.fields_ratio
+            elif und.polarization == "cp":
+                kx = k / _np.sqrt(1 + und.fields_ratio**2)
+                ky = kx * und.fields_ratio
             print(
                 "{:}{:<4}{:.5f}{:<2}{:.5f}{:<2}{:.5f}{:<2}{:.2f}{:<2}{:.2f}{:<3}{:.2f}{:<4}{:}{:<9}{:.2e}".format(
                     i,
