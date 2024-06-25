@@ -1849,10 +1849,10 @@ class SpectraInterface:
                 )
             )
             if source.source_type != "bendingmagnet":
-                if source.gap == 0:
-                    kmax = source.calc_max_k(self.accelerator)
-                else:
-                    kmax = source.get_k()
+                kmax = source.calc_max_k(self.accelerator)
+                if source.gap != 0:
+                    kmax_gap = source.get_k()
+                    kmax = kmax if kmax_gap > kmax else kmax_gap
 
                 if source.source_type == "wiggler":
                     flag_bend = True
@@ -2000,10 +2000,10 @@ class SpectraInterface:
                 )
             )
             if source.source_type != "bendingmagnet":
-                if source.gap == 0:
-                    kmax = source.calc_max_k(self.accelerator)
-                else:
-                    kmax = source.get_k()
+                kmax = source.calc_max_k(self.accelerator)
+                if source.gap != 0:
+                    kmax_gap = source.get_k()
+                    kmax = kmax if kmax_gap > kmax else kmax_gap
                 if source.source_type == "wiggler":
                     flag_bend = True
                     b_max = source.undulator_k_to_b(kmax, source.period)
@@ -2049,7 +2049,7 @@ class SpectraInterface:
                         self.calc.by_peak = source.fields_ratio
                     else:
                         return
-
+                    print(kmax)
                     self.calc.k_range = [kmin, kmax]
                     self.calc.period = source.period
 
