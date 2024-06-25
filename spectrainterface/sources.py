@@ -924,7 +924,9 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
         self._br = 1.71
         self._polarization = "hp"
         self._efficiency = 1.0
-        self._halbach_coef = {"hp": {"a": 3.0877, "b": -4.396, "c": 1.62}}
+        self._halbach_coef = {
+            "hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}
+        }
         self._source_type = "linearundulator"
 
 
