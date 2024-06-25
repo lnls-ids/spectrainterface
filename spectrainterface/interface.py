@@ -2049,7 +2049,6 @@ class SpectraInterface:
                         self.calc.by_peak = source.fields_ratio
                     else:
                         return
-                    print(kmax)
                     self.calc.k_range = [kmin, kmax]
                     self.calc.period = source.period
 
