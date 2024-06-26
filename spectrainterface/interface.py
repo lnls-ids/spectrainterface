@@ -1842,18 +1842,34 @@ class SpectraInterface:
         energies = list()
         brilliances = list()
         flag_bend = False
+
         for i, source in enumerate(source_list):
             print(
                 "Calculating curve for source {:.0f}/{:.0f}".format(
                     i + 1, len(source_list)
                 )
             )
+
+            if beta_sections is not None:
+                if beta_sections[i] == "high":
+                    self.accelerator.set_high_beta_section()
+                elif beta_sections[i] == "low":
+                    self.accelerator.set_low_beta_section()
+                elif beta_sections[i] == "b2":
+                    self.accelerator.set_b2_section()
+                elif beta_sections[i] == "bc":
+                    self.accelerator.set_bc_section()
+                elif beta_sections[i] == "b1":
+                    self.accelerator.set_b1_section()
+                else:
+                    raise ValueError("Invalid beta section.")
+
             if source.source_type != "bendingmagnet":
                 kmax = source.calc_max_k(self.accelerator)
                 if source.gap != 0:
                     kmax_gap = source.get_k()
                     kmax = kmax if kmax_gap > kmax else kmax_gap
-
+                print(kmax)
                 if source.source_type == "wiggler":
                     flag_bend = True
                     b_max = source.undulator_k_to_b(kmax, source.period)
@@ -1924,20 +1940,6 @@ class SpectraInterface:
 
             self.calc.length = source.source_length
 
-            if beta_sections is not None:
-                if beta_sections[i] == "high":
-                    self.accelerator.set_high_beta_section()
-                elif beta_sections[i] == "low":
-                    self.accelerator.set_low_beta_section()
-                elif beta_sections[i] == "b2":
-                    self.accelerator.set_b2_section()
-                elif beta_sections[i] == "bc":
-                    self.accelerator.set_bc_section()
-                elif beta_sections[i] == "b1":
-                    self.accelerator.set_b1_section()
-                else:
-                    raise ValueError("Invalid beta section.")
-
             self.calc.set_config()
             self.calc.run_calculation()
 
@@ -1999,6 +2001,21 @@ class SpectraInterface:
                     i + 1, len(source_list)
                 )
             )
+
+            if beta_sections is not None:
+                if beta_sections[i] == "high":
+                    self.accelerator.set_high_beta_section()
+                elif beta_sections[i] == "low":
+                    self.accelerator.set_low_beta_section()
+                elif beta_sections[i] == "b2":
+                    self.accelerator.set_b2_section()
+                elif beta_sections[i] == "bc":
+                    self.accelerator.set_bc_section()
+                elif beta_sections[i] == "b1":
+                    self.accelerator.set_b1_section()
+                else:
+                    raise ValueError("Invalid beta section.")
+
             if source.source_type != "bendingmagnet":
                 kmax = source.calc_max_k(self.accelerator)
                 if source.gap != 0:
@@ -2067,20 +2084,6 @@ class SpectraInterface:
                 self.calc.by_peak = b
 
             self.calc.length = source.source_length
-
-            if beta_sections is not None:
-                if beta_sections[i] == "high":
-                    self.accelerator.set_high_beta_section()
-                elif beta_sections[i] == "low":
-                    self.accelerator.set_low_beta_section()
-                elif beta_sections[i] == "b2":
-                    self.accelerator.set_b2_section()
-                elif beta_sections[i] == "bc":
-                    self.accelerator.set_bc_section()
-                elif beta_sections[i] == "b1":
-                    self.accelerator.set_b1_section()
-                else:
-                    raise ValueError("Invalid beta section.")
 
             self.calc.set_config()
             self.calc.run_calculation()
