@@ -2609,6 +2609,8 @@ class SpectraInterface:
         Returns:
             float: Brilliance value
         """
+        if target_k == 0:
+            return 0
         und: Undulator = self._und
 
         # Spectra Initialization
@@ -2720,14 +2722,10 @@ class SpectraInterface:
                 isnan = _np.isnan(ks)
                 idcs_nan = _np.argwhere(~isnan)
                 idcs_max = _np.argwhere(ks < k_max)
-                idcs_kmin = _np.argwhere(ks > kmin)
-                idcs = _np.intersect1d(
-                    idcs_nan.ravel(),
-                    _np.intersect1d(idcs_max.ravel(), idcs_kmin.ravel()),
-                )
+                idcs = _np.intersect1d(idcs_nan.ravel(), idcs_max.ravel())
                 kres = ks[idcs]
                 harm = n[idcs]
-                if idcs.size == 0:
+                if idcs.size == 0 or k_max > kmin:
                     arglist += [
                         (
                             0,
