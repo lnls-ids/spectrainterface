@@ -1869,7 +1869,6 @@ class SpectraInterface:
                 if source.gap != 0:
                     kmax_gap = source.get_k()
                     kmax = kmax if kmax_gap > kmax else kmax_gap
-                print(kmax)
                 if source.source_type == "wiggler":
                     flag_bend = True
                     b_max = source.undulator_k_to_b(kmax, source.period)
