@@ -856,7 +856,7 @@ class CPMU_Nd(IVU_NdFeB):
         self._source_type = "linearundulator"
 
 
-class CPMU_Pr_Nd(IVU_NdFeB):
+class CPMU_PrNd(IVU_NdFeB):
     """CPMU Pr Nd Undulator class.
 
     Args:
@@ -895,7 +895,7 @@ class CPMU_Pr(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU_Pr"
+        self._undulator_type = "CPMU"
         self._label = "CPMU (Pr)"
         self._br = 1.67
         self._polarization = "hp"
