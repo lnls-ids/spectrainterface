@@ -2172,7 +2172,10 @@ class SpectraInterface:
         spectra.calc.set_config()
         spectra.calc.run_calculation()
 
-        return [_np.max(spectra.calc.flux), target_k]
+        result = _np.max(spectra.calc.flux)
+        del spectra
+
+        return [result, target_k]
 
     def _parallel_calc_flux_density(self, args):
         target_k, period, length, _, distance = args
@@ -2413,6 +2416,9 @@ class SpectraInterface:
             )
         else:
             flux = _np.max(spectra.calc.flux)
+
+        del spectra
+
         return flux
 
     def _parallel_calc_flux(self, args):
@@ -2668,6 +2674,8 @@ class SpectraInterface:
             )
         else:
             brilliance = _np.max(spectra.calc.brilliance)
+
+        del spectra
 
         return brilliance
 
@@ -3490,7 +3498,7 @@ class SpectraInterface:
         title=None,
         clim=(None, None),
         cscale="linear",
-        cmap='viridis',
+        cmap="viridis",
         savefig=False,
         figsize=(5, 4),
         figname="brilliance_matrix.png",
