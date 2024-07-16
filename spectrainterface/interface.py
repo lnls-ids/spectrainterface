@@ -11,6 +11,7 @@ import json
 from spectrainterface import spectra
 import sys
 import time
+import copy
 import os
 import multiprocessing
 
@@ -1821,110 +1822,123 @@ class SpectraInterface:
             args
         )
 
-        ## Spectra Initialization
-        spectra = SpectraInterface()
-        spectra.accelerator.set_bsc_with_ivu18()
-
-        ## Spectra Configuration
-        spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
-        spectra.accelerator.zero_energy_spread = (
-            self.accelerator.zero_emittance
-        )
+        # Spectra Parameters Copy
+        spectra_calc = copy.deepcopy(self)
 
         if source.source_type != "bendingmagnet":
             if source.gap == 0:
-                kmax = source.calc_max_k(spectra.accelerator)
+                kmax = source.calc_max_k(spectra_calc.accelerator)
             else:
                 kmax = source.get_k()
 
             if source.source_type == "wiggler":
                 b_max = source.undulator_k_to_b(kmax, source.period)
-                spectra.calc.source_type = spectra.calc.SourceType.wiggler
-                spectra.calc.method = spectra.calc.CalcConfigs.Method.far_field
-                spectra.calc.indep_var = (
-                    spectra.calc.CalcConfigs.Variable.energy
+                spectra_calc.calc.source_type = (
+                    spectra_calc.calc.SourceType.wiggler
                 )
-                spectra.calc.output_type = (
-                    spectra.calc.CalcConfigs.Output.flux_density
+                spectra_calc.calc.method = (
+                    spectra_calc.calc.CalcConfigs.Method.far_field
                 )
-                spectra.calc.period = source.period
-                spectra.calc.by_peak = b_max
-                spectra.calc.ky = kmax
-                spectra.calc.observation_angle = [0, 0]
-                spectra.calc.energy_range = [1, emax]
-                spectra.calc.energy_step = 50
+                spectra_calc.calc.indep_var = (
+                    spectra_calc.calc.CalcConfigs.Variable.energy
+                )
+                spectra_calc.calc.output_type = (
+                    spectra_calc.calc.CalcConfigs.Output.flux_density
+                )
+                spectra_calc.calc.period = source.period
+                spectra_calc.calc.by_peak = b_max
+                spectra_calc.calc.ky = kmax
+                spectra_calc.calc.observation_angle = [0, 0]
+                spectra_calc.calc.energy_range = [1, emax]
+                spectra_calc.calc.energy_step = 50
             else:
-                spectra.calc.output_type = (
-                    spectra.calc.CalcConfigs.Output.brilliance
+                spectra_calc.calc.output_type = (
+                    spectra_calc.calc.CalcConfigs.Output.brilliance
                 )
-                spectra.calc._add_phase_errors = source.add_phase_errors
-                spectra.calc._use_recovery_params = source.use_recovery_params
-                spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.k
-                spectra.calc.method = spectra.calc.CalcConfigs.Method.wigner
-                spectra.calc.slice_x = 0
-                spectra.calc.slice_px = 0
-                spectra.calc.slice_y = 0
-                spectra.calc.slice_py = 0
-                spectra.calc.harmonic_range = harmonic_range
-                spectra.calc.k_nr_pts = nr_pts_k
+                spectra_calc.calc._add_phase_errors = source.add_phase_errors
+                spectra_calc.calc._use_recovery_params = (
+                    source.use_recovery_params
+                )
+                spectra_calc.calc.indep_var = (
+                    spectra_calc.calc.CalcConfigs.Variable.k
+                )
+                spectra_calc.calc.method = (
+                    spectra_calc.calc.CalcConfigs.Method.wigner
+                )
+                spectra_calc.calc.slice_x = 0
+                spectra_calc.calc.slice_px = 0
+                spectra_calc.calc.slice_y = 0
+                spectra_calc.calc.slice_py = 0
+                spectra_calc.calc.harmonic_range = harmonic_range
+                spectra_calc.calc.k_nr_pts = nr_pts_k
 
                 polarization = source.polarization
                 if polarization == "hp":
-                    spectra.calc.source_type = (
-                        spectra.calc.SourceType.horizontal_undulator
+                    spectra_calc.calc.source_type = (
+                        spectra_calc.calc.SourceType.horizontal_undulator
                     )
-                    spectra.calc.by_peak = 1
+                    spectra_calc.calc.by_peak = 1
                 elif polarization == "vp":
-                    spectra.calc.source_type = (
-                        spectra.calc.SourceType.vertical_undulator
+                    spectra_calc.calc.source_type = (
+                        spectra_calc.calc.SourceType.vertical_undulator
                     )
-                    spectra.calc.bx_peak = 1
+                    spectra_calc.calc.bx_peak = 1
                 elif polarization == "cp":
-                    spectra.calc.source_type = (
-                        spectra.calc.SourceType.elliptic_undulator
+                    spectra_calc.calc.source_type = (
+                        spectra_calc.calc.SourceType.elliptic_undulator
                     )
-                    spectra.calc.bx_peak = 1
-                    spectra.calc.by_peak = source.fields_ratio
+                    spectra_calc.calc.bx_peak = 1
+                    spectra_calc.calc.by_peak = source.fields_ratio
                 else:
                     return
 
-                spectra.calc.k_range = [kmin, kmax]
-                spectra.calc.period = source.period
+                spectra_calc.calc.k_range = [kmin, kmax]
+                spectra_calc.calc.period = source.period
 
         else:
             b = source.b_peak
-            spectra.calc.source_type = spectra.calc.SourceType.bending_magnet
-            spectra.calc.method = spectra.calc.CalcConfigs.Method.far_field
-            spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
-            spectra.calc.slit_acceptance = x_accep
-            spectra.calc.output_type = (
-                spectra.calc.CalcConfigs.Output.flux_density
+            spectra_calc.calc.source_type = (
+                spectra_calc.calc.SourceType.bending_magnet
             )
-            spectra.calc.by_peak = b
-            spectra.calc.observation_angle = [0, 0]
-            spectra.calc.energy_range = [1, emax]
-            spectra.calc.energy_step = 50
+            spectra_calc.calc.method = (
+                spectra_calc.calc.CalcConfigs.Method.far_field
+            )
+            spectra_calc.calc.indep_var = (
+                spectra_calc.calc.CalcConfigs.Variable.energy
+            )
+            spectra_calc.calc.slit_acceptance = x_accep
+            spectra_calc.calc.output_type = (
+                spectra_calc.calc.CalcConfigs.Output.flux_density
+            )
+            spectra_calc.calc.by_peak = b
+            spectra_calc.calc.observation_angle = [0, 0]
+            spectra_calc.calc.energy_range = [1, emax]
+            spectra_calc.calc.energy_step = 50
 
-        spectra.calc.length = source.source_length
+        spectra_calc.calc.length = source.source_length
 
         if beta_section is not None:
             if beta_section == "high":
-                spectra.accelerator.set_high_beta_section()
+                spectra_calc.accelerator.set_high_beta_section()
             elif beta_section == "low":
-                spectra.accelerator.set_low_beta_section()
+                spectra_calc.accelerator.set_low_beta_section()
             elif beta_section == "b2":
-                spectra.accelerator.set_b2_section()
+                spectra_calc.accelerator.set_b2_section()
             elif beta_section == "bc":
-                spectra.accelerator.set_bc_section()
+                spectra_calc.accelerator.set_bc_section()
             elif beta_section == "b1":
-                spectra.accelerator.set_b1_section()
+                spectra_calc.accelerator.set_b1_section()
             else:
                 raise ValueError("Invalid beta section.")
 
-        spectra.calc.set_config()
-        spectra.calc.run_calculation()
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
 
-        return spectra.calc.energies, spectra.calc.brilliance
+        energies = spectra_calc.calc.energies
+        brilliances = spectra_calc.calc.brilliance
+        del spectra_calc
+
+        return energies, brilliances
 
     def calc_brilliance_curve(
         self,
@@ -3115,7 +3129,7 @@ class SpectraInterface:
             self._brilliances = brilliances
 
         _plt.figure(figsize=figsize)
-        colorlist = ["C0", "C1", "C2", "C3", "C4", "C5"]
+        colorlist = ['C' + str(i) for i, value in enumerate(self.sources)]
         for i, source in enumerate(self.sources):
             color = colorlist[i]
             if source.source_type == "bendingmagnet":
