@@ -1813,7 +1813,7 @@ class SpectraInterface:
             ph = ph_err1[idx]
         return values * ph
 
-    def calc_brilliance_curve(  # noqa: C901
+    def _parallel_calc_brilliance_curve(  # noqa: C901
         self,
         args
     ):
@@ -1942,6 +1942,7 @@ class SpectraInterface:
              source.
 
         """
+        
         self._flag_brill_processed = False
         self.calc._slit_shape = ""
         source_list = self.sources
