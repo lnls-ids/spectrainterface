@@ -384,6 +384,13 @@ class StorageRingParameters:
         self._bsc0_h_highbeta = 11.6952
         self._bsc0_v_highbeta = 2.4706
 
+    def set_bsc_orion_reduction(self):
+        """Set BSC after changes due to ORION."""
+        self._bsc0_h_lowbeta = 3.4529
+        self._bsc0_v_lowbeta = 1.38
+        self._bsc0_h_highbeta = 11.6952
+        self._bsc0_v_highbeta = 2.18
+
     def set_low_beta_section(self):
         """Set low beta section."""
         self.energy = 3
