@@ -2135,7 +2135,6 @@ class SpectraInterface:
 
         energies = spectra_calc.calc.energies
         fluxes = spectra_calc.calc.flux
-
         del spectra_calc
 
         return energies, fluxes
