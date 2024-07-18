@@ -2297,7 +2297,10 @@ class SpectraInterface:
         spectra.calc.set_config()
         spectra.calc.run_calculation()
 
-        return [_np.max(spectra.calc.flux), target_k]
+        result = _np.max(spectra.calc.flux)
+        del spectra
+
+        return [result, target_k]
 
     def _parallel_calc_flux_density(self, args):
         target_k, period, length, _, distance = args
@@ -2538,6 +2541,9 @@ class SpectraInterface:
             )
         else:
             flux = _np.max(spectra.calc.flux)
+
+        del spectra
+
         return flux
 
     def _parallel_calc_flux(self, args):
@@ -2794,6 +2800,8 @@ class SpectraInterface:
         else:
             brilliance = _np.max(spectra.calc.brilliance)
 
+        del spectra
+
         return brilliance
 
     def _parallel_calc_brilliance(self, args):
@@ -2849,7 +2857,7 @@ class SpectraInterface:
                 idcs = _np.intersect1d(idcs_nan.ravel(), idcs_max.ravel())
                 kres = ks[idcs]
                 harm = n[idcs]
-                if idcs.size == 0 or k_max > kmin:
+                if idcs.size == 0 or k_max < kmin:
                     arglist += [
                         (
                             0,
@@ -3611,9 +3619,11 @@ class SpectraInterface:
 
     def plot_brilliance_matrix(
         self,
+        data=None,
         title=None,
         clim=(None, None),
         cscale="linear",
+        cmap="viridis",
         savefig=False,
         figsize=(5, 4),
         figname="brilliance_matrix.png",
@@ -3637,20 +3647,20 @@ class SpectraInterface:
              figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
-        info = self._info_matrix_brilliance[
-            _np.argmax(self._brilliance_matrix.ravel())
-        ]
+        brilliance_matrix = data[0]
+        info_matrix = data[1]
+        info = info_matrix[_np.argmax(brilliance_matrix.ravel())]
 
         period_number = info[1]
         length_number = info[2]
 
         # Getting the position of the best brilliance
         j = int(
-            _np.argmax(self._brilliance_matrix.ravel())
-            / len(self._brilliance_matrix[0, :])
+            _np.argmax(brilliance_matrix.ravel())
+            / len(brilliance_matrix[0, :])
         )
-        i = _np.argmax(self._brilliance_matrix.ravel()) % len(
-            self._brilliance_matrix[0, :]
+        i = _np.argmax(brilliance_matrix.ravel()) % len(
+            brilliance_matrix[0, :]
         )
 
         # Label creation
@@ -3659,7 +3669,7 @@ class SpectraInterface:
             period_number, length_number
         )
         label += "Brilliance: {:.2e} ph/s/0.1%/mm²/mrad²/100mA".format(
-            self._brilliance_matrix[j, i]
+            brilliance_matrix[j, i]
         )
 
         fig, ax = _plt.subplots(figsize=figsize)
@@ -3671,9 +3681,9 @@ class SpectraInterface:
         vmax = clim[1]
 
         if vmin is None:
-            vmin = _np.min(self._brilliance_matrix)
+            vmin = _np.min(brilliance_matrix)
         if vmax is None:
-            vmax = _np.max(self._brilliance_matrix)
+            vmax = _np.max(brilliance_matrix)
 
         step = (
             5
@@ -3683,26 +3693,29 @@ class SpectraInterface:
         vmin = vmin if cscale == "linear" else _np.log10(vmin)
         vmax = vmax if cscale == "linear" else _np.log10(vmax)
         bm = (
-            self._brilliance_matrix
+            brilliance_matrix
             if cscale == "linear"
-            else _np.log10(self._brilliance_matrix)
+            else _np.log10(brilliance_matrix)
         )
 
         ax.imshow(
             bm,
             extent=[
-                self._info_matrix_brilliance[0, 1],
-                self._info_matrix_brilliance[-1, 1],
-                self._info_matrix_brilliance[0, 2],
-                self._info_matrix_brilliance[-1, 2],
+                info_matrix[0, 1],
+                info_matrix[-1, 1],
+                info_matrix[0, 2],
+                info_matrix[-1, 2],
             ],
             aspect="auto",
             origin="lower",
+            cmap=cmap,
             norm=colors.Normalize(vmin=vmin, vmax=vmax)
             if cscale == "linear"
             else colors.LogNorm(vmin=vmin, vmax=vmax),
         )
-        sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax))
+        sm = _plt.cm.ScalarMappable(
+            _plt.Normalize(vmin=vmin, vmax=vmax), cmap=cmap
+        )
         sm.set_array(bm)
         cbar = fig.colorbar(
             sm,

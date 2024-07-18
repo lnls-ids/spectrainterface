@@ -412,8 +412,8 @@ class Undulator(SourceFunctions):
             vc_tolerance = self.vc_tolerance
 
         bsch, bscv = acc.calc_beam_stay_clear(pos)
-        gaph = 2 * bsch + vc_thickness + vc_tolerance
-        gapv = 2 * bscv + vc_thickness + vc_tolerance
+        gaph = 2 * (bsch + vc_thickness + vc_tolerance)
+        gapv = 2 * (bscv + vc_thickness + vc_tolerance)
 
         return gapv, gaph
 
@@ -829,7 +829,7 @@ class IVU_NdFeB(Hybrid_Nd):
         super().__init__(period, length)
         self._label = "IVU (Nd)"
         self.vc_thickness = 0
-        self.vc_tolerance = 0.4
+        self.vc_tolerance = 0.2
 
 
 class CPMU_Nd(IVU_NdFeB):
@@ -856,7 +856,7 @@ class CPMU_Nd(IVU_NdFeB):
         self._source_type = "linearundulator"
 
 
-class CPMU_Pr_Nd(IVU_NdFeB):
+class CPMU_PrNd(IVU_NdFeB):
     """CPMU Pr Nd Undulator class.
 
     Args:
@@ -895,7 +895,7 @@ class CPMU_Pr(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU_Pr"
+        self._undulator_type = "CPMU"
         self._label = "CPMU (Pr)"
         self._br = 1.67
         self._polarization = "hp"
@@ -996,7 +996,7 @@ class IVU18_2(IVU_NdFeB):
         self._br = 1.27
         self._gap = 4.5
         self.vc_thickness = 0
-        self.vc_tolerance = 0.7
+        self.vc_tolerance = 0.35
         self._polarization = "hp"
         self._halbach_coef = {
             "hp": {"a": 2.26223181, "b": -3.69776472, "c": 0.32867209},
@@ -1013,7 +1013,7 @@ class IVU18_1(IVU_NdFeB):
         self._br = 1.27
         self._gap = 4.5
         self._vc_thickness = 0
-        self._vc_tolerance = 0.7
+        self._vc_tolerance = 0.35
         self._polarization = "hp"
         self._halbach_coef = {
             "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
