@@ -4749,3 +4749,124 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
+
+    @staticmethod
+    def process_flux(args):
+        source = args["source"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        distance_from_source = (
+            args["distance_from_source"]
+            if "distance_from_source" in args
+            else 23
+        )
+        slit_acceptance = (
+            args["slit_acceptance"]
+            if "slit_acceptance" in args
+            else [0.06, 0.06]
+        )
+        slit_acceptance = [i / distance_from_source for i in slit_acceptance]
+        slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
+        xlim = args["xlim"] if "xlim" in args else [0, 20]
+        energy_range = (
+            args["energy_range"]
+            if "energy_range" in args
+            else [xlim[0] * 1e3, xlim[1] * 1e3]
+        )
+        nr_pts_k = args["nr_pts_k"] if "nr_pts_k" in args else 15
+        kmin = args["kmin"] if "kmin" in args else 0.2
+        gamma = spectra_calc.accelerator.gamma
+        if (
+            source.source_type != "wiggler"
+            and source.source_type != "bendingmagnet"
+        ):
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            first_hamonic_energy = source.get_harmonic_energy(
+                1, gamma, 0, source.period, source_k_max
+            )
+            n = int(xlim[1] * 1e3 / first_hamonic_energy)
+            n_harmonic = n - 1 if n % 2 == 0 else n
+        else:
+            n_harmonic = 1
+        if source.polarization == "cp":
+            n_harmonic = 1
+        harmonic_range = (
+            args["harmonic_range"]
+            if "harmonic_range" in args
+            else [1, n_harmonic]
+        )
+        process_curves = (
+            args["process_curves"] if "process_curves" in args else True
+        )
+        superp_value = args["superb_value"] if "superb_value" in args else 250
+        title = args["title"] if "title" in args else "Flux curve"
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "log"
+        figname = (
+            args["figname"]
+            if "figname" in args
+            else (
+                "flux_curve_{:}.png".format(source.label)
+                if source.source_type == "bendingmagnet"
+                else (
+                    "flux_curve_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    )
+                )
+            )
+        )
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+        legend_fs = args["legend_fs"] if "legend_fs" in args else 10
+        legend_properties = (
+            args["legend_properties"] if "legend_properties" in args else True
+        )
+        spectra_calc.sources = [source]
+        spectra_calc.calc_flux_curve(
+            energy_range=energy_range,
+            harmonic_range=harmonic_range,
+            nr_pts_k=nr_pts_k,
+            kmin=kmin,
+            slit_shape=slit_shape,
+            slit_acceptances=[slit_acceptance],
+            beta_sections=[spectra_calc.accelerator.beta_section],
+        )
+        if (
+            source.source_type != "wiggler"
+            and source.source_type != "bendingmagnet"
+        ):
+            idx_xlim = _np.argmin(
+                _np.abs(spectra_calc._energies[0, -1, :] - (xlim[1] * 1e3))
+            )
+            min_flux = float(
+                10 ** int(_np.log10(spectra_calc._fluxes[0, -1, idx_xlim - 1]))
+            )
+            max_flux = float(
+                10 ** (int(_np.log10(_np.max(spectra_calc._fluxes))) + 1)
+            )
+        else:
+            min_flux = float(
+                10 ** (int(_np.log10(spectra_calc._fluxes[0, -1])) - 1)
+            )
+            max_flux = float(
+                10 ** (int(_np.log10(_np.max(spectra_calc._fluxes))) + 1)
+            )
+        ylim = args["ylim"] if "ylim" in args else [min_flux, max_flux]
+        spectra_calc.plot_flux_curve(
+            process_curves=process_curves,
+            superp_value=superp_value,
+            title=title,
+            xscale=xscale,
+            yscale=yscale,
+            linewidth=linewidth,
+            savefig=savefig,
+            figname=figname,
+            dpi=dpi,
+            figsize=figsize,
+            legend_fs=legend_fs,
+            legend_properties=legend_properties,
+            ylim=ylim,
+            xlim=[xlim[0], xlim[1]],
+        )
+        del spectra_calc
