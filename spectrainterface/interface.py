@@ -4983,3 +4983,154 @@ class FunctionsManipulation:
             legend_properties=legend_properties,
         )
         del spectra_calc
+
+    @staticmethod
+    def process_degree_polarization(args):
+        source = args["source"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        distance = (
+            args["distance_from_source"]
+            if "distance_from_source" in args
+            else 23
+        )
+        slit_acceptance = (
+            args["slit_acceptance"] if "slit_acceptance" in args else [0, 0.04]
+        )
+        slit_acceptance = [i / distance for i in slit_acceptance]
+        slit_shape = args["slit_shape"] if "slit_shape" in args else "circslit"
+        xlim = args["xlim"] if "xlim" in args else [0, 20]
+        energy_range = (
+            args["energy_range"]
+            if "energy_range" in args
+            else [xlim[0] * 1e3, xlim[1] * 1e3]
+        )
+        slit_position = (
+            args["slit_position"] if "slit_position" in args else [0, 0]
+        )
+        slit_position = [i / distance for i in slit_position]
+        title = args["title"] if "title" in args else "Polarization Degree"
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        figname = (
+            args["figname"]
+            if "figname" in args
+            else (
+                "degree_polarization_{:}.png".format(source.label)
+                if source.source_type == "bendingmagnet"
+                else (
+                    "degree_polarization_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    )
+                )
+            )
+        )
+        dpi = args["dpi"] if "dpi" in args else 300
+        legend_fs = args["legend_fs"] if "legend_fs" in args else 9
+        if source.source_type != "bendingmagnet":
+            kmax = source.calc_max_k(spectra_calc.accelerator)
+            if source.gap != 0:
+                kmax_gap = source.get_k()
+                kmax = kmax if kmax_gap > kmax else kmax_gap
+            if source.source_type == "wiggler":
+                spectra_calc.calc.source_type = source.source_type
+                spectra_calc.calc.method = (
+                    spectra_calc.calc.CalcConfigs.Method.far_field
+                )
+                spectra_calc.calc.indep_var = (
+                    spectra_calc.calc.CalcConfigs.Variable.energy
+                )
+                spectra_calc.calc.output_type = (
+                    spectra_calc.calc.CalcConfigs.Output.flux
+                )
+                spectra_calc.calc.slit_shape = slit_shape
+                spectra_calc.calc.period = source.period
+                spectra_calc.calc.ky = kmax
+                spectra_calc.calc.observation_angle = slit_position
+                spectra_calc.calc.slit_acceptance = slit_acceptance
+                spectra_calc.calc.energy_range = energy_range
+                spectra_calc.calc.energy_step = 1
+            else:
+                spectra_calc.calc._add_phase_errors = source.add_phase_errors
+                spectra_calc.calc._use_recovery_params = (
+                    source.use_recovery_params
+                )
+                spectra_calc.calc.output_type = (
+                    spectra_calc.calc.CalcConfigs.Output.flux
+                )
+                spectra_calc.calc.method = (
+                    spectra_calc.calc.CalcConfigs.Method.far_field
+                )
+                spectra_calc.calc.indep_var = (
+                    spectra_calc.calc.CalcConfigs.Variable.energy
+                )
+                spectra_calc.calc.source_type = source.source_type
+                spectra_calc.calc.slit_shape = slit_shape
+                spectra_calc.calc.period = source.period
+                spectra_calc.calc.ky = kmax
+                spectra_calc.calc.observation_angle = slit_position
+                spectra_calc.calc.slit_acceptance = slit_acceptance
+                spectra_calc.calc.energy_range = energy_range
+                spectra_calc.calc.energy_step = 1
+        else:
+            b = source.b_peak
+            spectra_calc.calc.source_type = source.source_type
+            spectra_calc.calc.method = (
+                spectra_calc.calc.CalcConfigs.Method.far_field
+            )
+            spectra_calc.calc.indep_var = (
+                spectra_calc.calc.CalcConfigs.Variable.energy
+            )
+            spectra_calc.calc.output_type = (
+                spectra_calc.calc.CalcConfigs.Output.flux
+            )
+            spectra_calc.calc.slit_shape = slit_shape
+            spectra_calc.calc.observation_angle = slit_position
+            spectra_calc.calc.slit_acceptance = slit_acceptance
+            spectra_calc.calc.energy_range = energy_range
+            spectra_calc.calc.energy_step = 1
+            spectra_calc.calc.by_peak = b
+        spectra_calc.calc.length = source.source_length
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        energies = spectra_calc.calc.energies
+        degree_pl = spectra_calc.calc._pl
+        degree_pc = spectra_calc.calc._pc
+        del spectra_calc
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        _plt.plot(
+            energies * 1e-3,
+            degree_pl**2,
+            "-C0",
+            label="PL²",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            energies * 1e-3,
+            degree_pc**2,
+            "-C1",
+            label="PC²",
+            linewidth=linewidth,
+        )
+        _plt.xlabel("Energy [keV]")
+        _plt.ylabel("Polarization Degree")
+        _plt.legend(loc=5, ncol=3, fontsize=legend_fs)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.xlim(*xlim)
+        _plt.xscale(xscale)
+        _plt.yscale(yscale)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                figname,
+                dpi=dpi,
+            )
