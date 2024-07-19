@@ -5138,3 +5138,223 @@ class FunctionsManipulation:
     @staticmethod
     def process_degree_coherence(args):
         pass
+
+    @staticmethod
+    def process_power(args):
+        source = args["source"]
+        spectra = args["spectra"]
+        k_max = args["k_max"] if "k_max" in args else 2.0
+        x_range = [-0.3, 0.3]
+        y_range = [-0.3, 0.3]
+        distance_from_source = (
+            args["distance_from_source"]
+            if "distance_from_source" in args
+            else 23
+        )
+        x_nr_pts = args["x_nr_pts"] if "x_nr_pts" in args else 501
+        y_nr_pts = args["y_nr_pts"] if "y_nr_pts" in args else 501
+        slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
+        slit_acceptance = (
+            args["slit_acceptance"] if "slit_acceptance" in args else [1, 1]
+        )
+        slit_acceptance = [i / distance_from_source for i in slit_acceptance]
+        slit_position = (
+            args["slit_position"] if "slit_position" in args else [0, 0]
+        )
+        figsize = args["figsize"] if "figsize" in args else (5, 4)
+        savefig = args["savefig"] if "savefig" in args else True
+        dpi = args["dpi"] if "dpi" in args else 300
+        figname = (
+            args["figname"]
+            if "figname" in args
+            else (
+                "partial_power_{:}.png".format(source.label)
+                if source.source_type == "bendingmagnet"
+                else (
+                    "partial_power_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    )
+                )
+            )
+        )
+
+        # Calc Power Density 2D distribuition
+        spectra_calc = copy.deepcopy(spectra)
+        spectra_calc.accelerator.current = 350.0
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.method = (
+            spectra_calc.calc.CalcConfigs.Method.near_field
+        )
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.mesh_xy
+        )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.power_density
+        )
+        if source.source_type != "bendingmagnet":
+            spectra_calc.calc.ky = source.calc_max_k(spectra_calc.accelerator)
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+        else:
+            spectra_calc.calc.by_peak = source.b_peak
+            spectra_calc.calc.length = 0.05
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.x_range = x_range
+        spectra_calc.calc.y_range = y_range
+        spectra_calc.calc.x_nr_pts = x_nr_pts
+        spectra_calc.calc.y_nr_pts = y_nr_pts
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        power_densities = spectra_calc.calc.power_density
+        del spectra_calc
+
+        # Calc Partial Power
+        spectra_calc = copy.deepcopy(spectra)
+        spectra_calc.accelerator.current = 350.0
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.method = (
+            spectra_calc.calc.CalcConfigs.Method.fixedpoint_near_field
+        )
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.energy
+        )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.power
+        )
+        spectra_calc.calc.slit_shape = slit_shape
+
+        spectra_calc.calc.target_energy = 0
+        if source.source_type != "bendingmagnet":
+            spectra_calc.calc.ky = source.calc_max_k(spectra_calc.accelerator)
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+        else:
+            spectra_calc.calc.by_peak = source.b_peak
+            spectra_calc.calc.length = 0.05
+
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.observation_angle = slit_position
+        spectra_calc.calc.slit_acceptance = slit_acceptance
+
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        partial_power = spectra_calc.calc.power
+        del spectra_calc
+
+        # Plot
+        fig = _plt.figure(figsize=(figsize[0], figsize[0]))
+        ax = fig.add_subplot(111)
+        title = (
+            "Power Density @ 350 mA\n{:} ({:.1f} m, {:.2f} mm)\nK máx: {:.3f}".format(
+                source.label, source.source_length, source.period, k_max
+            )
+            if source.source_type != "bendingmagnet"
+            else "Power Density @ 350 mA\n{:}".format(source.label)
+        )
+        ax.set_title(title, fontsize=11)
+        ax.text(
+            x=x_range[0] + 0.015,
+            y=y_range[1] - 0.035,
+            s="Partial Power: {:.2f} W".format(partial_power * 1e3),
+            fontsize=9,
+            c="white",
+        )
+        im = ax.imshow(
+            power_densities,
+            extent=[*x_range, *y_range],
+            aspect="equal",
+            norm=colors.Normalize(
+                vmin=_np.min(power_densities), vmax=_np.max(power_densities)
+            ),
+        )
+        ax.set_xticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+        ax.set_yticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+        ax.tick_params(labelsize=9)
+        sm = _plt.cm.ScalarMappable(
+            _plt.Normalize(
+                vmin=_np.min(power_densities * distance_from_source**2),
+                vmax=_np.max(power_densities * distance_from_source**2),
+            )
+        )
+        sm.set_array(power_densities * distance_from_source**2)
+        cbar = fig.colorbar(
+            sm,
+            ax=ax,
+            label="Power Density [kW/mrad²]",
+            format="%.2f",
+            shrink=0.5,
+        )
+        cbar.set_ticks(
+            _np.linspace(
+                _np.min(power_densities * distance_from_source**2),
+                _np.max(power_densities * distance_from_source**2),
+                5,
+            )
+        )
+        cbar.ax.tick_params(labelsize=9)
+        ax.set_xlabel("X [mrad]")
+        ax.set_ylabel("Y [mrad]")
+        if slit_shape == "retslit":
+            ax.text(
+                x=x_range[0] * (1 - 0.05),
+                y=y_range[0] * (1 - 0.05),
+                s="{:.1f} x {:.1f} \u03bcrad²".format(
+                    slit_acceptance[0] * 1e3, slit_acceptance[1] * 1e3
+                ),
+                fontsize=8,
+                c="white",
+            )
+            patch = _patches.Rectangle(
+                (
+                    slit_position[0] - slit_acceptance[0] / 2,
+                    slit_position[1] - slit_acceptance[1] / 2,
+                ),
+                slit_acceptance[0],
+                slit_acceptance[1],
+                fc=(0, 0, 0, 0),
+                ec="black",
+                lw=1,
+                ls=":",
+            )
+            ax.add_patch(patch)
+        else:
+            ax.text(
+                x=x_range[0] * (1 - 0.05),
+                y=y_range[0] * (1 - 0.05) + 0.05,
+                s=r"$R_1:$"
+                + "{:.1f} \u03bcrad".format(slit_acceptance[0] * 1e3),
+                fontsize=8,
+                c="white",
+            )
+            ax.text(
+                x=x_range[0] * (1 - 0.05),
+                y=y_range[0] * (1 - 0.05),
+                s=r"$R_2:$"
+                + "{:.1f} \u03bcrad".format(slit_acceptance[1] * 1e3),
+                fontsize=8,
+                c="white",
+            )
+            patch = _patches.Circle(
+                (slit_position[0], slit_position[1]),
+                slit_acceptance[0],
+                fc=(0, 0, 0, 0),
+                ec="black",
+                lw=1,
+                ls=":",
+            )
+            ax.add_patch(patch)
+            patch = _patches.Circle(
+                (slit_position[0], slit_position[1]),
+                slit_acceptance[1],
+                fc=(0, 0, 0, 0),
+                ec="black",
+                lw=1,
+                ls=":",
+            )
+            ax.add_patch(patch)
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                figname,
+                dpi=dpi,
+            )
