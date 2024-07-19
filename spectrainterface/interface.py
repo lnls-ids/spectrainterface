@@ -1187,6 +1187,10 @@ class Calc(GeneralConfigs, SpectraTools):
                 input_temp["Configurations"][
                     "Slit Pos.: &theta;<sub>x,y</sub> (mrad)"
                 ] = self.observation_angle
+            elif self.output_type == self.CalcConfigs.Output.power:
+                input_temp["Configurations"][
+                    "Slit Pos.: &theta;<sub>x,y</sub> (mrad)"
+                ] = self.observation_angle
 
         if self.slit_acceptance is not None:
             if self.slit_shape == self.CalcConfigs.SlitShape.circular:
