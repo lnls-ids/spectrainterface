@@ -4524,3 +4524,108 @@ class FunctionsManipulation:
                 ),
                 dpi=300,
             )
+
+    @staticmethod
+    def process_table_parameters(args):
+        source = args["source"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        savefig = args["savefig"] if "savefig" in args else True
+
+        if source.source_type != "bendingmagnet":
+            fig, ax = _plt.subplots(figsize=figsize)
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+            rows = 7
+            col = 1.3
+            ax.set_ylim(0, rows)
+            ax.set_xlim(0, col + 0.2)
+            data = {
+                "Máx. B [T]": _np.round(
+                    source.undulator_k_to_b(source_k_max, source.period), 2
+                ),
+                "Min. gap [mm]": _np.round(gapv, 2),
+                "Máx. K": _np.round(source_k_max, 2),
+                "Polarization": source.polarization,
+                "Length [m]": _np.round(source.source_length, 2),
+                "Period [mm]": _np.round(source.period, 2),
+                "Source": source.material,
+            }
+            for i, info in enumerate(data):
+                ax.text(
+                    x=col, y=0.5 + i, s=data[info], va="center", ha="right"
+                )
+                ax.text(col - 1.1, 0.5 + i, info, weight="bold", ha="left")
+            ax.plot([0, col + 1], [rows - 1, rows - 1], lw=".5", c="black")
+            ax.plot([0, col + 1], [rows, rows], lw=".5", c="black")
+            ax.plot([0.7, 0.7], [0, rows], ls=":", lw=".5", c="grey")
+            for row in range(rows):
+                ax.plot([0, col + 1], [row, row], ls=":", lw=".5", c="grey")
+            rect = _patches.Rectangle(
+                (0, rows - 1), 2, 1, ec="none", fc="blue", alpha=0.4, zorder=-1
+            )
+            ax.add_patch(rect)
+            for row in range(int(rows / 2)):
+                rect = _patches.Rectangle(
+                    (0, rows - 2 * row - 3),
+                    2,
+                    1,
+                    ec="none",
+                    fc="blue",
+                    alpha=0.2,
+                    zorder=-1,
+                )
+                ax.add_patch(rect)
+
+            ax.set_title(
+                "Source Parameters\n{:}".format(source.label),
+                loc="center",
+                fontsize=12,
+            )
+            ax.axis("off")
+            _plt.tight_layout()
+            if savefig:
+                _plt.savefig(
+                    "parameters_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    ),
+                    dpi=300,
+                )
+        else:
+            fig, ax = _plt.subplots(figsize=(figsize[0], figsize[1] / 1.7))
+            rows = 2
+            col = 1.2
+            ax.set_ylim(0, rows)
+            ax.set_xlim(0, col + 0.2)
+            data = {
+                "Máx. B [T]": _np.round(source.b_peak, 2),
+                "Source": source.material,
+            }
+            for i, info in enumerate(data):
+                ax.text(
+                    x=col, y=0.5 + i, s=data[info], va="center", ha="right"
+                )
+                ax.text(col - 1, 0.5 + i, info, weight="bold", ha="left")
+            ax.plot([0, col + 1], [rows - 1, rows - 1], lw=".5", c="black")
+            ax.plot([0, col + 1], [rows, rows], lw=".5", c="black")
+            ax.plot([0.7, 0.7], [0, rows], ls=":", lw=".5", c="grey")
+            for row in range(rows):
+                ax.plot([0, col + 1], [row, row], ls=":", lw=".5", c="grey")
+
+            rect = _patches.Rectangle(
+                (0, rows - 1), 2, 1, ec="none", fc="blue", alpha=0.4, zorder=-1
+            )
+            ax.add_patch(rect)
+
+            ax.set_title(
+                "Source Parameters\n{:}".format(source.label),
+                loc="center",
+                fontsize=12,
+            )
+            ax.axis("off")
+            _plt.tight_layout()
+            if savefig:
+                _plt.savefig(
+                    "parameters_{:}.png".format(source.label),
+                    dpi=300,
+                )
