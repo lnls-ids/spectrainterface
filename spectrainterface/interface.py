@@ -4870,3 +4870,116 @@ class FunctionsManipulation:
             xlim=[xlim[0], xlim[1]],
         )
         del spectra_calc
+
+    @staticmethod
+    def process_brilliance(args):
+        source = args["source"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        nr_pts_k = args["nr_pts_k"] if "nr_pts_k" in args else 15
+        kmin = args["kmin"] if "kmin" in args else 0.2
+        xlim = args["xlim"] if "xlim" in args else []
+        emax = args["emax"] if "emax" in args else xlim[1] * 1e3
+        gamma = spectra_calc.accelerator.gamma
+        if (
+            source.source_type != "wiggler"
+            and source.source_type != "bendingmagnet"
+        ):
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            first_hamonic_energy = source.get_harmonic_energy(
+                1, gamma, 0, source.period, source_k_max
+            )
+            n = int(xlim[1] * 1e3 / first_hamonic_energy)
+            n_harmonic = n - 1 if n % 2 == 0 else n
+        else:
+            n_harmonic = 1
+        if source.polarization == "cp":
+            n_harmonic = 1
+        harmonic_range = (
+            args["harmonic_range"]
+            if "harmonic_range" in args
+            else [1, n_harmonic]
+        )
+        x_accep = args["x_accep"] if "x_accep" in args else 1
+
+        process_curves = (
+            args["process_curves"] if "process_curves" in args else True
+        )
+        superp_value = args["superp_value"] if "superp_value" in args else 250
+        title = args["title"] if "title" in args else "Brilliance curve"
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "log"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        figname = (
+            args["figname"]
+            if "figname" in args
+            else (
+                "brilliance_curve_{:}.png".format(source.label)
+                if source.source_type == "bendingmagnet"
+                else (
+                    "brilliance_curve_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    )
+                )
+            )
+        )
+        dpi = args["dpi"] if "dpi" in args else 300
+        legend_fs = args["legend_fs"] if "legend_fs" in args else 10
+        legend_properties = (
+            args["legend_properties"] if "legend_properties" in args else True
+        )
+        spectra_calc.sources = [source]
+        spectra_calc.calc_brilliance_curve(
+            harmonic_range=harmonic_range,
+            nr_pts_k=nr_pts_k,
+            kmin=kmin,
+            emax=emax,
+            x_accep=x_accep,
+            beta_sections=[spectra_calc.accelerator.beta_section],
+        )
+        if (
+            source.source_type != "wiggler"
+            and source.source_type != "bendingmagnet"
+        ):
+            idx_xlim = _np.argmin(
+                _np.abs(spectra_calc._energies[0, -1, :] - (xlim[1] * 1e3))
+            )
+            min_brilliance = float(
+                10
+                ** int(
+                    _np.log10(spectra_calc._brilliances[0, -1, idx_xlim - 1])
+                )
+            )
+            max_brilliance = float(
+                10 ** (int(_np.log10(_np.max(spectra_calc._brilliances))) + 1)
+            )
+        else:
+            min_brilliance = float(
+                10 ** (int(_np.log10(spectra_calc._brilliances[0, -1])) - 1)
+            )
+            max_brilliance = float(
+                10 ** (int(_np.log10(_np.max(spectra_calc._brilliances))) + 1)
+            )
+        ylim = (
+            args["ylim"]
+            if "ylim" in args
+            else [min_brilliance, max_brilliance]
+        )
+        spectra_calc.plot_brilliance_curve(
+            process_curves=process_curves,
+            superp_value=superp_value,
+            title=title,
+            xscale=xscale,
+            yscale=yscale,
+            xlim=xlim,
+            ylim=ylim,
+            linewidth=linewidth,
+            savefig=savefig,
+            figsize=figsize,
+            figname=figname,
+            dpi=dpi,
+            legend_fs=legend_fs,
+            legend_properties=legend_properties,
+        )
+        del spectra_calc
