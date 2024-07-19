@@ -5134,3 +5134,7 @@ class FunctionsManipulation:
                 figname,
                 dpi=dpi,
             )
+
+    @staticmethod
+    def process_degree_coherence(args):
+        pass
