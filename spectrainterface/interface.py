@@ -4629,3 +4629,123 @@ class FunctionsManipulation:
                     "parameters_{:}.png".format(source.label),
                     dpi=300,
                 )
+
+    @staticmethod
+    def process_gap_energy(args):
+        source = args["source"]
+        spectra_calc = args["spectra"]
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        xlim = args["xlim"]
+        title = (
+            args["title"]
+            if "title" in args
+            else "Gap vs Energy\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+        gaps = _np.linspace(gapv, 14, 501)
+        Bs = source.get_beff(gaps / source.period)
+        Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
+        gamma = spectra_calc.accelerator.gamma
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        for i in range(17):
+            Es = source.get_harmonic_energy(
+                n=2 * i + 1, gamma=gamma, theta=0, period=source.period, k=Ks
+            )
+            _plt.plot(
+                Es * 1e-3,
+                gaps,
+                "-C0",
+                linewidth=linewidth,
+            )
+
+        _plt.plot(
+            [*xlim],
+            [gaps[0], gaps[0]],
+            "--C1",
+            linewidth=linewidth,
+            label="Min. gap: {:.2f} mm".format(gaps[0]),
+        )
+
+        _plt.xlabel("Energy [keV]")
+        _plt.xscale(xscale)
+        _plt.ylabel("Gap [mm]")
+        _plt.yscale(yscale)
+        _plt.legend(loc=4, ncol=1, fontsize=9)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.xlim(*xlim)
+        _plt.ylim(0, 14)
+        _plt.yticks([0, 2, 4, 6, 8, 10, 12, 14])
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "gap_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+        # Fundamental Energy
+        gaps = _np.linspace(gapv, 20, 501)
+        Bs = source.get_beff(gaps / source.period)
+        Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
+        Es = source.get_harmonic_energy(
+            n=1, gamma=gamma, theta=0, period=source.period, k=Ks
+        )
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        _plt.plot(
+            gaps,
+            Es * 1e-3,
+            "-C0",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            [gaps[0], gaps[0]],
+            [0, 30],
+            "--C1",
+            linewidth=linewidth,
+            label="Min. gap: {:.2f} mm".format(gaps[0]),
+        )
+        _plt.ylabel("Energy [keV]")
+        _plt.xlabel("Gap [mm]")
+        _plt.legend(loc=4, ncol=1, fontsize=9)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.ylim(0, Es[-1] * 1e-3)
+        _plt.yscale(yscale)
+        _plt.xlim(0, 14)
+        _plt.xscale(xscale)
+        _plt.xticks([0, 2, 4, 6, 8, 10, 12, 14])
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "gap_fundamental_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
