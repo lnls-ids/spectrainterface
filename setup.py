@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="spectrainterface",
-    version="0.2.2",
+    version="0.2.3",
     author="Gabriel Rezende da Ascencao",
     author_email="gabriel.ascencao@lnls.br",
     description="Python interface for SPECTRA",
