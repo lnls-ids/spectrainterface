@@ -4305,3 +4305,113 @@ class FunctionsManipulation:
         _plt.tight_layout()
         if savefig:
             _plt.savefig(fig_name, dpi=dpi)
+
+    @staticmethod
+    def process_beam_size(args):
+        source = args["source"]
+        xlim = args["xlim"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        title = (
+            args["title"]
+            if "title" in args
+            else "Beam Size\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xlim = args["xlim"]
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        _plt.figure(figsize=figsize)
+
+        source_period = source.period
+        source_length = source.source_length
+        source_k_max = source.calc_max_k(spectra_calc.accelerator)
+
+        coupling_const = spectra_calc.accelerator.coupling_constant
+        nat_emittance = spectra_calc.accelerator.nat_emittance
+        x_emittance = (1 / (1 + coupling_const)) * nat_emittance
+        y_emittance = (coupling_const / (1 + coupling_const)) * nat_emittance
+        beta_x = spectra_calc.accelerator.betax
+        beta_y = spectra_calc.accelerator.betay
+        energy_spread = spectra_calc.accelerator.energy_spread
+
+        ne = 5001
+        dimensions_beam = _np.zeros((ne, 4))
+        energies = _np.linspace(100, xlim[1] * 1e3, ne)
+
+        for i in range(ne):
+            energy = energies[i]
+            h, K, B = source.get_min_or_max_k(
+                source_period, energy, source_k_max, "max"
+            )
+            sizex, divx = source.calc_beam_size_and_div(
+                x_emittance,
+                beta_x,
+                energy_spread,
+                source_length,
+                source_period,
+                energy,
+                h,
+            )
+            sizey, divy = source.calc_beam_size_and_div(
+                y_emittance,
+                beta_y,
+                energy_spread,
+                source_length,
+                source_period,
+                energy,
+                h,
+            )
+            dimensions_beam[i, 0] = sizex
+            dimensions_beam[i, 1] = sizey
+            dimensions_beam[i, 2] = divx
+            dimensions_beam[i, 3] = divy
+        _plt.title(title)
+        _plt.plot(
+            energies * 1e-3,
+            dimensions_beam[:, 0] * 1e6,
+            "-C0",
+            label=r"$\sigma_{x}$",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            energies * 1e-3,
+            dimensions_beam[:, 1] * 1e6,
+            "-C1",
+            label=r"$\sigma_{y}$",
+            linewidth=linewidth,
+        )
+        y_lim = max(dimensions_beam[-1, 0], dimensions_beam[-1, 1])
+        y_lim *= 1e6
+
+        _plt.xlabel("Energy [keV]")
+        _plt.ylabel("RMS beam size [\u03bcm]")
+        _plt.legend(loc=1, ncol=2, fontsize=9)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.xlim(*xlim)
+        _plt.xscale(xscale)
+        _plt.ylim(0, y_lim - y_lim % 5 + 15)
+        _plt.yscale(yscale)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "beam_size_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
