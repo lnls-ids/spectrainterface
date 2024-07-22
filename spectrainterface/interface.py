@@ -4246,7 +4246,7 @@ class FunctionsManipulation:
         else:
             ax.text(
                 x=x_range[0] * (1 - 0.05),
-                y=y_range[0] * (1 - 0.05) + 0.05,
+                y=y_range[0] * (1 - 0.17),
                 s=r"$R_1:$" + "{:.1f} mm".format(slit_acceptance[0]),
                 fontsize=8,
                 c="white",
