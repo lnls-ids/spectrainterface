@@ -1,0 +1,48 @@
+{
+  "Accelerator": {
+    "Energy (GeV)": 3,
+    "Current (mA)": 100,
+    "&sigma;<sub>z</sub> (mm)": 2.9,
+    "Nat. Emittance (m.rad)": 2.5e-10,
+    "Coupling Constant": 0.01,
+    "Energy Spread": 0.00084,
+    "&beta;<sub>x,y</sub> (m)": [0.338,5.356],
+    "&alpha;<sub>x,y</sub>": [0,0],
+    "&eta;<sub>x,y</sub> (m)": [0,0],
+    "&eta;'<sub>x,y</sub>": [0,0],
+    "Type": "Storage Ring",
+    "Options": {
+      "Bunch Profile": "Gaussian",
+      "Injection Condition": "Automatic",
+      "Zero Emittance": false
+    }
+  },
+  "Light Source": {
+    "B (T)": 0.9601840835380833,
+    "&rho; (m)": 10.421876566758463,
+    "BM Length (m)": 0.05,
+    "BM Fringe Length (m)": 0.05,
+    "Type": "Bending Magnet",
+    "Options": {
+      "Tandem Arrangement": false
+    }
+  },
+  "Configurations": {
+    "Distance from the Source (m)": 23,
+    "Target Energy (eV)": 101.48553719008262,
+    "Slit Pos.: &theta;<sub>x,y</sub> (mrad)": [0,0],
+    "Slit &theta;<sub>1,2</sub> (mrad)": [0.0652174,0.0913043],
+    "Type": "Fixed Point Calculation::Near Field::Partial Flux::Circular Slit",
+    "Options": {
+      "Define Obs. Point in": "Angle",
+      "Accuracy": "Default"
+    }
+  },
+  "Output File": {
+    "Format": "JSON",
+    "Folder": "/home/jefferson.vieira/Documents/",
+    "Prefix": "",
+    "Serial Number": -1,
+    "Comment": ""
+  }
+}

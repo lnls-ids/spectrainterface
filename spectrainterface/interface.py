@@ -3,6 +3,7 @@
 import numpy as _np
 import matplotlib.pyplot as _plt
 from matplotlib import colors
+import matplotlib.patches as _patches
 from spectrainterface.accelerator import StorageRingParameters
 import mathphys
 from spectrainterface.tools import SourceFunctions
@@ -4050,4 +4051,1310 @@ class SpectraInterface:
                     "",
                     result_matrix.ravel()[idx],
                 )
+            )
+
+
+class FunctionsManipulation:
+    """Manipulation generic Spectra Interface functions to generate graphs"""
+
+    @staticmethod
+    def process_flux_distribuition_2d(args):
+        source = args["source"]
+        slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
+        slit_acceptance = (
+            args["slit_acceptance"]
+            if "slit_acceptance" in args
+            else [0.06, 0.06]
+        )
+        slit_position = (
+            args["slit_position"] if "slit_position" in args else [0, 0]
+        )
+        target_energy = args["target_energy"]
+        distance_from_source = args["distance_from_source"]
+        x_range = args["x_range"] if "x_range" in args else [-0.5, 0.5]
+        y_range = args["y_range"] if "y_range" in args else [-0.5, 0.5]
+        x_nr_pts = args["x_nr_pts"] if "x_nr_pts" in args else 301
+        y_nr_pts = args["y_nr_pts"] if "y_nr_pts" in args else 301
+
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 4.5)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.flux_density
+        )
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.mesh_xy
+        )
+        if source.source_type != "bendingmagnet":
+            target_k = args["target_k"]
+            source_polarization = source.polarization
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+
+            if source_polarization == "hp":
+                spectra_calc.calc.ky = target_k
+            elif source_polarization == "vp":
+                spectra_calc.calc.kx = target_k
+            else:
+                spectra_calc.calc.kx = target_k / _np.sqrt(
+                    1 + source.fields_ratio**2
+                )
+                spectra_calc.calc.ky = (
+                    spectra_calc.calc.kx * source.fields_ratio
+                )
+            spectra_calc.calc.method = (
+                spectra_calc.calc.CalcConfigs.Method.far_field
+            )
+            fig_name = (
+                "flux_density_{:}_{:.0f}m_{:.0f}mm_{:.0f}keV.png".format(
+                    source.label,
+                    source.source_length,
+                    source.period,
+                    target_energy * 1e-3,
+                )
+            )
+            title = "Flux Density\nEnergy: {:.2f} keV, z = {:.1f} m\n{:} ({:.1f} m, {:.2f} mm)".format(
+                target_energy * 1e-3,
+                distance_from_source,
+                source.label,
+                source.source_length,
+                source.period,
+            )
+        else:
+            spectra_calc.calc.by = source.b_peak
+            spectra_calc.calc.method = (
+                spectra_calc.calc.CalcConfigs.Method.near_field
+            )
+            fig_name = "flux_density_{:}_{:.0f}keV.png".format(
+                source.label,
+                target_energy * 1e-3,
+            )
+            title = (
+                "Flux Density\nEnergy: {:.2f} keV, z = {:.1f} m\n{:}".format(
+                    target_energy * 1e-3,
+                    distance_from_source,
+                    source.label,
+                )
+            )
+        spectra_calc.calc.x_nr_pts = x_nr_pts
+        spectra_calc.calc.y_nr_pts = y_nr_pts
+        spectra_calc.calc.x_range = [i / distance_from_source for i in x_range]
+        spectra_calc.calc.y_range = [i / distance_from_source for i in y_range]
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.target_energy = target_energy
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        result = spectra_calc.calc.flux
+        del spectra_calc
+
+        spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.energy
+        )
+        spectra_calc.calc.method = (
+            spectra_calc.calc.CalcConfigs.Method.fixedpoint_near_field
+        )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.flux
+        )
+
+        spectra_calc.calc.slit_shape = slit_shape
+        spectra_calc.calc.slit_acceptance = [
+            i / distance_from_source for i in slit_acceptance
+        ]
+        spectra_calc.calc.observation_angle = [
+            i / distance_from_source for i in slit_position
+        ]
+
+        if source.source_type != "bendingmagnet":
+            target_k = args["target_k"]
+            source_polarization = source.polarization
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+
+            if source_polarization == "hp":
+                spectra_calc.calc.ky = target_k
+            elif source_polarization == "vp":
+                spectra_calc.calc.kx = target_k
+            else:
+                spectra_calc.calc.kx = target_k / _np.sqrt(
+                    1 + source.fields_ratio**2
+                )
+                spectra_calc.calc.ky = (
+                    spectra_calc.calc.kx * source.fields_ratio
+                )
+        else:
+            spectra_calc.calc.by = source.b_peak
+
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.target_energy = target_energy
+
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        flux_total = spectra_calc.calc.flux
+        del spectra_calc
+
+        fig = _plt.figure(figsize=(figsize[0], figsize[0]))
+        ax = fig.add_subplot(111)
+
+        ax.set_title(title)
+        im = ax.imshow(
+            result,
+            extent=[
+                x_range[0],
+                x_range[1],
+                y_range[0],
+                y_range[1],
+            ],
+            aspect="equal",
+        )
+        ax.text(
+            x=x_range[0] * (1 - 0.05),
+            y=y_range[1] * (1 - 0.13),
+            s="Total Flux: {:.2e} [ph/s/0.1%/100mA]".format(flux_total[0]),
+            fontsize=8.3,
+            c="white",
+        )
+
+        if slit_shape == "retslit":
+            ax.text(
+                x=x_range[0] * (1 - 0.05),
+                y=y_range[0] * (1 - 0.05),
+                s="{:.3f} x {:.3f} mm²".format(
+                    slit_acceptance[0], slit_acceptance[1]
+                ),
+                fontsize=8,
+                c="white",
+            )
+            patch = _patches.Rectangle(
+                (
+                    (slit_position[0] - slit_acceptance[0] / 2),
+                    (slit_position[1] - slit_acceptance[1] / 2),
+                ),
+                slit_acceptance[0],
+                slit_acceptance[1],
+                fc=(0, 0, 0, 0),
+                ec="black",
+                lw=1,
+                ls=":",
+            )
+            ax.add_patch(patch)
+        else:
+            ax.text(
+                x=x_range[0] * (1 - 0.05),
+                y=y_range[0] * (1 - 0.17),
+                s=r"$R_1:$" + "{:.1f} mm".format(slit_acceptance[0]),
+                fontsize=8,
+                c="white",
+            )
+            ax.text(
+                x=x_range[0] * (1 - 0.05),
+                y=y_range[0] * (1 - 0.05),
+                s=r"$R_2:$" + "{:.1f} mm".format(slit_acceptance[1]),
+                fontsize=8,
+                c="white",
+            )
+            patch = _patches.Circle(
+                (slit_position[0], slit_position[1]),
+                slit_acceptance[0],
+                fc=(0, 0, 0, 0),
+                ec="black",
+                lw=1,
+                ls=":",
+            )
+            ax.add_patch(patch)
+            patch = _patches.Circle(
+                (slit_position[0], slit_position[1]),
+                slit_acceptance[1],
+                fc=(0, 0, 0, 0),
+                ec="black",
+                lw=1,
+                ls=":",
+            )
+            ax.add_patch(patch)
+        ax.tick_params(labelsize=9)
+        sm = _plt.cm.ScalarMappable(
+            _plt.Normalize(
+                vmin=_np.min(result / (distance_from_source**2)),
+                vmax=_np.max(result / (distance_from_source**2)),
+            )
+        )
+        sm.set_array(result / (distance_from_source**2))
+
+        cbar = fig.colorbar(
+            sm,
+            ax=ax,
+            label="Flux Density [ph/s/mm²/0.1%/100mA]",
+            format="%.1e",
+            shrink=0.5,
+        )
+        cbar.set_ticks(
+            _np.linspace(
+                _np.min(result / (distance_from_source**2)),
+                _np.max(result / (distance_from_source**2)),
+                5,
+            )
+        )
+        cbar.ax.tick_params(labelsize=9)
+        ax.set_xlabel("X [mm]")
+        ax.set_ylabel("Y [mm]")
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(fig_name, dpi=dpi)
+
+    @staticmethod
+    def process_beam_size(args):
+        source = args["source"]
+        xlim = args["xlim"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        title = (
+            args["title"]
+            if "title" in args
+            else "Beam Size\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xlim = args["xlim"]
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        _plt.figure(figsize=figsize)
+
+        source_period = source.period
+        source_length = source.source_length
+        source_k_max = source.calc_max_k(spectra_calc.accelerator)
+
+        coupling_const = spectra_calc.accelerator.coupling_constant
+        nat_emittance = spectra_calc.accelerator.nat_emittance
+        x_emittance = (1 / (1 + coupling_const)) * nat_emittance
+        y_emittance = (coupling_const / (1 + coupling_const)) * nat_emittance
+        beta_x = spectra_calc.accelerator.betax
+        beta_y = spectra_calc.accelerator.betay
+        energy_spread = spectra_calc.accelerator.energy_spread
+
+        ne = 5001
+        dimensions_beam = _np.zeros((ne, 4))
+        energies = _np.linspace(100, xlim[1] * 1e3, ne)
+
+        for i in range(ne):
+            energy = energies[i]
+            h, K, B = source.get_min_or_max_k(
+                source_period, energy, source_k_max, "max"
+            )
+            sizex, divx = source.calc_beam_size_and_div(
+                x_emittance,
+                beta_x,
+                energy_spread,
+                source_length,
+                source_period,
+                energy,
+                h,
+            )
+            sizey, divy = source.calc_beam_size_and_div(
+                y_emittance,
+                beta_y,
+                energy_spread,
+                source_length,
+                source_period,
+                energy,
+                h,
+            )
+            dimensions_beam[i, 0] = sizex
+            dimensions_beam[i, 1] = sizey
+            dimensions_beam[i, 2] = divx
+            dimensions_beam[i, 3] = divy
+        _plt.title(title)
+        _plt.plot(
+            energies * 1e-3,
+            dimensions_beam[:, 0] * 1e6,
+            "-C0",
+            label=r"$\sigma_{x}$",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            energies * 1e-3,
+            dimensions_beam[:, 1] * 1e6,
+            "-C1",
+            label=r"$\sigma_{y}$",
+            linewidth=linewidth,
+        )
+        y_lim = max(dimensions_beam[-1, 0], dimensions_beam[-1, 1])
+        y_lim *= 1e6
+
+        _plt.xlabel("Energy [keV]")
+        _plt.ylabel("RMS beam size [\u03bcm]")
+        _plt.legend(loc=1, ncol=2, fontsize=9)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.xlim(*xlim)
+        _plt.xscale(xscale)
+        _plt.ylim(0, y_lim - y_lim % 5 + 15)
+        _plt.yscale(yscale)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "beam_size_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+    @staticmethod
+    def process_beam_divergence(args):
+        source = args["source"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        title = (
+            args["title"]
+            if "title" in args
+            else "Beam Divergence\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xlim = args["xlim"]
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+
+        _plt.figure(figsize=figsize)
+
+        source_period = source.period
+        source_length = source.source_length
+        source_k_max = source.calc_max_k(spectra_calc.accelerator)
+
+        coupling_const = spectra_calc.accelerator.coupling_constant
+        nat_emittance = spectra_calc.accelerator.nat_emittance
+        x_emittance = (1 / (1 + coupling_const)) * nat_emittance
+        y_emittance = (coupling_const / (1 + coupling_const)) * nat_emittance
+        beta_x = spectra_calc.accelerator.betax
+        beta_y = spectra_calc.accelerator.betay
+        energy_spread = spectra_calc.accelerator.energy_spread
+
+        ne = 5001
+        dimensions_beam = _np.zeros((ne, 4))
+        energies = _np.linspace(100, xlim[1] * 1e3, ne)
+
+        for i in range(ne):
+            energy = energies[i]
+            h, K, B = source.get_min_or_max_k(
+                source_period, energy, source_k_max, "max"
+            )
+            sizex, divx = source.calc_beam_size_and_div(
+                x_emittance,
+                beta_x,
+                energy_spread,
+                source_length,
+                source_period,
+                energy,
+                h,
+            )
+            sizey, divy = source.calc_beam_size_and_div(
+                y_emittance,
+                beta_y,
+                energy_spread,
+                source_length,
+                source_period,
+                energy,
+                h,
+            )
+            dimensions_beam[i, 0] = sizex
+            dimensions_beam[i, 1] = sizey
+            dimensions_beam[i, 2] = divx
+            dimensions_beam[i, 3] = divy
+
+        _plt.title(title)
+        _plt.plot(
+            energies * 1e-3,
+            dimensions_beam[:, 2] * 1e6,
+            "-C0",
+            label=r"$\sigma'_{x}$",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            energies * 1e-3,
+            dimensions_beam[:, 3] * 1e6,
+            "-C1",
+            label=r"$\sigma'_{y}$",
+            linewidth=linewidth,
+        )
+        y_lim = max(dimensions_beam[-1, 2], dimensions_beam[-1, 3])
+        y_lim *= 1e6
+
+        _plt.xlabel("Energy [keV]")
+        _plt.ylabel("RMS beam divergence [\u03bcrad]")
+        _plt.legend(loc=1, ncol=2, fontsize=9)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.xlim(*xlim)
+        _plt.xscale(xscale)
+        _plt.ylim(0, y_lim - y_lim % 5 + 10)
+        _plt.yscale(yscale)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "beam_div_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=300,
+            )
+
+    @staticmethod
+    def process_table_parameters(args):
+        source = args["source"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        savefig = args["savefig"] if "savefig" in args else True
+
+        if source.source_type != "bendingmagnet":
+            fig, ax = _plt.subplots(figsize=figsize)
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+            rows = 7
+            col = 1.3
+            ax.set_ylim(0, rows)
+            ax.set_xlim(0, col + 0.2)
+            data = {
+                "Máx. B [T]": _np.round(
+                    source.undulator_k_to_b(source_k_max, source.period), 2
+                ),
+                "Min. gap [mm]": _np.round(gapv, 2),
+                "Máx. K": _np.round(source_k_max, 2),
+                "Polarization": source.polarization,
+                "Length [m]": _np.round(source.source_length, 2),
+                "Period [mm]": _np.round(source.period, 2),
+                "Source": source.material,
+            }
+            for i, info in enumerate(data):
+                ax.text(
+                    x=col, y=0.5 + i, s=data[info], va="center", ha="right"
+                )
+                ax.text(col - 1.1, 0.5 + i, info, weight="bold", ha="left")
+            ax.plot([0, col + 1], [rows - 1, rows - 1], lw=".5", c="black")
+            ax.plot([0, col + 1], [rows, rows], lw=".5", c="black")
+            ax.plot([0.7, 0.7], [0, rows], ls=":", lw=".5", c="grey")
+            for row in range(rows):
+                ax.plot([0, col + 1], [row, row], ls=":", lw=".5", c="grey")
+            rect = _patches.Rectangle(
+                (0, rows - 1), 2, 1, ec="none", fc="blue", alpha=0.4, zorder=-1
+            )
+            ax.add_patch(rect)
+            for row in range(int(rows / 2)):
+                rect = _patches.Rectangle(
+                    (0, rows - 2 * row - 3),
+                    2,
+                    1,
+                    ec="none",
+                    fc="blue",
+                    alpha=0.2,
+                    zorder=-1,
+                )
+                ax.add_patch(rect)
+
+            ax.set_title(
+                "Source Parameters\n{:}".format(source.label),
+                loc="center",
+                fontsize=12,
+            )
+            ax.axis("off")
+            _plt.tight_layout()
+            if savefig:
+                _plt.savefig(
+                    "parameters_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    ),
+                    dpi=300,
+                )
+        else:
+            fig, ax = _plt.subplots(figsize=(figsize[0], figsize[1] / 1.7))
+            rows = 2
+            col = 1.2
+            ax.set_ylim(0, rows)
+            ax.set_xlim(0, col + 0.2)
+            data = {
+                "Máx. B [T]": _np.round(source.b_peak, 2),
+                "Source": source.material,
+            }
+            for i, info in enumerate(data):
+                ax.text(
+                    x=col, y=0.5 + i, s=data[info], va="center", ha="right"
+                )
+                ax.text(col - 1, 0.5 + i, info, weight="bold", ha="left")
+            ax.plot([0, col + 1], [rows - 1, rows - 1], lw=".5", c="black")
+            ax.plot([0, col + 1], [rows, rows], lw=".5", c="black")
+            ax.plot([0.7, 0.7], [0, rows], ls=":", lw=".5", c="grey")
+            for row in range(rows):
+                ax.plot([0, col + 1], [row, row], ls=":", lw=".5", c="grey")
+
+            rect = _patches.Rectangle(
+                (0, rows - 1), 2, 1, ec="none", fc="blue", alpha=0.4, zorder=-1
+            )
+            ax.add_patch(rect)
+
+            ax.set_title(
+                "Source Parameters\n{:}".format(source.label),
+                loc="center",
+                fontsize=12,
+            )
+            ax.axis("off")
+            _plt.tight_layout()
+            if savefig:
+                _plt.savefig(
+                    "parameters_{:}.png".format(source.label),
+                    dpi=300,
+                )
+
+    @staticmethod
+    def process_gap_energy(args):
+        source = args["source"]
+        spectra_calc = args["spectra"]
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        xlim = args["xlim"]
+        title = (
+            args["title"]
+            if "title" in args
+            else "Gap vs Energy\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+        gaps = _np.linspace(gapv, 14, 501)
+        Bs = source.get_beff(gaps / source.period)
+        Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
+        gamma = spectra_calc.accelerator.gamma
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        for i in range(17):
+            Es = source.get_harmonic_energy(
+                n=2 * i + 1, gamma=gamma, theta=0, period=source.period, k=Ks
+            )
+            _plt.plot(
+                Es * 1e-3,
+                gaps,
+                "-C0",
+                linewidth=linewidth,
+            )
+
+        _plt.plot(
+            [*xlim],
+            [gaps[0], gaps[0]],
+            "--C1",
+            linewidth=linewidth,
+            label="Min. gap: {:.2f} mm".format(gaps[0]),
+        )
+
+        _plt.xlabel("Energy [keV]")
+        _plt.xscale(xscale)
+        _plt.ylabel("Gap [mm]")
+        _plt.yscale(yscale)
+        _plt.legend(loc=4, ncol=1, fontsize=9)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.xlim(*xlim)
+        _plt.ylim(0, 14)
+        _plt.yticks([0, 2, 4, 6, 8, 10, 12, 14])
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "gap_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+        # Fundamental Energy
+        gaps = _np.linspace(gapv, 20, 501)
+        Bs = source.get_beff(gaps / source.period)
+        Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
+        Es = source.get_harmonic_energy(
+            n=1, gamma=gamma, theta=0, period=source.period, k=Ks
+        )
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        _plt.plot(
+            gaps,
+            Es * 1e-3,
+            "-C0",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            [gaps[0], gaps[0]],
+            [0, 30],
+            "--C1",
+            linewidth=linewidth,
+            label="Min. gap: {:.2f} mm".format(gaps[0]),
+        )
+        _plt.ylabel("Energy [keV]")
+        _plt.xlabel("Gap [mm]")
+        _plt.legend(loc=4, ncol=1, fontsize=9)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.ylim(0, Es[-1] * 1e-3)
+        _plt.yscale(yscale)
+        _plt.xlim(0, 14)
+        _plt.xscale(xscale)
+        _plt.xticks([0, 2, 4, 6, 8, 10, 12, 14])
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "gap_fundamental_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+    @staticmethod
+    def process_flux(args):
+        source = args["source"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        distance_from_source = (
+            args["distance_from_source"]
+            if "distance_from_source" in args
+            else 23
+        )
+        slit_acceptance = (
+            args["slit_acceptance"]
+            if "slit_acceptance" in args
+            else [0.06, 0.06]
+        )
+        slit_acceptance = [i / distance_from_source for i in slit_acceptance]
+        slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
+        xlim = args["xlim"] if "xlim" in args else [0, 20]
+        energy_range = (
+            args["energy_range"]
+            if "energy_range" in args
+            else [xlim[0] * 1e3, xlim[1] * 1e3]
+        )
+        nr_pts_k = args["nr_pts_k"] if "nr_pts_k" in args else 15
+        kmin = args["kmin"] if "kmin" in args else 0.2
+        gamma = spectra_calc.accelerator.gamma
+        if (
+            source.source_type != "wiggler"
+            and source.source_type != "bendingmagnet"
+        ):
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            first_hamonic_energy = source.get_harmonic_energy(
+                1, gamma, 0, source.period, source_k_max
+            )
+            n = int(xlim[1] * 1e3 / first_hamonic_energy)
+            n_harmonic = n - 1 if n % 2 == 0 else n
+        else:
+            n_harmonic = 1
+        if source.polarization == "cp":
+            n_harmonic = 1
+        harmonic_range = (
+            args["harmonic_range"]
+            if "harmonic_range" in args
+            else [1, n_harmonic]
+        )
+        process_curves = (
+            args["process_curves"] if "process_curves" in args else True
+        )
+        superp_value = args["superb_value"] if "superb_value" in args else 250
+        title = args["title"] if "title" in args else "Flux curve"
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "log"
+        figname = (
+            args["figname"]
+            if "figname" in args
+            else (
+                "flux_curve_{:}.png".format(source.label)
+                if source.source_type == "bendingmagnet"
+                else (
+                    "flux_curve_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    )
+                )
+            )
+        )
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+        legend_fs = args["legend_fs"] if "legend_fs" in args else 10
+        legend_properties = (
+            args["legend_properties"] if "legend_properties" in args else True
+        )
+        spectra_calc.sources = [source]
+        spectra_calc.calc_flux_curve(
+            energy_range=energy_range,
+            harmonic_range=harmonic_range,
+            nr_pts_k=nr_pts_k,
+            kmin=kmin,
+            slit_shape=slit_shape,
+            slit_acceptances=[slit_acceptance],
+            beta_sections=[spectra_calc.accelerator.beta_section],
+        )
+        if (
+            source.source_type != "wiggler"
+            and source.source_type != "bendingmagnet"
+        ):
+            idx_xlim = _np.argmin(
+                _np.abs(spectra_calc._energies[0, -1, :] - (xlim[1] * 1e3))
+            )
+            min_flux = float(
+                10 ** int(_np.log10(spectra_calc._fluxes[0, -1, idx_xlim - 1]))
+            )
+            max_flux = float(
+                10 ** (int(_np.log10(_np.max(spectra_calc._fluxes))) + 1)
+            )
+        else:
+            min_flux = float(
+                10 ** (int(_np.log10(spectra_calc._fluxes[0, -1])) - 1)
+            )
+            max_flux = float(
+                10 ** (int(_np.log10(_np.max(spectra_calc._fluxes))) + 1)
+            )
+        ylim = args["ylim"] if "ylim" in args else [min_flux, max_flux]
+        spectra_calc.plot_flux_curve(
+            process_curves=process_curves,
+            superp_value=superp_value,
+            title=title,
+            xscale=xscale,
+            yscale=yscale,
+            linewidth=linewidth,
+            savefig=savefig,
+            figname=figname,
+            dpi=dpi,
+            figsize=figsize,
+            legend_fs=legend_fs,
+            legend_properties=legend_properties,
+            ylim=ylim,
+            xlim=[xlim[0], xlim[1]],
+        )
+        del spectra_calc
+
+    @staticmethod
+    def process_brilliance(args):
+        source = args["source"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        nr_pts_k = args["nr_pts_k"] if "nr_pts_k" in args else 15
+        kmin = args["kmin"] if "kmin" in args else 0.2
+        xlim = args["xlim"] if "xlim" in args else []
+        emax = args["emax"] if "emax" in args else xlim[1] * 1e3
+        gamma = spectra_calc.accelerator.gamma
+        if (
+            source.source_type != "wiggler"
+            and source.source_type != "bendingmagnet"
+        ):
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            first_hamonic_energy = source.get_harmonic_energy(
+                1, gamma, 0, source.period, source_k_max
+            )
+            n = int(xlim[1] * 1e3 / first_hamonic_energy)
+            n_harmonic = n - 1 if n % 2 == 0 else n
+        else:
+            n_harmonic = 1
+        if source.polarization == "cp":
+            n_harmonic = 1
+        harmonic_range = (
+            args["harmonic_range"]
+            if "harmonic_range" in args
+            else [1, n_harmonic]
+        )
+        x_accep = args["x_accep"] if "x_accep" in args else 1
+
+        process_curves = (
+            args["process_curves"] if "process_curves" in args else True
+        )
+        superp_value = args["superp_value"] if "superp_value" in args else 250
+        title = args["title"] if "title" in args else "Brilliance curve"
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "log"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        figname = (
+            args["figname"]
+            if "figname" in args
+            else (
+                "brilliance_curve_{:}.png".format(source.label)
+                if source.source_type == "bendingmagnet"
+                else (
+                    "brilliance_curve_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    )
+                )
+            )
+        )
+        dpi = args["dpi"] if "dpi" in args else 300
+        legend_fs = args["legend_fs"] if "legend_fs" in args else 10
+        legend_properties = (
+            args["legend_properties"] if "legend_properties" in args else True
+        )
+        spectra_calc.sources = [source]
+        spectra_calc.calc_brilliance_curve(
+            harmonic_range=harmonic_range,
+            nr_pts_k=nr_pts_k,
+            kmin=kmin,
+            emax=emax,
+            x_accep=x_accep,
+            beta_sections=[spectra_calc.accelerator.beta_section],
+        )
+        if (
+            source.source_type != "wiggler"
+            and source.source_type != "bendingmagnet"
+        ):
+            idx_xlim = _np.argmin(
+                _np.abs(spectra_calc._energies[0, -1, :] - (xlim[1] * 1e3))
+            )
+            min_brilliance = float(
+                10
+                ** int(
+                    _np.log10(spectra_calc._brilliances[0, -1, idx_xlim - 1])
+                )
+            )
+            max_brilliance = float(
+                10 ** (int(_np.log10(_np.max(spectra_calc._brilliances))) + 1)
+            )
+        else:
+            min_brilliance = float(
+                10 ** (int(_np.log10(spectra_calc._brilliances[0, -1])) - 1)
+            )
+            max_brilliance = float(
+                10 ** (int(_np.log10(_np.max(spectra_calc._brilliances))) + 1)
+            )
+        ylim = (
+            args["ylim"]
+            if "ylim" in args
+            else [min_brilliance, max_brilliance]
+        )
+        spectra_calc.plot_brilliance_curve(
+            process_curves=process_curves,
+            superp_value=superp_value,
+            title=title,
+            xscale=xscale,
+            yscale=yscale,
+            xlim=xlim,
+            ylim=ylim,
+            linewidth=linewidth,
+            savefig=savefig,
+            figsize=figsize,
+            figname=figname,
+            dpi=dpi,
+            legend_fs=legend_fs,
+            legend_properties=legend_properties,
+        )
+        del spectra_calc
+
+    @staticmethod
+    def process_degree_polarization(args):
+        source = args["source"]
+        spectra_calc = copy.deepcopy(args["spectra"])
+        distance = (
+            args["distance_from_source"]
+            if "distance_from_source" in args
+            else 23
+        )
+        slit_acceptance = (
+            args["slit_acceptance"] if "slit_acceptance" in args else [0, 0.04]
+        )
+        slit_acceptance = [i / distance for i in slit_acceptance]
+        slit_shape = args["slit_shape"] if "slit_shape" in args else "circslit"
+        xlim = args["xlim"] if "xlim" in args else [0, 20]
+        energy_range = (
+            args["energy_range"]
+            if "energy_range" in args
+            else [xlim[0] * 1e3, xlim[1] * 1e3]
+        )
+        slit_position = (
+            args["slit_position"] if "slit_position" in args else [0, 0]
+        )
+        slit_position = [i / distance for i in slit_position]
+        title = args["title"] if "title" in args else "Polarization Degree"
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        figname = (
+            args["figname"]
+            if "figname" in args
+            else (
+                "degree_polarization_{:}.png".format(source.label)
+                if source.source_type == "bendingmagnet"
+                else (
+                    "degree_polarization_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    )
+                )
+            )
+        )
+        dpi = args["dpi"] if "dpi" in args else 300
+        legend_fs = args["legend_fs"] if "legend_fs" in args else 9
+        if source.source_type != "bendingmagnet":
+            kmax = source.calc_max_k(spectra_calc.accelerator)
+            if source.gap != 0:
+                kmax_gap = source.get_k()
+                kmax = kmax if kmax_gap > kmax else kmax_gap
+            if source.source_type == "wiggler":
+                spectra_calc.calc.source_type = source.source_type
+                spectra_calc.calc.method = (
+                    spectra_calc.calc.CalcConfigs.Method.far_field
+                )
+                spectra_calc.calc.indep_var = (
+                    spectra_calc.calc.CalcConfigs.Variable.energy
+                )
+                spectra_calc.calc.output_type = (
+                    spectra_calc.calc.CalcConfigs.Output.flux
+                )
+                spectra_calc.calc.slit_shape = slit_shape
+                spectra_calc.calc.period = source.period
+                spectra_calc.calc.ky = kmax
+                spectra_calc.calc.observation_angle = slit_position
+                spectra_calc.calc.slit_acceptance = slit_acceptance
+                spectra_calc.calc.energy_range = energy_range
+                spectra_calc.calc.energy_step = 1
+            else:
+                spectra_calc.calc._add_phase_errors = source.add_phase_errors
+                spectra_calc.calc._use_recovery_params = (
+                    source.use_recovery_params
+                )
+                spectra_calc.calc.output_type = (
+                    spectra_calc.calc.CalcConfigs.Output.flux
+                )
+                spectra_calc.calc.method = (
+                    spectra_calc.calc.CalcConfigs.Method.far_field
+                )
+                spectra_calc.calc.indep_var = (
+                    spectra_calc.calc.CalcConfigs.Variable.energy
+                )
+                spectra_calc.calc.source_type = source.source_type
+                spectra_calc.calc.slit_shape = slit_shape
+                spectra_calc.calc.period = source.period
+                spectra_calc.calc.ky = kmax
+                spectra_calc.calc.observation_angle = slit_position
+                spectra_calc.calc.slit_acceptance = slit_acceptance
+                spectra_calc.calc.energy_range = energy_range
+                spectra_calc.calc.energy_step = 1
+        else:
+            b = source.b_peak
+            spectra_calc.calc.source_type = source.source_type
+            spectra_calc.calc.method = (
+                spectra_calc.calc.CalcConfigs.Method.far_field
+            )
+            spectra_calc.calc.indep_var = (
+                spectra_calc.calc.CalcConfigs.Variable.energy
+            )
+            spectra_calc.calc.output_type = (
+                spectra_calc.calc.CalcConfigs.Output.flux
+            )
+            spectra_calc.calc.slit_shape = slit_shape
+            spectra_calc.calc.observation_angle = slit_position
+            spectra_calc.calc.slit_acceptance = slit_acceptance
+            spectra_calc.calc.energy_range = energy_range
+            spectra_calc.calc.energy_step = 1
+            spectra_calc.calc.by_peak = b
+        spectra_calc.calc.length = source.source_length
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        energies = spectra_calc.calc.energies
+        degree_pl = spectra_calc.calc._pl
+        degree_pc = spectra_calc.calc._pc
+        del spectra_calc
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        _plt.plot(
+            energies * 1e-3,
+            degree_pl**2,
+            "-C0",
+            label="PL²",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            energies * 1e-3,
+            degree_pc**2,
+            "-C1",
+            label="PC²",
+            linewidth=linewidth,
+        )
+        _plt.xlabel("Energy [keV]")
+        _plt.ylabel("Polarization Degree")
+        _plt.legend(loc=5, ncol=3, fontsize=legend_fs)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.xlim(*xlim)
+        _plt.xscale(xscale)
+        _plt.yscale(yscale)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                figname,
+                dpi=dpi,
+            )
+
+    @staticmethod
+    def process_degree_coherence(args):
+        pass
+
+    @staticmethod
+    def process_power(args):
+        source = args["source"]
+        spectra = args["spectra"]
+        k_max = args["k_max"] if "k_max" in args else 2.0
+        x_range = [-0.3, 0.3]
+        y_range = [-0.3, 0.3]
+        distance_from_source = (
+            args["distance_from_source"]
+            if "distance_from_source" in args
+            else 23
+        )
+        x_nr_pts = args["x_nr_pts"] if "x_nr_pts" in args else 501
+        y_nr_pts = args["y_nr_pts"] if "y_nr_pts" in args else 501
+        slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
+        slit_acceptance = (
+            args["slit_acceptance"] if "slit_acceptance" in args else [1, 1]
+        )
+        slit_acceptance = [i / distance_from_source for i in slit_acceptance]
+        slit_position = (
+            args["slit_position"] if "slit_position" in args else [0, 0]
+        )
+        figsize = args["figsize"] if "figsize" in args else (5, 4)
+        savefig = args["savefig"] if "savefig" in args else True
+        dpi = args["dpi"] if "dpi" in args else 300
+        figname = (
+            args["figname"]
+            if "figname" in args
+            else (
+                "partial_power_{:}.png".format(source.label)
+                if source.source_type == "bendingmagnet"
+                else (
+                    "partial_power_{:}_{:.0f}m_{:.0f}mm.png".format(
+                        source.label, source.source_length, source.period
+                    )
+                )
+            )
+        )
+
+        # Calc Power Density 2D distribuition
+        spectra_calc = copy.deepcopy(spectra)
+        spectra_calc.accelerator.current = 350.0
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.method = (
+            spectra_calc.calc.CalcConfigs.Method.near_field
+        )
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.mesh_xy
+        )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.power_density
+        )
+        if source.source_type != "bendingmagnet":
+            spectra_calc.calc.ky = source.calc_max_k(spectra_calc.accelerator)
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+        else:
+            spectra_calc.calc.by_peak = source.b_peak
+            spectra_calc.calc.length = 0.05
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.x_range = x_range
+        spectra_calc.calc.y_range = y_range
+        spectra_calc.calc.x_nr_pts = x_nr_pts
+        spectra_calc.calc.y_nr_pts = y_nr_pts
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        power_densities = spectra_calc.calc.power_density
+        del spectra_calc
+
+        # Calc Partial Power
+        spectra_calc = copy.deepcopy(spectra)
+        spectra_calc.accelerator.current = 350.0
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.method = (
+            spectra_calc.calc.CalcConfigs.Method.fixedpoint_near_field
+        )
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.energy
+        )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.power
+        )
+        spectra_calc.calc.slit_shape = slit_shape
+
+        spectra_calc.calc.target_energy = 0
+        if source.source_type != "bendingmagnet":
+            spectra_calc.calc.ky = source.calc_max_k(spectra_calc.accelerator)
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+        else:
+            spectra_calc.calc.by_peak = source.b_peak
+            spectra_calc.calc.length = 0.05
+
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.observation_angle = slit_position
+        spectra_calc.calc.slit_acceptance = slit_acceptance
+
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        partial_power = spectra_calc.calc.power
+        del spectra_calc
+
+        # Plot
+        fig = _plt.figure(figsize=(figsize[0], figsize[0]))
+        ax = fig.add_subplot(111)
+        title = (
+            "Power Density @ 350 mA\n{:} ({:.1f} m, {:.2f} mm)\nK máx: {:.3f}".format(
+                source.label, source.source_length, source.period, k_max
+            )
+            if source.source_type != "bendingmagnet"
+            else "Power Density @ 350 mA\n{:}".format(source.label)
+        )
+        ax.set_title(title, fontsize=11)
+        ax.text(
+            x=x_range[0] + 0.015,
+            y=y_range[1] - 0.035,
+            s="Partial Power: {:.2f} W".format(partial_power * 1e3),
+            fontsize=9,
+            c="white",
+        )
+        im = ax.imshow(
+            power_densities,
+            extent=[*x_range, *y_range],
+            aspect="equal",
+            norm=colors.Normalize(
+                vmin=_np.min(power_densities), vmax=_np.max(power_densities)
+            ),
+        )
+        ax.set_xticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+        ax.set_yticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+        ax.tick_params(labelsize=9)
+        sm = _plt.cm.ScalarMappable(
+            _plt.Normalize(
+                vmin=_np.min(power_densities * distance_from_source**2),
+                vmax=_np.max(power_densities * distance_from_source**2),
+            )
+        )
+        sm.set_array(power_densities * distance_from_source**2)
+        cbar = fig.colorbar(
+            sm,
+            ax=ax,
+            label="Power Density [kW/mrad²]",
+            format="%.2f",
+            shrink=0.5,
+        )
+        cbar.set_ticks(
+            _np.linspace(
+                _np.min(power_densities * distance_from_source**2),
+                _np.max(power_densities * distance_from_source**2),
+                5,
+            )
+        )
+        cbar.ax.tick_params(labelsize=9)
+        ax.set_xlabel("X [mrad]")
+        ax.set_ylabel("Y [mrad]")
+        if slit_shape == "retslit":
+            ax.text(
+                x=x_range[0] * (1 - 0.05),
+                y=y_range[0] * (1 - 0.05),
+                s="{:.1f} x {:.1f} \u03bcrad²".format(
+                    slit_acceptance[0] * 1e3, slit_acceptance[1] * 1e3
+                ),
+                fontsize=8,
+                c="white",
+            )
+            patch = _patches.Rectangle(
+                (
+                    slit_position[0] - slit_acceptance[0] / 2,
+                    slit_position[1] - slit_acceptance[1] / 2,
+                ),
+                slit_acceptance[0],
+                slit_acceptance[1],
+                fc=(0, 0, 0, 0),
+                ec="black",
+                lw=1,
+                ls=":",
+            )
+            ax.add_patch(patch)
+        else:
+            ax.text(
+                x=x_range[0] * (1 - 0.05),
+                y=y_range[0] * (1 - 0.05) + 0.05,
+                s=r"$R_1:$"
+                + "{:.1f} \u03bcrad".format(slit_acceptance[0] * 1e3),
+                fontsize=8,
+                c="white",
+            )
+            ax.text(
+                x=x_range[0] * (1 - 0.05),
+                y=y_range[0] * (1 - 0.05),
+                s=r"$R_2:$"
+                + "{:.1f} \u03bcrad".format(slit_acceptance[1] * 1e3),
+                fontsize=8,
+                c="white",
+            )
+            patch = _patches.Circle(
+                (slit_position[0], slit_position[1]),
+                slit_acceptance[0],
+                fc=(0, 0, 0, 0),
+                ec="black",
+                lw=1,
+                ls=":",
+            )
+            ax.add_patch(patch)
+            patch = _patches.Circle(
+                (slit_position[0], slit_position[1]),
+                slit_acceptance[1],
+                fc=(0, 0, 0, 0),
+                ec="black",
+                lw=1,
+                ls=":",
+            )
+            ax.add_patch(patch)
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                figname,
+                dpi=dpi,
             )
