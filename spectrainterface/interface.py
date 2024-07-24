@@ -415,6 +415,8 @@ class Calc(GeneralConfigs, SpectraTools):
 
             energy = "en"
             mesh_xy = "xy"
+            mesh_xxp = "xxp"
+            mesh_yyp = "xxp"
             k = "k"
 
         class Output:
@@ -425,6 +427,7 @@ class Calc(GeneralConfigs, SpectraTools):
             brilliance = "brilliance"
             power_density = "powerdensity"
             power = "partialpower"
+            phasespace = "phasespace"
 
         class SlitShape:
             """Sub class to define slit shape."""
@@ -454,8 +457,12 @@ class Calc(GeneralConfigs, SpectraTools):
         self._target_energy = None
         self._x_range = None
         self._y_range = None
+        self._xp_range = None
+        self._yp_range = None
         self._x_nr_pts = None
+        self._xp_nr_pts = None
         self._y_nr_pts = None
+        self._yp_nr_pts = None
 
         #  K related
         self._harmonic_range = None
@@ -584,6 +591,15 @@ class Calc(GeneralConfigs, SpectraTools):
         return self._x_range
 
     @property
+    def xp_range(self):
+        """Mesh x' range.
+
+        Returns:
+            List of floats: x' limits [mrad] [initial point, final point]
+        """
+        return self._xp_range
+
+    @property
     def y_range(self):
         """Mesh y range.
 
@@ -591,6 +607,15 @@ class Calc(GeneralConfigs, SpectraTools):
             List of floats: y limits [mrad] [initial point, final point]
         """
         return self._y_range
+
+    @property
+    def yp_range(self):
+        """Mesh y' range.
+
+        Returns:
+            List of floats: y' limits [mrad] [initial point, final point]
+        """
+        return self._yp_range
 
     @property
     def x_nr_pts(self):
@@ -602,6 +627,15 @@ class Calc(GeneralConfigs, SpectraTools):
         return self._x_nr_pts
 
     @property
+    def xp_nr_pts(self):
+        """Nr of x' points.
+
+        Returns:
+            float: Number of horizontal angle mesh points
+        """
+        return self._xp_nr_pts
+
+    @property
     def y_nr_pts(self):
         """Nr of y points.
 
@@ -609,6 +643,15 @@ class Calc(GeneralConfigs, SpectraTools):
             float: Number of vertical mesh points
         """
         return self._y_nr_pts
+
+    @property
+    def yp_nr_pts(self):
+        """Nr of y' points.
+
+        Returns:
+            float: Number of vertical angle mesh points
+        """
+        return self._yp_nr_pts
 
     @property
     def harmonic_range(self):
@@ -928,39 +971,119 @@ class Calc(GeneralConfigs, SpectraTools):
 
     @x_range.setter
     def x_range(self, value):
-        if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
-            raise ValueError(
-                "X range can only be defined if the variable is a xy mesh."  # noqa: E501
-            )
-        else:
+        if (
+            self.indep_var == self.CalcConfigs.Variable.mesh_xxp
+            and self.output_type == self.CalcConfigs.Output.phasespace
+            and self.method == self.CalcConfigs.Method.wigner
+        ):
             self._x_range = value
+        elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            self._x_range = value
+        else:
+            raise ValueError(
+                "X range can only be defined if the variable is a xy mesh or xx' phasespace."  # noqa: E501
+            )
+
+    @xp_range.setter
+    def xp_range(self, value):
+        if (
+            self.indep_var == self.CalcConfigs.Variable.mesh_xxp
+            and self.output_type == self.CalcConfigs.Output.phasespace
+            and self.method == self.CalcConfigs.Method.wigner
+        ):
+            self._xp_range = value
+        elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            self._xp_range = value
+        else:
+            raise ValueError(
+                "X range can only be defined if the variable is a xy mesh or xx' phasespace."  # noqa: E501
+            )
 
     @y_range.setter
     def y_range(self, value):
-        if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
-            raise ValueError(
-                "Y range can only be defined if the variable is a xy mesh."  # noqa: E501
-            )
-        else:
+        if (
+            self.indep_var == self.CalcConfigs.Variable.mesh_yyp
+            and self.output_type == self.CalcConfigs.Output.phasespace
+            and self.method == self.CalcConfigs.Method.wigner
+        ):
             self._y_range = value
+        elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            self._y_range = value
+        else:
+            raise ValueError(
+                "X range can only be defined if the variable is a xy mesh or yy' phasespace."  # noqa: E501
+            )
+
+    @yp_range.setter
+    def yp_range(self, value):
+        if (
+            self.indep_var == self.CalcConfigs.Variable.mesh_yyp
+            and self.output_type == self.CalcConfigs.Output.phasespace
+            and self.method == self.CalcConfigs.Method.wigner
+        ):
+            self._yp_range = value
+        elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            self._yp_range = value
+        else:
+            raise ValueError(
+                "X range can only be defined if the variable is a xy mesh or or yy' phasespace."  # noqa: E501
+            )
 
     @x_nr_pts.setter
     def x_nr_pts(self, value):
-        if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
-            raise ValueError(
-                "X range can only be defined if the variable is a xy mesh."  # noqa: E501
-            )
-        else:
+        if (
+            self.indep_var == self.CalcConfigs.Variable.mesh_xxp
+            and self.output_type == self.CalcConfigs.Output.phasespace
+            and self.method == self.CalcConfigs.Method.wigner
+        ):
             self._x_nr_pts = value
+        elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            self._x_nr_pts = value
+        else:
+            raise ValueError(
+                "X range can only be defined if the variable is a xy mesh or xx' phasespace."  # noqa: E501
+            )
+
+    @xp_nr_pts.setter
+    def xp_nr_pts(self, value):
+        if (
+            self.indep_var == self.CalcConfigs.Variable.mesh_xxp
+            and self.output_type == self.CalcConfigs.Output.phasespace
+            and self.method == self.CalcConfigs.Method.wigner
+        ):
+            self._xp_nr_pts = value
+        else:
+            raise ValueError(
+                "X range can only be defined if the variable is a or xx' phasespace."  # noqa: E501
+            )
 
     @y_nr_pts.setter
     def y_nr_pts(self, value):
-        if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
+        if (
+            self.indep_var == self.CalcConfigs.Variable.mesh_yyp
+            and self.output_type == self.CalcConfigs.Output.phasespace
+            and self.method == self.CalcConfigs.Method.wigner
+        ):
+            self._y_nr_pts = value
+        elif self.indep_var == self.CalcConfigs.Variable.mesh_xy:
+            self._y_nr_pts = value
+        else:
             raise ValueError(
                 "Y range can only be defined if the variable is a xy mesh."  # noqa: E501
             )
+
+    @yp_nr_pts.setter
+    def yp_nr_pts(self, value):
+        if (
+            self.indep_var == self.CalcConfigs.Variable.mesh_yyp
+            and self.output_type == self.CalcConfigs.Output.phasespace
+            and self.method == self.CalcConfigs.Method.wigner
+        ):
+            self._yp_nr_pts = value
         else:
-            self._y_nr_pts = value
+            raise ValueError(
+                "X range can only be defined if the variable is a or yy' phasespace."  # noqa: E501
+            )
 
     @harmonic_range.setter
     def harmonic_range(self, value):
@@ -973,7 +1096,12 @@ class Calc(GeneralConfigs, SpectraTools):
 
     @target_harmonic.setter
     def target_harmonic(self, value):
-        if self.indep_var == self.CalcConfigs.Variable.energy:
+        if (
+            self.indep_var == self.CalcConfigs.Variable.mesh_xxp
+            and self.output_type == self.CalcConfigs.Output.phasespace
+        ):
+            self._target_harmonic = value
+        elif self.indep_var == self.CalcConfigs.Variable.energy:
             if self.method == self.CalcConfigs.Method.fixedpoint_wigner:
                 self._target_harmonic = value
             else:
@@ -1219,14 +1347,38 @@ class Calc(GeneralConfigs, SpectraTools):
             )
 
         if self.x_range is not None:
-            input_temp["Configurations"][
-                "&theta;<sub>x</sub> Range (mrad)"
-            ] = self.x_range
-            input_temp["Configurations"][
-                "&theta;<sub>y</sub> Range (mrad)"
-            ] = self.y_range
-            input_temp["Configurations"]["Points (x)"] = self.x_nr_pts
-            input_temp["Configurations"]["Points (y)"] = self.y_nr_pts
+            if self.output_type == self.CalcConfigs.Output.phasespace:
+                input_temp["Configurations"]["X Range (mm)"] = self.x_range
+                input_temp["Configurations"]["Points (X)"] = self.x_nr_pts
+                input_temp["Configurations"]["X' Range (mrad)"] = self.xp_range
+                input_temp["Configurations"]["Points (X')"] = self.xp_nr_pts
+            else:
+                input_temp["Configurations"][
+                    "&theta;<sub>x</sub> Range (mrad)"
+                ] = self.x_range
+                input_temp["Configurations"]["Points (x)"] = self.x_nr_pts
+
+        if self.y_range is not None:
+            if self.output_type == self.CalcConfigs.Output.phasespace:
+                input_temp["Configurations"].pop("X Range (mm)")
+                input_temp["Configurations"].pop("Points (X)")
+                input_temp["Configurations"].pop("X' Range (mrad)")
+                input_temp["Configurations"].pop("Points (X')")
+
+                input_temp["Configurations"]["Type"] = (
+                    "Characterization at the Source Point::Wigner Function::Phase-Space Distribution::Y-Y' (Projected)"
+                )
+
+                input_temp["Configurations"]["Y Range (mm)"] = self.y_range
+                input_temp["Configurations"]["Points (Y)"] = self.y_nr_pts
+                input_temp["Configurations"]["Y' Range (mrad)"] = self.yp_range
+                input_temp["Configurations"]["Points (Y')"] = self.yp_nr_pts
+
+            else:
+                input_temp["Configurations"][
+                    "&theta;<sub>y</sub> Range (mrad)"
+                ] = self.y_range
+                input_temp["Configurations"]["Points (y)"] = self.y_nr_pts
 
         if self.harmonic_range is not None:
             input_temp["Configurations"]["Harmonic Range"] = (
@@ -1304,6 +1456,26 @@ class Calc(GeneralConfigs, SpectraTools):
 
             if self.y_nr_pts is None:
                 raise ValueError("Nr. of y points must be defined.")
+
+        if self.indep_var == self.CalcConfigs.Variable.mesh_xxp:
+            if self.target_harmonic is None:
+                raise ValueError("Harmonic number must be defined.")
+            if self.x_range is not None:
+                if self.xp_range is None:
+                    raise ValueError("X' range must be defined.")
+                if self.x_nr_pts is None:
+                    raise ValueError("Nr. of x points must be defined.")
+                if self.xp_nr_pts is None:
+                    raise ValueError("Nr. of x' points must be defined.")
+            elif self.y_range is not None:
+                if self.yp_range is None:
+                    raise ValueError("Y' range must be defined.")
+                if self.y_nr_pts is None:
+                    raise ValueError("Nr. of y points must be defined.")
+                if self.yp_nr_pts is None:
+                    raise ValueError("Nr. of y' points must be defined.")
+            else:
+                raise ValueError("X or Y range must be defined.")
 
         if self.indep_var == self.CalcConfigs.Variable.k:
             if self.harmonic_range is None:
@@ -1405,6 +1577,13 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._pl45, (len(self._x), len(self._y))
                 )
                 self._pl45 = _np.flip(self._pl45, axis=0)
+
+        elif self.indep_var == self.CalcConfigs.Variable.mesh_xxp:
+            if (
+                self.method == self.CalcConfigs.Method.wigner
+                and self.output_type == self.CalcConfigs.Output.phasespace
+            ):
+                self._brilliance = data[0]
 
         elif self.indep_var == self.CalcConfigs.Variable.k:
             if self.method == self.CalcConfigs.Method.wigner:
