@@ -6,7 +6,7 @@
     "Nat. Emittance (m.rad)": 2.5e-10,
     "Coupling Constant": 0.01,
     "Energy Spread": 0.00084,
-    "&beta;<sub>x,y</sub> (m)": [17.196,3.605],
+    "&beta;<sub>x,y</sub> (m)": [1.5,1.4],
     "&alpha;<sub>x,y</sub>": [0,0],
     "&eta;<sub>x,y</sub> (m)": [0,0],
     "&eta;'<sub>x,y</sub>": [0,0],
@@ -21,7 +21,7 @@
   "Light Source": {
     "&lambda;<sub>u</sub> (mm)": 14,
     "Device Length (m)": 2.05,
-    "K value": 1.3865,
+    "K value": 1.3,
     "Type": "Vertical Undulator",
     "Options": {
       "Field Structure": "Antisymmetric",
@@ -33,16 +33,28 @@
     }
   },
   "Configurations": {
-    "Target Harmonic": 1,
+    "Target Harmonic": 3,
     "Detuning": 0,
     "X Range (mm)": [-1,1],
-    "Points (X)": 51,
+    "Points (X)": 101,
     "X' Range (mrad)": [-0.05,0.05],
-    "Points (X')": 51,
+    "Points (X')": 101,
     "Type": "Characterization at the Source Point::Wigner Function::Phase-Space Distribution::X-X' (Projected)",
     "Options": {
       "Accuracy": "Default",
-      "Perform CMD?": false
+      "Perform CMD?": true,
+      "Apply GS Model": false,
+      "Export Field Profile": "JSON",
+      "Export Intensity Profile": false,
+      "CMD Parameter": {
+        "HG Order Limit (X)": 80,
+        "Maximum CMD Order": 80,
+        "Flux Cutoff": 0.0001,
+        "Amplitude Cutoff": 0.00001,
+        "Export Step: X (mm)": 0.001
+      },
+      "Compare Wigner Function": false,
+      "Compare Intensity Profile": false
     }
   },
   "Output File": {

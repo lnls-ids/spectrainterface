@@ -416,7 +416,7 @@ class Calc(GeneralConfigs, SpectraTools):
             energy = "en"
             mesh_xy = "xy"
             mesh_xxp = "xxp"
-            mesh_yyp = "xxp"
+            mesh_yyp = "yyp"
             k = "k"
 
         class Output:
@@ -1098,8 +1098,8 @@ class Calc(GeneralConfigs, SpectraTools):
     def target_harmonic(self, value):
         if (
             self.indep_var == self.CalcConfigs.Variable.mesh_xxp
-            and self.output_type == self.CalcConfigs.Output.phasespace
-        ):
+            or self.indep_var == self.CalcConfigs.Variable.mesh_yyp
+        ) and self.output_type == self.CalcConfigs.Output.phasespace:
             self._target_harmonic = value
         elif self.indep_var == self.CalcConfigs.Variable.energy:
             if self.method == self.CalcConfigs.Method.fixedpoint_wigner:
@@ -1360,20 +1360,10 @@ class Calc(GeneralConfigs, SpectraTools):
 
         if self.y_range is not None:
             if self.output_type == self.CalcConfigs.Output.phasespace:
-                input_temp["Configurations"].pop("X Range (mm)")
-                input_temp["Configurations"].pop("Points (X)")
-                input_temp["Configurations"].pop("X' Range (mrad)")
-                input_temp["Configurations"].pop("Points (X')")
-
-                input_temp["Configurations"]["Type"] = (
-                    "Characterization at the Source Point::Wigner Function::Phase-Space Distribution::Y-Y' (Projected)"
-                )
-
                 input_temp["Configurations"]["Y Range (mm)"] = self.y_range
                 input_temp["Configurations"]["Points (Y)"] = self.y_nr_pts
                 input_temp["Configurations"]["Y' Range (mrad)"] = self.yp_range
                 input_temp["Configurations"]["Points (Y')"] = self.yp_nr_pts
-
             else:
                 input_temp["Configurations"][
                     "&theta;<sub>y</sub> Range (mrad)"
@@ -1578,7 +1568,10 @@ class Calc(GeneralConfigs, SpectraTools):
                 )
                 self._pl45 = _np.flip(self._pl45, axis=0)
 
-        elif self.indep_var == self.CalcConfigs.Variable.mesh_xxp:
+        elif (
+            self.indep_var == self.CalcConfigs.Variable.mesh_xxp
+            or self.indep_var == self.CalcConfigs.Variable.mesh_yyp
+        ):
             if (
                 self.method == self.CalcConfigs.Method.wigner
                 and self.output_type == self.CalcConfigs.Output.phasespace
@@ -1639,6 +1632,7 @@ class Calc(GeneralConfigs, SpectraTools):
         """
         captions = solver.GetCaptions()
         data = _np.array(solver.GetData()["data"])
+
         if self.indep_var != self.CalcConfigs.Variable.k:
             variables = _np.array(solver.GetData()["variables"], dtype=object)
         else:

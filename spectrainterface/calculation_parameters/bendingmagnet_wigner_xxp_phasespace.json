@@ -6,7 +6,7 @@
     "Nat. Emittance (m.rad)": 2.5e-10,
     "Coupling Constant": 0.01,
     "Energy Spread": 0.00084,
-    "&beta;<sub>x,y</sub> (m)": [17.196,3.605],
+    "&beta;<sub>x,y</sub> (m)": [1.5,1.4],
     "&alpha;<sub>x,y</sub>": [0,0],
     "&eta;<sub>x,y</sub> (m)": [0,0],
     "&eta;'<sub>x,y</sub>": [0,0],
@@ -18,8 +18,8 @@
     }
   },
   "Light Source": {
-    "B (T)": 1.0606473000807974,
-    "&rho; (m)": 9.434729150055535,
+    "B (T)": 0.9944763722358722,
+    "&rho; (m)": 10.062501512732307,
     "BM Length (m)": 0.05,
     "BM Fringe Length (m)": 0.05,
     "Type": "Bending Magnet",
@@ -28,18 +28,30 @@
     }
   },
   "Configurations": {
-    "Target Energy (eV)": 2088.9772376628684,
+    "Target Energy (eV)": 6808.31598513011,
     "X' Acceptance (mrad)": 0.1,
     "X Range (mm)": [-1,1],
-    "Points (X)": 51,
+    "Points (X)": 101,
     "X' Range (mrad)": [-0.05,0.05],
-    "Points (X')": 51,
+    "Points (X')": 101,
     "Type": "Characterization at the Source Point::Wigner Function::Phase-Space Distribution::X-X' (Projected)",
     "Options": {
       "Optimize &Delta;X' for Computation": true,
       "Level of Smoothing Along X": 1,
       "Accuracy": "Default",
-      "Perform CMD?": false
+      "Perform CMD?": true,
+      "Apply GS Model": false,
+      "Export Field Profile": "JSON",
+      "Export Intensity Profile": false,
+      "CMD Parameter": {
+        "HG Order Limit (X)": 80,
+        "Maximum CMD Order": 80,
+        "Flux Cutoff": 0.0001,
+        "Amplitude Cutoff": 0.00001,
+        "Export Step: X (mm)": 0.001
+      },
+      "Compare Wigner Function": false,
+      "Compare Intensity Profile": false
     }
   },
   "Output File": {

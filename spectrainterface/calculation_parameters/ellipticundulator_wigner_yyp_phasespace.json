@@ -21,9 +21,10 @@
   "Light Source": {
     "&lambda;<sub>u</sub> (mm)": 14,
     "Device Length (m)": 2.05,
-    "K value": 1.3,
-    "Type": "Linear Undulator",
+    "K<sub>x,y</sub>": [1.3,1.3],
+    "Type": "Elliptic Undulator",
     "Options": {
+      "APPLE Configuration": false,
       "Field Structure": "Antisymmetric",
       "End Correction Magnet": true,
       "Natural Focusing": "None",
@@ -35,11 +36,11 @@
   "Configurations": {
     "Target Harmonic": 3,
     "Detuning": 0,
-    "X Range (mm)": [-1,1],
-    "Points (X)": 101,
-    "X' Range (mrad)": [-0.05,0.05],
-    "Points (X')": 101,
-    "Type": "Characterization at the Source Point::Wigner Function::Phase-Space Distribution::X-X' (Projected)",
+    "Y Range (mm)": [-0.05,0.05],
+    "Points (Y)": 101,
+    "Y' Range (mrad)": [-0.05,0.05],
+    "Points (Y')": 101,
+    "Type": "Characterization at the Source Point::Wigner Function::Phase-Space Distribution::Y-Y' (Projected)",
     "Options": {
       "Accuracy": "Default",
       "Perform CMD?": true,
@@ -47,11 +48,11 @@
       "Export Field Profile": "JSON",
       "Export Intensity Profile": false,
       "CMD Parameter": {
-        "HG Order Limit (X)": 80,
+        "HG Order Limit (Y)": 80,
         "Maximum CMD Order": 80,
         "Flux Cutoff": 0.0001,
         "Amplitude Cutoff": 0.00001,
-        "Export Step: X (mm)": 0.001
+        "Export Step: Y (mm)": 0.001
       },
       "Compare Wigner Function": false,
       "Compare Intensity Profile": false
