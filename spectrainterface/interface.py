@@ -4701,7 +4701,6 @@ class FunctionsManipulation:
     @staticmethod
     def process_beam_size(args):
         source = args["source"]
-        xlim = args["xlim"]
         spectra_calc = copy.deepcopy(args["spectra"])
         if (
             source.source_type == "bendingmagnet"
@@ -4715,7 +4714,7 @@ class FunctionsManipulation:
                 source.label, source.source_length, source.period
             )
         )
-        xlim = args["xlim"]
+        xlim = args["e_range"]
         xscale = args["xscale"] if "xscale" in args else "linear"
         yscale = args["yscale"] if "yscale" in args else "linear"
         linewidth = args["linewidth"] if "linewidth" in args else 3
@@ -4824,7 +4823,7 @@ class FunctionsManipulation:
                 source.label, source.source_length, source.period
             )
         )
-        xlim = args["xlim"]
+        xlim = args["e_range"]
         xscale = args["xscale"] if "xscale" in args else "linear"
         yscale = args["yscale"] if "yscale" in args else "linear"
         linewidth = args["linewidth"] if "linewidth" in args else 3
@@ -5031,7 +5030,7 @@ class FunctionsManipulation:
             or source.source_type == "wiggler"
         ):
             return 0
-        xlim = args["xlim"]
+        xlim = args["e_range"]
         title = (
             args["title"]
             if "title" in args
@@ -5158,7 +5157,7 @@ class FunctionsManipulation:
         )
         slit_acceptance = [i / distance_from_source for i in slit_acceptance]
         slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
-        xlim = args["xlim"] if "xlim" in args else [0, 20]
+        xlim = args["e_range"] if "e_range" in args else [0, 20]
         energy_range = (
             args["energy_range"]
             if "energy_range" in args
@@ -5269,7 +5268,7 @@ class FunctionsManipulation:
         spectra_calc = copy.deepcopy(args["spectra"])
         nr_pts_k = args["nr_pts_k"] if "nr_pts_k" in args else 15
         kmin = args["kmin"] if "kmin" in args else 0.2
-        xlim = args["xlim"] if "xlim" in args else []
+        xlim = args["e_range"] if "e_range" in args else []
         emax = args["emax"] if "emax" in args else xlim[1] * 1e3
         gamma = spectra_calc.accelerator.gamma
         if (
@@ -5390,7 +5389,7 @@ class FunctionsManipulation:
         )
         slit_acceptance = [i / distance for i in slit_acceptance]
         slit_shape = args["slit_shape"] if "slit_shape" in args else "circslit"
-        xlim = args["xlim"] if "xlim" in args else [0, 20]
+        xlim = args["e_range"] if "e_range" in args else [0, 20]
         energy_range = (
             args["energy_range"]
             if "energy_range" in args
@@ -5751,37 +5750,128 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
-    # @staticmethod
-    # def process_numerizal_div_size_wigner(args):
-    #     source = args["source"]
-    #     spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+    @staticmethod
+    def process_numerical_div_size_wigner(args):
+        source = args["source"]
+        spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
 
-    #     xlim = args["xlim"] if "xlim" in args else [0, 22]
-    #     x_nr_pts = args["x_nr_pts"] if "x_nr_pts" in args else 201
-    #     linewidth = args["linewidth"] if "linewidth" in args else 3
-    #     savefig = args["savefig"] if "savefig" in args else True
-    #     figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
-    #     dpi = args["dpi"] if "dpi" in args else 300
+        xlim = args["e_range"] if "e_range" in args else [0, 22]
+        x_nr_pts = args["e_nr_pts"] if "e_nr_pts" in args else 101
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
 
-    #     div_size_x, energies = spectra_calc.calc_numerical_div_size_wigner(
-    #         source,
-    #         emax=xlim[1]*1e3,
-    #         e_pts=x_nr_pts,
-    #         r_range=[-0.18, 0.18],
-    #         r_pts=71,
-    #         rp_range=[-0.03, 0.03],
-    #         rp_pts=71,
-    #         direction="horizontal",
-    #     )
+        div_size_x, energies = spectra_calc.calc_numerical_div_size_wigner(
+            source,
+            emax=xlim[1] * 1e3,
+            e_pts=x_nr_pts,
+            direction="horizontal",
+        )
 
-    #     div_size_y, energies = spectra_calc.calc_numerical_div_size_wigner(
-    #         source,
-    #         emax=xlim[1]*1e3,
-    #         e_pts=x_nr_pts,
-    #         r_range=[-0.03, 0.03],
-    #         r_pts=71,
-    #         rp_range=[-0.035, 0.035],
-    #         rp_pts=71,
-    #         direction="vertical",
-    #     )
-    #     pass
+        div_size_y, energies = spectra_calc.calc_numerical_div_size_wigner(
+            source,
+            emax=xlim[1] * 1e3,
+            e_pts=x_nr_pts,
+            direction="vertical",
+        )
+
+        # Plot Beam Divergence
+        _plt.figure(figsize=figsize)
+        _plt.title(
+            "Beam Divergence ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
+                spectra_calc.accelerator.beta_section,
+                source.label,
+                source.source_length,
+                source.period,
+            )
+        )
+        _plt.plot(
+            energies * 1e-3,
+            div_size_y[:, 0] * 1e3,
+            "-C1",
+            label=r"$\sigma'_y$",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            energies * 1e-3,
+            div_size_x[:, 0] * 1e3,
+            "-C0",
+            label=r"$\sigma'_x$",
+            linewidth=linewidth,
+        )
+        _plt.legend()
+        valmax = (
+            max(_np.nanmax(div_size_x[:, 0]), _np.nanmax(div_size_y[:, 0]))
+            * 1e3
+        )
+        valmax = (int(valmax / 2) + 2) * 2
+        _plt.ylim(0, valmax)
+        _plt.xlim(0, xlim[1])
+        _plt.ylabel("RMS beam divergence [\u03bcrad]")
+        _plt.xlabel("Energy [keV]")
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "numerical_beam_divergence{:}_{:}_beta.png".format(
+                    source.label, spectra_calc.accelerator.beta_section
+                ),
+                dpi=dpi,
+            )
+
+        # Plot Beam Size
+        _plt.figure(figsize=figsize)
+        _plt.title(
+            "Beam Size ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
+                spectra_calc.accelerator.beta_section,
+                source.label,
+                source.source_length,
+                source.period,
+            )
+        )
+        _plt.plot(
+            energies * 1e-3,
+            div_size_y[:, 1] * 1e3,
+            "-C1",
+            label=r"$\sigma_y$",
+            linewidth=2,
+        )
+        _plt.plot(
+            energies * 1e-3,
+            div_size_x[:, 1] * 1e3,
+            "-C0",
+            label=r"$\sigma_x$",
+            linewidth=2,
+        )
+        _plt.legend()
+
+        valmax = (
+            max(_np.nanmax(div_size_x[:, 1]), _np.nanmax(div_size_y[:, 1]))
+            * 1e3
+        )
+        valmax = (int(valmax / 5) + 2) * 5
+
+        _plt.ylim(0, valmax)
+        _plt.xlim(0, xlim[1])
+        _plt.ylabel("RMS beam size [\u03bcm]")
+        _plt.xlabel("Energy [keV]")
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "numerical_beam_size_{:}_{:}_beta.png".format(
+                    source.label, spectra_calc.accelerator.beta_section
+                ),
+                dpi=dpi,
+            )
