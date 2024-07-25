@@ -3387,11 +3387,11 @@ class SpectraInterface:
                 rp_pts=rp_pts,
                 direction=direction,
             )
-            brilliance_middle_rp = brilliance[:, int(r_pts / 2)]
-            brilliance_middle_r = brilliance[int(rp_pts / 2), :]
+            brilliance_proj_rp = _np.sum(brilliance, axis=1)
+            brilliance_proj_r = _np.sum(brilliance, axis=0)
 
-            rp_div = self.calc_rms(rp_range, brilliance_middle_rp)
-            r_size = self.calc_rms(r_range, brilliance_middle_r)
+            rp_div = self.calc_rms(rp_range, brilliance_proj_rp)
+            r_size = self.calc_rms(r_range, brilliance_proj_r)
 
             return rp_div, r_size
         else:
@@ -3421,7 +3421,8 @@ class SpectraInterface:
             direction (str): direction phase space "vertical" or "horizontal".
 
         Returns:
-            numpy array: Div. at 1th pos. and Size at 2nd pos.
+            div_size (numpy array): Div. at 1th pos. and Size at 2nd pos.
+            energies (numpy array)
         """
         r_range = _np.linspace(r_range[0], r_range[1], r_pts)
         rp_range = _np.linspace(r_range[0], rp_range[1], rp_pts)
@@ -3461,7 +3462,7 @@ class SpectraInterface:
         with multiprocessing.Pool(processes=num_process - 1) as parallel:
             data = parallel.map(self._parallel_calc_div_size, arglist)
         div_size = _np.array(data)
-        return div_size
+        return div_size, energies
 
     def plot_brilliance_curve(  # noqa: C901
         self,
