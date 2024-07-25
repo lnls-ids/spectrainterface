@@ -3356,7 +3356,16 @@ class SpectraInterface:
             spectra_calc.calc.x_nr_pts = r_pts
             spectra_calc.calc.xp_nr_pts = rp_pts
 
-        spectra_calc.calc.ky = target_k
+        if source.polarization == "hp":
+            spectra_calc.calc.ky = target_k
+        elif source.polarization == "vp":
+            spectra_calc.calc.kx = target_k
+        else:
+            spectra_calc.calc.kx = target_k / _np.sqrt(
+                1 + source.fields_ratio**2
+            )
+            spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
+
         spectra_calc.calc.target_harmonic = n_harmonic
         spectra_calc.calc.set_config()
         spectra_calc.calc.run_calculation()
@@ -3401,11 +3410,7 @@ class SpectraInterface:
         self,
         source,
         emax=20e3,
-        e_pts=501,
-        r_range=[-0.02, 0.02],
-        r_pts=101,
-        rp_range=[-0.02, 0.02],
-        rp_pts=101,
+        e_pts=101,
         direction="vertical",
     ):
         """Calc numerical Divergence and Size of Light Beam.
@@ -3414,26 +3419,58 @@ class SpectraInterface:
             source: source light.
             emax (float): Máx energy range.
             e_pts (int): points number to energy range.
-            r_range (list): size range to calculate.
-            r_pts (int): points number to r_range.
-            rp_range (list): divergence range to calculate.
-            rp_pts (int): points number to rp_range.
             direction (str): direction phase space "vertical" or "horizontal".
 
         Returns:
             div_size (numpy array): Div. at 1th pos. and Size at 2nd pos.
-            energies (numpy array)
+            energies (numpy array).
         """
-        r_range = _np.linspace(r_range[0], r_range[1], r_pts)
-        rp_range = _np.linspace(r_range[0], rp_range[1], rp_pts)
-
         kmax_source = source.calc_max_k(self.accelerator)
+
+        # Automatic range adjust
+        r_lim = 0.01
+        rp_lim = 0.01
+
+        r_pts = 31
+        rp_pts = 31
+        dif_r = 1
+        dif_rp = 1
+        while dif_r > 0.01 or dif_rp > 0.01:
+            brilliance = self.calc_proj_brilliance_with_phasespace(
+                source=source,
+                target_k=kmax_source,
+                n_harmonic=1,
+                r_range=[-r_lim, r_lim],
+                r_pts=r_pts,
+                rp_range=[-rp_lim, rp_lim],
+                rp_pts=rp_pts,
+                direction=direction,
+            )
+
+            brilliance_r = _np.sum(brilliance, axis=0)
+            brilliance_r = brilliance_r / _np.max(brilliance_r)
+            dif_r = brilliance_r[0]
+            if dif_r > 0.01:
+                r_lim *= 1.05 + 2 * dif_r
+
+            brilliance_rp = _np.sum(brilliance, axis=1)
+            brilliance_rp = brilliance_rp / _np.max(brilliance_rp)
+            dif_rp = brilliance_rp[0]
+            if dif_rp > 0.01:
+                rp_lim *= 1.05 + 2 * dif_rp
+
+        r_lim *= 1.05
+        rp_lim *= 1.05
+        r_range = _np.linspace(-r_lim, r_lim, r_pts)
+        rp_range = _np.linspace(-rp_lim, rp_lim, rp_pts)
+
         fundamental_energy = source.get_harmonic_energy(
             1, self.accelerator.gamma, 0, source.period, kmax_source
         )
         emin = fundamental_energy
         energies = _np.linspace(emin, emax, e_pts)
 
+        # Arglist Assembly
         arglist = []
         for j, energy in enumerate(energies):
             n = int(energy / fundamental_energy)
@@ -3457,6 +3494,7 @@ class SpectraInterface:
                 )
             ]
 
+        # Calc Divergence and Size
         num_process = multiprocessing.cpu_count()
         data = []
         with multiprocessing.Pool(processes=num_process - 1) as parallel:
@@ -5712,3 +5750,38 @@ class FunctionsManipulation:
                 figname,
                 dpi=dpi,
             )
+
+    # @staticmethod
+    # def process_numerizal_div_size_wigner(args):
+    #     source = args["source"]
+    #     spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+
+    #     xlim = args["xlim"] if "xlim" in args else [0, 22]
+    #     x_nr_pts = args["x_nr_pts"] if "x_nr_pts" in args else 201
+    #     linewidth = args["linewidth"] if "linewidth" in args else 3
+    #     savefig = args["savefig"] if "savefig" in args else True
+    #     figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+    #     dpi = args["dpi"] if "dpi" in args else 300
+
+    #     div_size_x, energies = spectra_calc.calc_numerical_div_size_wigner(
+    #         source,
+    #         emax=xlim[1]*1e3,
+    #         e_pts=x_nr_pts,
+    #         r_range=[-0.18, 0.18],
+    #         r_pts=71,
+    #         rp_range=[-0.03, 0.03],
+    #         rp_pts=71,
+    #         direction="horizontal",
+    #     )
+
+    #     div_size_y, energies = spectra_calc.calc_numerical_div_size_wigner(
+    #         source,
+    #         emax=xlim[1]*1e3,
+    #         e_pts=x_nr_pts,
+    #         r_range=[-0.03, 0.03],
+    #         r_pts=71,
+    #         rp_range=[-0.035, 0.035],
+    #         rp_pts=71,
+    #         direction="vertical",
+    #     )
+    #     pass
