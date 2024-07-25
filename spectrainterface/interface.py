@@ -3285,6 +3285,69 @@ class SpectraInterface:
 
         return partial_power_matrix
 
+    def calc_proj_brilliance_with_phasespace(
+        self,
+        source,
+        target_k,
+        n_harmonic,
+        r_range=[-0.02, 0.02],
+        r_pts=101,
+        rp_range=[-0.02, 0.02],
+        rp_pts=101,
+        direction="vertical",
+    ):
+        """Phase Space of Light Beam.
+
+        Args:
+            source: source light.
+            target_k (float): target K.
+            n_harmonic (int): harmonic number.
+            r_range (list): size range to calculate.
+            r_pts (int): points number to r_range.
+            rp_range (list): divergence range to calculate.
+            rp_pts (int): points number to rp_range.
+            direction (str): direction phase space.
+
+        Returns:
+            numpy array: Brilliance.
+        """
+        spectra_calc: SpectraInterface = copy.deepcopy(self)
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.method = spectra_calc.calc.CalcConfigs.Method.wigner
+        if direction == "vertical":
+            spectra_calc.calc.indep_var = (
+                spectra_calc.calc.CalcConfigs.Variable.mesh_yyp
+            )
+        else:
+            spectra_calc.calc.indep_var = (
+                spectra_calc.calc.CalcConfigs.Variable.mesh_xxp
+            )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.phasespace
+        )
+
+        spectra_calc.calc.period = source.period
+        spectra_calc.calc.length = source.source_length
+
+        if direction == "vertical":
+            spectra_calc.calc.y_range = r_range
+            spectra_calc.calc.yp_range = rp_range
+            spectra_calc.calc.y_nr_pts = r_pts
+            spectra_calc.calc.yp_nr_pts = rp_pts
+        else:
+            spectra_calc.calc.x_range = r_range
+            spectra_calc.calc.xp_range = rp_range
+            spectra_calc.calc.x_nr_pts = r_pts
+            spectra_calc.calc.xp_nr_pts = rp_pts
+
+        spectra_calc.calc.ky = target_k
+        spectra_calc.calc.target_harmonic = n_harmonic
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        brilliance = spectra_calc.calc.brilliance.reshape(rp_pts, r_pts)
+        del spectra_calc
+        return brilliance
+
     def plot_brilliance_curve(  # noqa: C901
         self,
         process_curves=True,
