@@ -1503,6 +1503,8 @@ class Calc(GeneralConfigs, SpectraTools):
         self._output_variables = variables
         self._set_outputs()
 
+        return solver
+
     def _set_outputs(self):  # noqa: C901
         data = self._output_data
         captions = self._output_captions
