@@ -1972,6 +1972,22 @@ class SpectraInterface:
     def target_energy(self, value):
         self._target_energy = value
 
+    @staticmethod
+    def calc_rms(x, f_x):
+        """RMS function.
+
+        Args:
+            x (numpy array): x values
+            f_x (numpy array): f(x) values
+
+        Returns:
+            float: RMS Value
+        """
+        return _np.sqrt(
+            _np.sum(f_x * _np.square(x)) / _np.sum(f_x)
+            - (_np.sum(f_x * x) / _np.sum(f_x)) ** 2
+        )
+
     def apply_phase_error_matrix(self, values, harm, rec_param=True):
         """Add phase errors.
 
@@ -3347,6 +3363,105 @@ class SpectraInterface:
         brilliance = spectra_calc.calc.brilliance.reshape(rp_pts, r_pts)
         del spectra_calc
         return brilliance
+
+    def _parallel_calc_div_size(self, args):
+        (
+            source,
+            target_k,
+            n_harmonic,
+            r_range,
+            r_pts,
+            rp_range,
+            rp_pts,
+            direction,
+        ) = args
+
+        if not _np.isnan(target_k):
+            brilliance = self.calc_proj_brilliance_with_phasespace(
+                source=source,
+                target_k=target_k,
+                n_harmonic=n_harmonic,
+                r_range=[r_range[0], r_range[-1]],
+                r_pts=r_pts,
+                rp_range=[rp_range[0], rp_range[-1]],
+                rp_pts=rp_pts,
+                direction=direction,
+            )
+            brilliance_middle_rp = brilliance[:, int(r_pts / 2)]
+            brilliance_middle_r = brilliance[int(rp_pts / 2), :]
+
+            rp_div = self.calc_rms(rp_range, brilliance_middle_rp)
+            r_size = self.calc_rms(r_range, brilliance_middle_r)
+
+            return rp_div, r_size
+        else:
+            return _np.nan, _np.nan
+
+    def calc_numerical_div_size_wigner(
+        self,
+        source,
+        emax=20e3,
+        e_pts=501,
+        r_range=[-0.02, 0.02],
+        r_pts=101,
+        rp_range=[-0.02, 0.02],
+        rp_pts=101,
+        direction="vertical",
+    ):
+        """Calc numerical Divergence and Size of Light Beam.
+
+        Args:
+            source: source light.
+            emax (float): Máx energy range.
+            e_pts (int): points number to energy range.
+            r_range (list): size range to calculate.
+            r_pts (int): points number to r_range.
+            rp_range (list): divergence range to calculate.
+            rp_pts (int): points number to rp_range.
+            direction (str): direction phase space "vertical" or "horizontal".
+
+        Returns:
+            numpy array: Div. at 1th pos. and Size at 2nd pos.
+        """
+        r_range = _np.linspace(r_range[0], r_range[1], r_pts)
+        rp_range = _np.linspace(r_range[0], rp_range[1], rp_pts)
+
+        kmax_source = source.calc_max_k(self.accelerator)
+        fundamental_energy = source.get_harmonic_energy(
+            1, self.accelerator.gamma, 0, source.period, kmax_source
+        )
+        emin = fundamental_energy
+        energies = _np.linspace(emin, emax, e_pts)
+
+        arglist = []
+        for j, energy in enumerate(energies):
+            n = int(energy / fundamental_energy)
+            if n > 0:
+                n_harmonic = n - 1 if n % 2 == 0 else n
+            else:
+                n_harmonic = 1
+            target_k = source.calc_k_target(
+                self.accelerator.gamma, n_harmonic, source.period, energy
+            )
+            arglist += [
+                (
+                    source,
+                    target_k,
+                    n_harmonic,
+                    r_range,
+                    r_pts,
+                    rp_range,
+                    rp_pts,
+                    direction,
+                )
+            ]
+
+        num_process = multiprocessing.cpu_count()
+        data = []
+        with multiprocessing.Pool(processes=num_process - 1) as parallel:
+            data = parallel.map(self._parallel_calc_div_size, arglist)
+        div_size = _np.array(data)
+        return div_size
 
     def plot_brilliance_curve(  # noqa: C901
         self,
