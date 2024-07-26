@@ -2525,7 +2525,7 @@ class SpectraInterface:
             ns = ns[::2]
         else:
             ns = ns[1::2]
-        ks = _np.linspace(source_k_max, 0.2, 101)
+        ks = _np.linspace(source_k_max, 0.2, 31)
 
         arglist = []
         for i, harmonic in enumerate(ns):
