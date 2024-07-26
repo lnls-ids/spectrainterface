@@ -8,6 +8,8 @@ from spectrainterface.accelerator import StorageRingParameters
 import mathphys
 from spectrainterface.tools import SourceFunctions
 from spectrainterface.sources import Undulator
+from scipy.interpolate import interp1d
+from scipy.interpolate import make_interp_spline
 import json
 from spectrainterface import spectra
 import sys
@@ -2416,6 +2418,236 @@ class SpectraInterface:
 
         self._energies = energies
         self._fluxes = fluxes
+
+    def _parallel_calc_flux_fpmethod(self, args):
+        (
+            source,
+            target_k,
+            target_energy,
+            slit_shape,
+            slit_acceptance,
+            observation_angle,
+            distance_from_source,
+        ) = args
+
+        spectra_calc: SpectraInterface = copy.deepcopy(self)
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.energy
+        )
+        spectra_calc.calc.method = (
+            spectra_calc.calc.CalcConfigs.Method.fixedpoint_far_field
+        )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.flux
+        )
+
+        spectra_calc.calc.slit_shape = slit_shape
+        spectra_calc.calc.slit_acceptance = slit_acceptance
+        spectra_calc.calc.observation_angle = observation_angle
+
+        if source.source_type != "bendingmagnet":
+            source_polarization = source.polarization
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+
+            if source_polarization == "hp":
+                spectra_calc.calc.ky = target_k
+            elif source_polarization == "vp":
+                spectra_calc.calc.kx = target_k
+            else:
+                spectra_calc.calc.kx = target_k / _np.sqrt(
+                    1 + source.fields_ratio**2
+                )
+                spectra_calc.calc.ky = (
+                    spectra_calc.calc.kx * source.fields_ratio
+                )
+        else:
+            spectra_calc.calc.by = source.b_peak
+
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.target_energy = target_energy
+
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        flux_total = spectra_calc.calc.flux
+        return flux_total[0]
+
+    def calc_flux_curve_generic(
+        self,
+        und,
+        emax=20e3,
+        slit_shape="retslit",
+        slit_acceptance=(0.060, 0.060),
+        observation_angle=(0, 0),
+        distance_from_source=30,
+        k_nr_pts=1,
+        deltak=0.99,
+        even_harmonic=False,
+        superb=201,
+    ):
+        """Calculate flux curve generic, at res, out res, even harmonic, odd harmonic.
+
+        Args:
+            und (Undulator object): Must be an object from undulator class.
+            emax (float): Máx energy range to calculate [eV]
+            slit_shape (str, optional): Slit shape "retslit" or "circslit".
+                Defaults to "retslit".
+            slit_acceptance (tuple, optional): Slit acceptances.
+                Defaults to (0.060, 0.060).
+            observation_angle (tuple, optional): Slit position.
+                Defaults to (0.060, 0.060).
+            kmin (float): Minimum K allowed.
+            distance_from_source (float, optional): Distance from source.
+                Defaults to 23.
+            method (str, optional): Method of calc. Defaults to "farfield".
+            k_nr_pts (int, optional): Number of K points around of ressonance k.
+                Defaults to 1 to use ressonance k.
+            dk (float, optional): Rate for change of k
+            even_harmonic (bool, optional): If it is false it will be calculated for the even harmonic
+            superb (int, optional): Extrapolation of the intersection of the curve
+
+        Returns:
+            tuple: Fluxes, and Energies.
+        """
+        source_k_max = und.calc_max_k(self.accelerator)
+        first_hamonic_energy = und.get_harmonic_energy(
+            1, self.accelerator.gamma, 0, und.period, source_k_max
+        )
+
+        n = int(emax / first_hamonic_energy)
+        if n > 0:
+            n_harmonic = n - 1 if n % 2 == 0 else n
+        else:
+            n_harmonic = 1
+        ns = _np.linspace(1, n_harmonic, n_harmonic)
+        if not even_harmonic:
+            ns = ns[::2]
+        else:
+            ns = ns[1::2]
+        ks = _np.linspace(source_k_max, 0.2, 101)
+
+        arglist = []
+        for i, harmonic in enumerate(ns):
+            for j, k in enumerate(ks):
+                e = und.get_harmonic_energy(
+                    harmonic, self.accelerator.gamma, 0, und.period, k
+                )
+                dks = _np.linspace(k, k * deltak, k_nr_pts)
+                for w, dk in enumerate(dks):
+                    arglist += [
+                        (
+                            und,
+                            dk,
+                            e,
+                            slit_shape,
+                            slit_acceptance,
+                            observation_angle,
+                            distance_from_source,
+                        )
+                    ]
+
+        data = []
+        num_process = multiprocessing.cpu_count()
+        with multiprocessing.Pool(processes=num_process - 1) as parallel:
+            data = parallel.map(self._parallel_calc_flux_fpmethod, arglist)
+
+        arglist = _np.array(arglist, dtype="object")
+        arglist = arglist[:, [1, 2]]
+        result = _np.array(data)
+
+        idx_broke = list(_np.where(arglist[:-1, 1] != arglist[1:, 1])[0])
+        idx_broke.append(len(arglist) - 1)
+
+        i_start = 0
+        filter_arglist = []
+        filter_result = []
+
+        for i in idx_broke:
+            collection_arg = []
+            collection_result = []
+            for j in range(i_start, i + 1):
+                collection_arg.append(list(arglist[j]))
+                collection_result.append(result[j])
+            i_start = i + 1
+            filter_arglist.append(collection_arg)
+            filter_result.append(collection_result)
+
+        best_result = []
+        info_unds = []
+
+        for i, flux_values in enumerate(filter_result):
+            if k_nr_pts > 1:
+                fs_result = _np.flip(_np.array(flux_values))
+                ks_result = _np.flip(
+                    _np.array(_np.array(filter_arglist)[i, :, 0])
+                )
+                es_result = _np.flip(
+                    _np.array(_np.array(filter_arglist)[i, :, 1])
+                )
+
+                spl = make_interp_spline(ks_result, fs_result, k=3)
+                smooth_ks = _np.linspace(ks_result.min(), ks_result.max(), 300)
+                smooth_fs = spl(smooth_ks)
+
+                best_result.append(smooth_fs[_np.argmax(smooth_fs)])
+                info_unds.append(
+                    [smooth_ks[_np.argmax(smooth_fs)], es_result[0]]
+                )
+            else:
+                best_result.append(flux_values[_np.argmax(flux_values)])
+                info_unds.append(filter_arglist[i][_np.argmax(flux_values)])
+
+        best_result = _np.array(best_result)
+        info_unds = _np.array(info_unds)
+        fs = _np.array_split(best_result, len(ns))
+        es = _np.array_split(info_unds[:, 1], len(ns))
+
+        idxs_min_max = _np.zeros((len(es), 2))
+        for i, e in enumerate(es):
+            if i < len(es) - 1:
+                # Data
+                x_list = [es[i], es[i + 1]]
+                y_list = [fs[i], fs[i + 1]]
+
+                x1 = _np.array(x_list[0])
+                y1 = _np.array(y_list[0])
+                x2 = _np.array(x_list[1])
+                y2 = _np.array(y_list[1])
+
+                # Interpolate the y-values
+                f1 = interp1d(x1, y1, kind="linear", fill_value="extrapolate")
+                f2 = interp1d(x2, y2, kind="linear", fill_value="extrapolate")
+
+                # Find the intersection
+                x_new = _np.linspace(
+                    max(min(x1), min(x2)), min(max(x1), max(x2)), num=10000
+                )
+                y1_new = f1(x_new)
+                y2_new = f2(x_new)
+
+                diff = _np.abs(1 - (y1_new / y2_new))
+                idx = _np.argmin(diff)
+
+                intersection_x = x_new[idx]
+                intersection_y = y1_new[idx]
+
+                idx_x1 = _np.argmin(_np.abs(x1 - (intersection_x + superb)))
+                idx_x2 = _np.argmin(_np.abs(x2 - (intersection_x - superb)))
+
+                idxs_min_max[i, 1] = idx_x1
+                idxs_min_max[i + 1, 0] = idx_x2
+            else:
+                idxs_min_max[i, 1] = -2
+        for i in range(len(es)):
+            es[i] = es[i][
+                int(idxs_min_max[i, 0]) : int(idxs_min_max[i, 1]) + 1
+            ]
+            fs[i] = fs[i][
+                int(idxs_min_max[i, 0]) : int(idxs_min_max[i, 1]) + 1
+            ]
+
+        return fs, es
 
     def _calc_flux_density(
         self,
