@@ -5819,8 +5819,11 @@ class FunctionsManipulation:
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
-                "numerical_beam_divergence{:}_{:}_beta.png".format(
-                    source.label, spectra_calc.accelerator.beta_section
+                "numerical_beam_divergence{:}_{:.0f}m_{:.0f}mm_{:}_beta.png".format(
+                    source.label,
+                    source.source_length,
+                    source.period,
+                    spectra_calc.accelerator.beta_section,
                 ),
                 dpi=dpi,
             )
@@ -5870,8 +5873,11 @@ class FunctionsManipulation:
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
-                "numerical_beam_size_{:}_{:}_beta.png".format(
-                    source.label, spectra_calc.accelerator.beta_section
+                "numerical_beam_size_{:}_{:.0f}m_{:.0f}mm_{:}_beta.png".format(
+                    source.label,
+                    source.source_length,
+                    source.period,
+                    spectra_calc.accelerator.beta_section,
                 ),
                 dpi=dpi,
             )
