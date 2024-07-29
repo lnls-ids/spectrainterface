@@ -5987,6 +5987,12 @@ class FunctionsManipulation:
         source = args["source"]
         spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
 
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+
         xlim = args["e_range"] if "e_range" in args else [0, 22]
         x_nr_pts = args["e_nr_pts"] if "e_nr_pts" in args else 101
         linewidth = args["linewidth"] if "linewidth" in args else 3
@@ -6106,6 +6112,163 @@ class FunctionsManipulation:
         if savefig:
             _plt.savefig(
                 "numerical_beam_size_{:}_{:.0f}m_{:.0f}mm_{:}_beta.png".format(
+                    source.label,
+                    source.source_length,
+                    source.period,
+                    spectra_calc.accelerator.beta_section,
+                ),
+                dpi=dpi,
+            )
+
+    @staticmethod
+    def process_flux_curve_generic(args):
+        source = args["source"]
+        spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+
+        distance_from_source = (
+            args["distance_from_source"]
+            if "distance_from_source" in args
+            else 23
+        )
+        slit_acceptance = (
+            args["slit_acceptance"]
+            if "slit_acceptance" in args
+            else [0.06, 0.06]
+        )
+        slit_acceptance = [i / distance_from_source for i in slit_acceptance]
+        slit_position = (
+            args["slit_position"] if "slit_positin" in args else [0, 0]
+        )
+        slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
+        xlim = args["e_range"] if "e_range" in args else [0, 20]
+        figsize = args["figsize"] if "figsize" in args else (4, 3)
+        savefig = args["savefig"] if "savefig" in args else True
+        linewidth = args["linewidth"] if "linewidth" in args else 2
+        dpi = args["dpi"] if "dpi" in args else 400
+        superb = args["superb"] if "superb" in args else 201
+
+        fs_at_res, es_at_res = spectra_calc.calc_flux_curve_generic(
+            source,
+            emax=xlim[1] * 1e3,
+            slit_shape=slit_shape,
+            slit_acceptance=(slit_acceptance[0], slit_acceptance[1]),
+            observation_angle=(slit_position[0], slit_position[1]),
+            distance_from_source=distance_from_source,
+            k_nr_pts=1,
+            deltak=0.99,
+            even_harmonic=False,
+            superb=superb,
+        )
+
+        fs_out_res, es_out_res = spectra_calc.calc_flux_curve_generic(
+            source,
+            emax=xlim[1] * 1e3,
+            slit_shape=slit_shape,
+            slit_acceptance=(slit_acceptance[0], slit_acceptance[1]),
+            observation_angle=(slit_position[0], slit_position[1]),
+            distance_from_source=distance_from_source,
+            k_nr_pts=11,
+            deltak=0.99,
+            even_harmonic=False,
+            superb=superb,
+        )
+
+        valmin = float(
+            10
+            ** int(
+                _np.log10(
+                    max(
+                        fs_at_res[
+                            _np.argmin(
+                                [
+                                    _np.min(_np.abs(i - xlim[1] * 1e3))
+                                    for i in _np.array(
+                                        es_at_res, dtype="object"
+                                    )
+                                ]
+                            )
+                        ]
+                    )
+                )
+                - 1
+            )
+        )
+        valmax = float(
+            10
+            ** int(
+                _np.log10(
+                    max(
+                        [
+                            i.max()
+                            for i in _np.array(fs_out_res, dtype="object")
+                        ]
+                    )
+                )
+                + 1
+            )
+        )
+
+        # Plot flux curve
+        _plt.figure(figsize=figsize)
+        _plt.title(
+            "Flux curve ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
+                spectra_calc.accelerator.beta_section,
+                source.label,
+                source.source_length,
+                source.period,
+            )
+        )
+
+        _plt.plot(
+            _np.array(es_at_res[0]) * 1e-3,
+            fs_at_res[0],
+            "-C0",
+            label="At Res.",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            _np.array(es_out_res[0]) * 1e-3,
+            fs_out_res[0],
+            "--C0",
+            label="Out Res.",
+            linewidth=linewidth,
+        )
+        for i in range(1, len(es_at_res)):
+            _plt.plot(
+                _np.array(es_at_res[i]) * 1e-3,
+                fs_at_res[i],
+                "-C0",
+                linewidth=linewidth,
+            )
+            _plt.plot(
+                _np.array(es_out_res[i]) * 1e-3,
+                fs_out_res[i],
+                "--C0",
+                linewidth=linewidth,
+            )
+
+        _plt.legend()
+        _plt.ylim(valmin, valmax)
+        _plt.xlim(0, xlim[1])
+        _plt.ylabel("Flux [ph/s/0.1%/100mA]")
+        _plt.yscale("log")
+        _plt.xlabel("Energy [keV]")
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "flux_curve_generic_{:}_{:.0f}m_{:.0f}mm_{:}_beta.png".format(
                     source.label,
                     source.source_length,
                     source.period,
