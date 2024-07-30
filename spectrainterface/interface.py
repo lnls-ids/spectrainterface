@@ -5410,6 +5410,9 @@ class FunctionsManipulation:
     def process_flux(args):
         source = args["source"]
         spectra_calc = copy.deepcopy(args["spectra"])
+        if source.source_type != "bendingmagnet":
+            if source.use_recovery_params and source.add_phase_errors:
+                spectra_calc.use_recovery_params = True
         distance_from_source = (
             args["distance_from_source"]
             if "distance_from_source" in args
