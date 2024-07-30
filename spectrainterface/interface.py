@@ -6195,7 +6195,7 @@ class FunctionsManipulation:
                             )
                         ]
                     )
-                )
+                ) - 1
             )
         )
         valmax = float(
@@ -6221,22 +6221,24 @@ class FunctionsManipulation:
                 source.label,
                 source.source_length,
                 source.period,
-            )
+            ),
+            fontsize=10,
         )
 
         _plt.plot(
             _np.array(es_at_res[0]) * 1e-3,
             fs_at_res[0],
             "-C0",
-            label="At Res.",
+            label="At Ressonance",
             linewidth=linewidth,
         )
         _plt.plot(
             _np.array(es_out_res[0]) * 1e-3,
             fs_out_res[0],
-            "--C0",
-            label="Out Res.",
+            "-C1",
+            label="At Peak Flux",
             linewidth=linewidth,
+            alpha=0.6
         )
         for i in range(1, len(es_at_res)):
             _plt.plot(
@@ -6248,11 +6250,12 @@ class FunctionsManipulation:
             _plt.plot(
                 _np.array(es_out_res[i]) * 1e-3,
                 fs_out_res[i],
-                "--C0",
+                "-C1",
                 linewidth=linewidth,
+                alpha=0.6
             )
 
-        _plt.legend()
+        _plt.legend(fontsize=8)
         _plt.ylim(valmin, valmax)
         _plt.xlim(0, xlim[1])
         _plt.ylabel("Flux [ph/s/0.1%/100mA]")
