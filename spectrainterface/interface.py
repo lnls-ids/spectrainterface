@@ -6149,6 +6149,8 @@ class FunctionsManipulation:
         linewidth = args["linewidth"] if "linewidth" in args else 2
         dpi = args["dpi"] if "dpi" in args else 400
         superb = args["superb"] if "superb" in args else 701
+        deltak = args["deltak"] if "deltak" in args else 0.99
+        k_nr_pts = args["k_nr_pts"] if "k_nr_pts" in args else 11
 
         fs_at_res, es_at_res = spectra_calc.calc_flux_curve_generic(
             source,
@@ -6170,8 +6172,8 @@ class FunctionsManipulation:
             slit_acceptance=(slit_acceptance[0], slit_acceptance[1]),
             observation_angle=(slit_position[0], slit_position[1]),
             distance_from_source=distance_from_source,
-            k_nr_pts=11,
-            deltak=0.99,
+            k_nr_pts=k_nr_pts,
+            deltak=deltak,
             even_harmonic=False,
             superb=superb,
         )
