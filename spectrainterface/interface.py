@@ -4702,6 +4702,25 @@ class FunctionsManipulation:
         dpi = args["dpi"] if "dpi" in args else 300
 
         spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+
+        fundamental_energy = source.get_harmonic_energy(
+            1,
+            spectra_calc.accelerator.gamma,
+            0,
+            source.period,
+            source.calc_max_k(spectra_calc.accelerator),
+        )
+
+        target_harmonic = int(target_energy / fundamental_energy)
+        target_harmonic = (
+            target_harmonic - 1
+            if target_harmonic % 2 == 0
+            else target_harmonic
+        )
+
+        if source.source_type != "bendingmagnet":
+            if source.use_recovery_params and source.add_phase_errors:
+                spectra_calc.use_recovery_params = True
         spectra_calc.calc.source_type = source.source_type
         spectra_calc.calc.output_type = (
             spectra_calc.calc.CalcConfigs.Output.flux_density
@@ -4769,9 +4788,18 @@ class FunctionsManipulation:
         spectra_calc.calc.set_config()
         spectra_calc.calc.run_calculation()
         result = spectra_calc.calc.flux
+        if source.source_type != "bendingmagnet":
+            result = spectra_calc.apply_phase_error_matrix(
+                values=result,
+                harm=target_harmonic,
+                rec_param=spectra_calc.use_recovery_params,
+            )
         del spectra_calc
 
         spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+        if source.source_type != "bendingmagnet":
+            if source.use_recovery_params and source.add_phase_errors:
+                spectra_calc.use_recovery_params = True
         spectra_calc.calc.source_type = source.source_type
         spectra_calc.calc.indep_var = (
             spectra_calc.calc.CalcConfigs.Variable.energy
@@ -4817,6 +4845,14 @@ class FunctionsManipulation:
         spectra_calc.calc.set_config()
         spectra_calc.calc.run_calculation()
         flux_total = spectra_calc.calc.flux
+        print(flux_total)
+        if source.source_type != "bendingmagnet":
+            flux_total = spectra_calc.apply_phase_error_matrix(
+                values=flux_total,
+                harm=target_harmonic,
+                rec_param=spectra_calc.use_recovery_params,
+            )
+        print(flux_total)
         del spectra_calc
 
         fig = _plt.figure(figsize=(figsize[0], figsize[0]))
@@ -6194,7 +6230,8 @@ class FunctionsManipulation:
                             )
                         ]
                     )
-                ) - 1
+                )
+                - 1
             )
         )
         valmax = float(
