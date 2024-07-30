@@ -2430,6 +2430,7 @@ class SpectraInterface:
             distance_from_source,
             _,
             _,
+            harmonic,
         ) = args
 
         spectra_calc: SpectraInterface = copy.deepcopy(self)
@@ -2473,6 +2474,13 @@ class SpectraInterface:
         spectra_calc.calc.set_config()
         spectra_calc.calc.run_calculation()
         flux_total = spectra_calc.calc.flux
+        if source.source_type != "bendingmagnet":
+            if source.use_recovery_params and source.add_phase_errors:
+                flux_total = spectra_calc.apply_phase_error_matrix(
+                    values=flux_total,
+                    harm=harmonic,
+                    rec_param=spectra_calc.use_recovery_params,
+                )
         return flux_total[0]
 
     def calc_flux_curve_generic(
@@ -2552,6 +2560,7 @@ class SpectraInterface:
                                 distance_from_source,
                                 j,
                                 w,
+                                harmonic,
                             )
                         ]
 
@@ -4789,11 +4798,12 @@ class FunctionsManipulation:
         spectra_calc.calc.run_calculation()
         result = spectra_calc.calc.flux
         if source.source_type != "bendingmagnet":
-            result = spectra_calc.apply_phase_error_matrix(
-                values=result,
-                harm=target_harmonic,
-                rec_param=spectra_calc.use_recovery_params,
-            )
+            if source.use_recovery_params and source.add_phase_errors:
+                result = spectra_calc.apply_phase_error_matrix(
+                    values=result,
+                    harm=target_harmonic,
+                    rec_param=spectra_calc.use_recovery_params,
+                )
         del spectra_calc
 
         spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
@@ -4845,14 +4855,13 @@ class FunctionsManipulation:
         spectra_calc.calc.set_config()
         spectra_calc.calc.run_calculation()
         flux_total = spectra_calc.calc.flux
-        print(flux_total)
         if source.source_type != "bendingmagnet":
-            flux_total = spectra_calc.apply_phase_error_matrix(
-                values=flux_total,
-                harm=target_harmonic,
-                rec_param=spectra_calc.use_recovery_params,
-            )
-        print(flux_total)
+            if source.use_recovery_params and source.add_phase_errors:
+                flux_total = spectra_calc.apply_phase_error_matrix(
+                    values=flux_total,
+                    harm=target_harmonic,
+                    rec_param=spectra_calc.use_recovery_params,
+                )
         del spectra_calc
 
         fig = _plt.figure(figsize=(figsize[0], figsize[0]))
@@ -6163,6 +6172,9 @@ class FunctionsManipulation:
     def process_flux_curve_generic(args):
         source = args["source"]
         spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+        if source.source_type != "bendingmagnet":
+            if source.use_recovery_params and source.add_phase_errors:
+                spectra_calc.use_recovery_params = True
 
         if (
             source.source_type == "bendingmagnet"
