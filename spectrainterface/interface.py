@@ -5534,6 +5534,9 @@ class FunctionsManipulation:
     def process_brilliance(args):
         source = args["source"]
         spectra_calc = copy.deepcopy(args["spectra"])
+        if source.source_type != "bendingmagnet":
+            if source.use_recovery_params and source.add_phase_errors:
+                spectra_calc.use_recovery_params = True
         nr_pts_k = args["nr_pts_k"] if "nr_pts_k" in args else 15
         kmin = args["kmin"] if "kmin" in args else 0.2
         xlim = args["e_range"] if "e_range" in args else []
