@@ -2428,6 +2428,8 @@ class SpectraInterface:
             slit_acceptance,
             observation_angle,
             distance_from_source,
+            _,
+            _,
         ) = args
 
         spectra_calc: SpectraInterface = copy.deepcopy(self)
@@ -2484,7 +2486,7 @@ class SpectraInterface:
         k_nr_pts=1,
         deltak=0.99,
         even_harmonic=False,
-        superb=201,
+        superb=701,
     ):
         """Calculate flux curve generic, at res, out res, even harmonic, odd harmonic.
 
@@ -2525,7 +2527,7 @@ class SpectraInterface:
             ns = ns[::2]
         else:
             ns = ns[1::2]
-        ks = _np.linspace(source_k_max, 0.2, 31)
+        ks = _np.linspace(source_k_max, 0.2, 41)
 
         arglist = []
         for i, harmonic in enumerate(ns):
@@ -2533,19 +2535,25 @@ class SpectraInterface:
                 e = und.get_harmonic_energy(
                     harmonic, self.accelerator.gamma, 0, und.period, k
                 )
-                dks = _np.linspace(k, k * deltak, k_nr_pts)
-                for w, dk in enumerate(dks):
-                    arglist += [
-                        (
-                            und,
-                            dk,
-                            e,
-                            slit_shape,
-                            slit_acceptance,
-                            observation_angle,
-                            distance_from_source,
-                        )
-                    ]
+                if (
+                    e < (harmonic + 2) * first_hamonic_energy + superb
+                    and e < emax + 5e3
+                ):
+                    dks = _np.linspace(k, k * deltak, k_nr_pts)
+                    for w, dk in enumerate(dks):
+                        arglist += [
+                            (
+                                und,
+                                dk,
+                                e,
+                                slit_shape,
+                                slit_acceptance,
+                                observation_angle,
+                                distance_from_source,
+                                j,
+                                w,
+                            )
+                        ]
 
         data = []
         num_process = multiprocessing.cpu_count()
@@ -2553,99 +2561,88 @@ class SpectraInterface:
             data = parallel.map(self._parallel_calc_flux_fpmethod, arglist)
 
         arglist = _np.array(arglist, dtype="object")
-        arglist = arglist[:, [1, 2]]
+        arglist = arglist[:, [1, 2, 7, 8]]
         result = _np.array(data)
 
-        idx_broke = list(_np.where(arglist[:-1, 1] != arglist[1:, 1])[0])
-        idx_broke.append(len(arglist) - 1)
+        if k_nr_pts > 1:
+            idx_broke = list(
+                _np.where(
+                    (arglist[:-1, 2] != arglist[1:, 2])
+                    | (arglist[:-1, 3] == arglist[1:, 3])
+                )[0]
+            )
+            idx_broke.append(len(arglist) - 1)
+
+            i_start = 0
+            filter_arglist = []
+            filter_result = []
+
+            for i in idx_broke:
+                collection_arg = []
+                collection_result = []
+                for j in range(i_start, i + 1):
+                    collection_arg.append(list(arglist[j]))
+                    collection_result.append(result[j])
+                i_start = i + 1
+                filter_arglist.append(collection_arg)
+                filter_result.append(collection_result)
+
+            filter_arglist = _np.array(filter_arglist)
+            filter_result = _np.array(filter_result)
+
+            best_result = []
+            best_arglist = []
+
+            for i, flux_values in enumerate(filter_result):
+                if k_nr_pts > 1:
+                    fs_result = _np.flip(filter_result[i, :])
+                    ks_result = _np.flip(filter_arglist[i, :, 0])
+                    es_result = _np.flip(filter_arglist[i, :, 1])
+                    hs_result = _np.flip(filter_arglist[i, :, 2])
+
+                    spl = make_interp_spline(ks_result, fs_result, k=3)
+                    smooth_ks = _np.linspace(
+                        ks_result.min(), ks_result.max(), 300
+                    )
+                    smooth_fs = spl(smooth_ks)
+
+                    best_result.append(smooth_fs[_np.argmax(smooth_fs)])
+                    best_arglist.append(
+                        [
+                            smooth_ks[_np.argmax(smooth_fs)],
+                            es_result[0],
+                            hs_result[0],
+                        ]
+                    )
+                else:
+                    best_result.append(flux_values[0])
+                    best_arglist.append(filter_arglist[i][0])
+
+            best_arglist = _np.array(best_arglist)
+            best_result = _np.array(best_result)
+        else:
+            best_arglist = arglist
+            best_result = result
+
+        idx_broke = list(_np.where(best_arglist[:, 2] == 0)[0][1:] - 1)
+        idx_broke.append(len(best_arglist) - 1)
 
         i_start = 0
-        filter_arglist = []
-        filter_result = []
+        harmonic_arglist = []
+        harmonic_result = []
 
         for i in idx_broke:
             collection_arg = []
             collection_result = []
             for j in range(i_start, i + 1):
-                collection_arg.append(list(arglist[j]))
-                collection_result.append(result[j])
+                collection_arg.append(list(best_arglist[j]))
+                collection_result.append(best_result[j])
             i_start = i + 1
-            filter_arglist.append(collection_arg)
-            filter_result.append(collection_result)
+            harmonic_arglist.append(_np.array(collection_arg))
+            harmonic_result.append(_np.array(collection_result))
 
-        best_result = []
-        info_unds = []
-
-        for i, flux_values in enumerate(filter_result):
-            if k_nr_pts > 1:
-                fs_result = _np.flip(_np.array(flux_values))
-                ks_result = _np.flip(
-                    _np.array(_np.array(filter_arglist)[i, :, 0])
-                )
-                es_result = _np.flip(
-                    _np.array(_np.array(filter_arglist)[i, :, 1])
-                )
-
-                spl = make_interp_spline(ks_result, fs_result, k=3)
-                smooth_ks = _np.linspace(ks_result.min(), ks_result.max(), 300)
-                smooth_fs = spl(smooth_ks)
-
-                best_result.append(smooth_fs[_np.argmax(smooth_fs)])
-                info_unds.append(
-                    [smooth_ks[_np.argmax(smooth_fs)], es_result[0]]
-                )
-            else:
-                best_result.append(flux_values[_np.argmax(flux_values)])
-                info_unds.append(filter_arglist[i][_np.argmax(flux_values)])
-
-        best_result = _np.array(best_result)
-        info_unds = _np.array(info_unds)
-        fs = _np.array_split(best_result, len(ns))
-        es = _np.array_split(info_unds[:, 1], len(ns))
-
-        idxs_min_max = _np.zeros((len(es), 2))
-        for i, e in enumerate(es):
-            if i < len(es) - 1:
-                # Data
-                x_list = [es[i], es[i + 1]]
-                y_list = [fs[i], fs[i + 1]]
-
-                x1 = _np.array(x_list[0])
-                y1 = _np.array(y_list[0])
-                x2 = _np.array(x_list[1])
-                y2 = _np.array(y_list[1])
-
-                # Interpolate the y-values
-                f1 = interp1d(x1, y1, kind="linear", fill_value="extrapolate")
-                f2 = interp1d(x2, y2, kind="linear", fill_value="extrapolate")
-
-                # Find the intersection
-                x_new = _np.linspace(
-                    max(min(x1), min(x2)), min(max(x1), max(x2)), num=10000
-                )
-                y1_new = f1(x_new)
-                y2_new = f2(x_new)
-
-                diff = _np.abs(1 - (y1_new / y2_new))
-                idx = _np.argmin(diff)
-
-                intersection_x = x_new[idx]
-                intersection_y = y1_new[idx]
-
-                idx_x1 = _np.argmin(_np.abs(x1 - (intersection_x + superb)))
-                idx_x2 = _np.argmin(_np.abs(x2 - (intersection_x - superb)))
-
-                idxs_min_max[i, 1] = idx_x1
-                idxs_min_max[i + 1, 0] = idx_x2
-            else:
-                idxs_min_max[i, 1] = -2
-        for i in range(len(es)):
-            es[i] = es[i][
-                int(idxs_min_max[i, 0]) : int(idxs_min_max[i, 1]) + 1
-            ]
-            fs[i] = fs[i][
-                int(idxs_min_max[i, 0]) : int(idxs_min_max[i, 1]) + 1
-            ]
+        fs = harmonic_result
+        es = [harmonic[:, 1] for harmonic in harmonic_arglist]
 
         return fs, es
 
@@ -6151,7 +6148,7 @@ class FunctionsManipulation:
         savefig = args["savefig"] if "savefig" in args else True
         linewidth = args["linewidth"] if "linewidth" in args else 2
         dpi = args["dpi"] if "dpi" in args else 400
-        superb = args["superb"] if "superb" in args else 201
+        superb = args["superb"] if "superb" in args else 701
 
         fs_at_res, es_at_res = spectra_calc.calc_flux_curve_generic(
             source,
@@ -6238,7 +6235,7 @@ class FunctionsManipulation:
             "-C1",
             label="At Peak Flux",
             linewidth=linewidth,
-            alpha=0.6
+            alpha=0.6,
         )
         for i in range(1, len(es_at_res)):
             _plt.plot(
@@ -6252,15 +6249,15 @@ class FunctionsManipulation:
                 fs_out_res[i],
                 "-C1",
                 linewidth=linewidth,
-                alpha=0.6
+                alpha=0.6,
             )
 
         _plt.legend(fontsize=8)
         _plt.ylim(valmin, valmax)
         _plt.xlim(0, xlim[1])
-        _plt.ylabel("Flux [ph/s/0.1%/100mA]")
+        _plt.ylabel("Flux [ph/s/0.1%/100mA]", fontsize=10)
         _plt.yscale("log")
-        _plt.xlabel("Energy [keV]")
+        _plt.xlabel("Energy [keV]", fontsize=10)
         _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
