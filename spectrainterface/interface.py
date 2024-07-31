@@ -3877,7 +3877,7 @@ class SpectraInterface:
         Args:
             source: light source.
             x_range (tuple): x range to calculate power dentity [mrad].
-                Defaults to 501.
+                Defaults to (-3,3).
             x_nr_pts (int): x number points of x_range.
                 Defaults to 501.
             y_range (tuple): y range to calculate power dentity [mrad].
@@ -4021,6 +4021,114 @@ class SpectraInterface:
         partial_power = spectra_calc.calc.power
         del spectra_calc
         return partial_power
+
+    def calc_flux_distribuition_2d(
+        self,
+        source,
+        target_energy: float = 12e3,
+        target_k: float = 1.2,
+        x_range: tuple = (-3, 3),
+        x_nr_pts: int = 401,
+        y_range: tuple = (-3, 3),
+        y_nr_pts: int = 401,
+        distance_from_source: float = 30,
+    ):
+        """Flux Distribuition 2D.
+
+        Args:
+            source: light source.
+            target_energy (float): target energy [eV].
+            target_k (float): k deflection parameter.
+            x_range (tuple): x range to calculate power dentity [mrad].
+                Defaults to (-3, 3).
+            x_nr_pts (int): x number points of x_range.
+                Defaults to 401.
+            y_range (tuple): y range to calculate power dentity [mrad].
+                Defaults to (-3, 3).
+            y_nr_pts (int): y number points of y_range.
+                Defaults to 401.
+            distance_from_source (float): distance from source [m].
+                Defaults to 30.
+
+        Return:
+            Flux distribuition 2D (Numpy array)
+        """
+        spectra_calc: SpectraInterface = copy.deepcopy(self)
+
+        fundamental_energy = source.get_harmonic_energy(
+            1,
+            spectra_calc.accelerator.gamma,
+            0,
+            source.period,
+            source.calc_max_k(spectra_calc.accelerator),
+        )
+        target_harmonic = int(target_energy / fundamental_energy)
+        target_harmonic = (
+            target_harmonic - 1
+            if target_harmonic % 2 == 0
+            else target_harmonic
+        )
+        target_harmonic = 1 if target_harmonic <= 0 else target_harmonic
+
+        if source.source_type != "bendingmagnet":
+            if source.use_recovery_params and source.add_phase_errors:
+                spectra_calc.use_recovery_params = True
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.flux_density
+        )
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.mesh_xy
+        )
+        if source.source_type != "bendingmagnet":
+            target_k = target_k
+            source_polarization = source.polarization
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+
+            if source_polarization == "hp":
+                spectra_calc.calc.ky = target_k
+            elif source_polarization == "vp":
+                spectra_calc.calc.kx = target_k
+            else:
+                spectra_calc.calc.kx = target_k / _np.sqrt(
+                    1 + source.fields_ratio**2
+                )
+                spectra_calc.calc.ky = (
+                    spectra_calc.calc.kx * source.fields_ratio
+                )
+            spectra_calc.calc.method = (
+                spectra_calc.calc.CalcConfigs.Method.far_field
+            )
+        else:
+            spectra_calc.calc.by = source.b_peak
+            spectra_calc.calc.method = (
+                spectra_calc.calc.CalcConfigs.Method.near_field
+            )
+        spectra_calc.calc.x_nr_pts = x_nr_pts
+        spectra_calc.calc.y_nr_pts = y_nr_pts
+        spectra_calc.calc.x_range = [
+            x_range[0] / distance_from_source,
+            x_range[1] / distance_from_source,
+        ]
+        spectra_calc.calc.y_range = [
+            y_range[0] / distance_from_source,
+            y_range[1] / distance_from_source,
+        ]
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.target_energy = target_energy
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        flux_distribuition = spectra_calc.calc.flux
+        if source.source_type != "bendingmagnet":
+            if source.use_recovery_params and source.add_phase_errors:
+                flux_distribuition = spectra_calc.apply_phase_error_matrix(
+                    values=flux_distribuition,
+                    harm=target_harmonic,
+                    rec_param=spectra_calc.use_recovery_params,
+                )
+        del spectra_calc
+        return flux_distribuition
 
     def plot_brilliance_curve(  # noqa: C901
         self,
@@ -5072,8 +5180,14 @@ class FunctionsManipulation:
             )
         spectra_calc.calc.x_nr_pts = x_nr_pts
         spectra_calc.calc.y_nr_pts = y_nr_pts
-        spectra_calc.calc.x_range = [i / distance_from_source for i in x_range]
-        spectra_calc.calc.y_range = [i / distance_from_source for i in y_range]
+        spectra_calc.calc.x_range = [
+            x_range[0] / distance_from_source,
+            x_range[1] / distance_from_source,
+        ]
+        spectra_calc.calc.y_range = [
+            y_range[0] / distance_from_source,
+            y_range[1] / distance_from_source,
+        ]
         spectra_calc.calc.distance_from_source = distance_from_source
         spectra_calc.calc.target_energy = target_energy
         spectra_calc.calc.set_config()
@@ -5105,10 +5219,12 @@ class FunctionsManipulation:
 
         spectra_calc.calc.slit_shape = slit_shape
         spectra_calc.calc.slit_acceptance = [
-            i / distance_from_source for i in slit_acceptance
+            slit_acceptance[0] / distance_from_source,
+            slit_acceptance[1] / distance_from_source,
         ]
         spectra_calc.calc.observation_angle = [
-            i / distance_from_source for i in slit_position
+            slit_position[0] / distance_from_source,
+            slit_position[1] / distance_from_source,
         ]
 
         if source.source_type != "bendingmagnet":
