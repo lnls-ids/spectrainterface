@@ -3742,11 +3742,11 @@ class SpectraInterface:
     def calc_degree_polarization(
         self,
         source,
-        slit_shape="retslit",
-        slit_position=(0, 0),
-        slit_acceptance=(0.060, 0.060),
-        distance_from_source=30,
-        energy_range=(0, 20e3),
+        slit_shape: str = "retslit",
+        slit_position: tuple = (0, 0),
+        slit_acceptance: tuple = (0.060, 0.060),
+        distance_from_source: float = 30,
+        energy_range: tuple = (0, 20e3),
     ):
         """Degree Polarization Function.
 
