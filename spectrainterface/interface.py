@@ -3951,6 +3951,24 @@ class SpectraInterface:
         distance_from_source: float = 30,
         current: float = 350,
     ):
+        """Partial Power Function.
+
+        Args:
+            source: light source.
+            slit_shape (str): slit shape "retslit" or "circslit".
+                Defaults to "retslit"
+            slit_position (tuple): slit position [mrad].
+                Defaults to (0,0)
+            slit_acceptance (tuple): slit acceptance [mrad].
+                Defaults to (0.060, 0.060)
+            distance_from_source (float): distance from source [m].
+                Defaults to 30.
+            current (float): current [mA].
+                Defaults to 350.
+
+        Return:
+            Partial Power (float)
+        """
         spectra_calc: SpectraInterface = copy.deepcopy(self)
         spectra_calc.accelerator.current = current
         spectra_calc.calc.source_type = source.source_type
