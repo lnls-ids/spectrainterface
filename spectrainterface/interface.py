@@ -6063,7 +6063,7 @@ class FunctionsManipulation:
             )
         )
 
-        # Calc Power Density 2D distribuition
+        # Calc Power Density and Partial Power
         spectra_calc: SpectraInterface = copy.deepcopy(spectra)
         power_densities = spectra_calc.calc_power_density(
             source=source,
@@ -6074,39 +6074,14 @@ class FunctionsManipulation:
             distance_from_source=distance_from_source,
             current=350,
         )
-        del spectra_calc
-
-        # Calc Partial Power
-        spectra_calc = copy.deepcopy(spectra)
-        spectra_calc.accelerator.current = 350.0
-        spectra_calc.calc.source_type = source.source_type
-        spectra_calc.calc.method = (
-            spectra_calc.calc.CalcConfigs.Method.fixedpoint_near_field
+        partial_power = spectra_calc.calc_partial_power(
+            source=source,
+            slit_shape=slit_shape,
+            slit_position=slit_position,
+            slit_acceptance=slit_acceptance,
+            distance_from_source=distance_from_source,
+            current=350,
         )
-        spectra_calc.calc.indep_var = (
-            spectra_calc.calc.CalcConfigs.Variable.energy
-        )
-        spectra_calc.calc.output_type = (
-            spectra_calc.calc.CalcConfigs.Output.power
-        )
-        spectra_calc.calc.slit_shape = slit_shape
-
-        spectra_calc.calc.target_energy = 0
-        if source.source_type != "bendingmagnet":
-            spectra_calc.calc.ky = source.calc_max_k(spectra_calc.accelerator)
-            spectra_calc.calc.period = source.period
-            spectra_calc.calc.length = source.source_length
-        else:
-            spectra_calc.calc.by_peak = source.b_peak
-            spectra_calc.calc.length = 0.05
-
-        spectra_calc.calc.distance_from_source = distance_from_source
-        spectra_calc.calc.observation_angle = slit_position
-        spectra_calc.calc.slit_acceptance = slit_acceptance
-
-        spectra_calc.calc.set_config()
-        spectra_calc.calc.run_calculation()
-        partial_power = spectra_calc.calc.power
         del spectra_calc
 
         # Plot
