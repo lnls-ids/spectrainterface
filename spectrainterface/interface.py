@@ -3862,6 +3862,86 @@ class SpectraInterface:
         del spectra_calc
         return energies, degree_pl, degree_pc
 
+    def calc_power_density(
+        self,
+        source,
+        x_range: tuple = (-3, 3),
+        x_nr_pts: int = 501,
+        y_range: tuple = (-3, 3),
+        y_nr_pts: int = 501,
+        distance_from_source: float = 30,
+        current: float = 350,
+    ):
+        """Power Density Function.
+
+        Args:
+            source: light source.
+            x_range (tuple): x range to calculate power dentity [mrad].
+                Defaults to 501.
+            x_nr_pts (int): x number points of x_range.
+                Defaults to 501.
+            y_range (tuple): y range to calculate power dentity [mrad].
+                Defaults to (-3, 3).
+            y_nr_pts (int): y number points of y_range.
+                Defaults to 501.
+            distance_from_source (float): distance from source [m].
+                Defaults to 30.
+            current (float): current [mA].
+                Defaults to 350.
+
+        Return:
+            Power densities (Numpy array)
+        """
+        spectra_calc: SpectraInterface = copy.deepcopy(self)
+        spectra_calc.accelerator.current = current
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.method = (
+            spectra_calc.calc.CalcConfigs.Method.near_field
+        )
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.mesh_xy
+        )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.power_density
+        )
+        if source.source_type != "bendingmagnet":
+            kmax = source.calc_max_k(spectra_calc.accelerator)
+            if source.polarization == "hp":
+                spectra_calc.calc.source_type = (
+                    spectra_calc.calc.SourceType.horizontal_undulator
+                )
+                spectra_calc.calc.ky = kmax
+            elif source.polarization == "vp":
+                spectra_calc.calc.source_type = (
+                    spectra_calc.calc.SourceType.vertical_undulator
+                )
+                spectra_calc.calc.kx = kmax
+            else:
+                spectra_calc.calc.source_type = (
+                    spectra_calc.calc.SourceType.elliptic_undulator
+                )
+                spectra_calc.calc.kx = kmax / _np.sqrt(
+                    1 + source.fields_ratio**2
+                )
+                spectra_calc.calc.ky = (
+                    spectra_calc.calc.kx * source.fields_ratio
+                )
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+        else:
+            spectra_calc.calc.by_peak = source.b_peak
+            spectra_calc.calc.length = 0.05
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.x_range = x_range
+        spectra_calc.calc.y_range = y_range
+        spectra_calc.calc.x_nr_pts = x_nr_pts
+        spectra_calc.calc.y_nr_pts = y_nr_pts
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        power_densities = spectra_calc.calc.power_density
+        del spectra_calc
+        return power_densities
+
     def plot_brilliance_curve(  # noqa: C901
         self,
         process_curves=True,
