@@ -5999,33 +5999,16 @@ class FunctionsManipulation:
         )
 
         # Calc Power Density 2D distribuition
-        spectra_calc = copy.deepcopy(spectra)
-        spectra_calc.accelerator.current = 350.0
-        spectra_calc.calc.source_type = source.source_type
-        spectra_calc.calc.method = (
-            spectra_calc.calc.CalcConfigs.Method.near_field
+        spectra_calc: SpectraInterface = copy.deepcopy(spectra)
+        power_densities = spectra_calc.calc_power_density(
+            source=source,
+            x_range=x_range,
+            x_nr_pts=x_nr_pts,
+            y_range=y_range,
+            y_nr_pts=y_nr_pts,
+            distance_from_source=distance_from_source,
+            current=350,
         )
-        spectra_calc.calc.indep_var = (
-            spectra_calc.calc.CalcConfigs.Variable.mesh_xy
-        )
-        spectra_calc.calc.output_type = (
-            spectra_calc.calc.CalcConfigs.Output.power_density
-        )
-        if source.source_type != "bendingmagnet":
-            spectra_calc.calc.ky = source.calc_max_k(spectra_calc.accelerator)
-            spectra_calc.calc.period = source.period
-            spectra_calc.calc.length = source.source_length
-        else:
-            spectra_calc.calc.by_peak = source.b_peak
-            spectra_calc.calc.length = 0.05
-        spectra_calc.calc.distance_from_source = distance_from_source
-        spectra_calc.calc.x_range = x_range
-        spectra_calc.calc.y_range = y_range
-        spectra_calc.calc.x_nr_pts = x_nr_pts
-        spectra_calc.calc.y_nr_pts = y_nr_pts
-        spectra_calc.calc.set_config()
-        spectra_calc.calc.run_calculation()
-        power_densities = spectra_calc.calc.power_density
         del spectra_calc
 
         # Calc Partial Power
