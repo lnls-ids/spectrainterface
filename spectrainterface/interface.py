@@ -6059,10 +6059,14 @@ class FunctionsManipulation:
         )
         slit_acceptance = (
             slit_acceptance[0] / distance_from_source,
-            slit_acceptance[0] / distance_from_source,
+            slit_acceptance[1] / distance_from_source,
         )
         slit_position = (
             args["slit_position"] if "slit_position" in args else (0, 0)
+        )
+        slit_position = (
+            slit_position[0] / distance_from_source,
+            slit_position[1] / distance_from_source,
         )
         figsize = args["figsize"] if "figsize" in args else (5, 4)
         savefig = args["savefig"] if "savefig" in args else True
