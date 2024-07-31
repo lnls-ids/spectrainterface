@@ -376,6 +376,7 @@ class StorageRingParameters:
         self._bsc0_v_lowbeta = 1.8627
         self._bsc0_h_highbeta = 11.6952
         self._bsc0_v_highbeta = 2.9524
+        self.update_bsc()
 
     def set_bsc_with_ivu18(self):
         """Set BSC with IVU18."""
@@ -383,6 +384,7 @@ class StorageRingParameters:
         self._bsc0_v_lowbeta = 1.5588
         self._bsc0_h_highbeta = 11.6952
         self._bsc0_v_highbeta = 2.4706
+        self.update_bsc()
 
     def set_bsc_orion_reduction(self):
         """Set BSC after changes due to ORION."""
@@ -390,6 +392,20 @@ class StorageRingParameters:
         self._bsc0_v_lowbeta = 1.38
         self._bsc0_h_highbeta = 11.6952
         self._bsc0_v_highbeta = 2.18
+        self.update_bsc()
+
+    def update_bsc(self):
+        """Set BSC depending on the section type"""
+        if(self.beta_section not in ['b1', 'b2', 'bc']):
+            if(self._beta_section == 'low'):
+                self.bsc0_h = self.bsc0_h_lowbeta
+                self.bsc0_v = self.bsc0_v_lowbeta
+            elif(self.beta_section == 'high'):
+                self.bsc0_h = self.bsc0_h_highbeta
+                self.bsc0_v = self.bsc0_v_highbeta
+            else:
+                raise ValueError('self._beta_section is not defined previously"')
+            
 
     def set_low_beta_section(self):
         """Set low beta section."""
