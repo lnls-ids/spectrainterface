@@ -6567,7 +6567,6 @@ class FunctionsManipulation:
                         ]
                     )
                 )
-                - 1
             )
         )
         valmax = float(
