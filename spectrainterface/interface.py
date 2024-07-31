@@ -3942,6 +3942,68 @@ class SpectraInterface:
         del spectra_calc
         return power_densities
 
+    def calc_partial_power(
+        self,
+        source,
+        slit_shape: str = "retslit",
+        slit_position: tuple = (0, 0),
+        slit_acceptance: tuple = (0.060, 0.060),
+        distance_from_source: float = 30,
+        current: float = 350,
+    ):
+        spectra_calc: SpectraInterface = copy.deepcopy(self)
+        spectra_calc.accelerator.current = current
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.method = (
+            spectra_calc.calc.CalcConfigs.Method.fixedpoint_near_field
+        )
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.energy
+        )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.power
+        )
+        spectra_calc.calc.slit_shape = slit_shape
+
+        spectra_calc.calc.target_energy = 0
+        if source.source_type != "bendingmagnet":
+            kmax = source.calc_max_k(spectra_calc.accelerator)
+            if source.polarization == "hp":
+                spectra_calc.calc.source_type = (
+                    spectra_calc.calc.SourceType.horizontal_undulator
+                )
+                spectra_calc.calc.ky = kmax
+            elif source.polarization == "vp":
+                spectra_calc.calc.source_type = (
+                    spectra_calc.calc.SourceType.vertical_undulator
+                )
+                spectra_calc.calc.kx = kmax
+            else:
+                spectra_calc.calc.source_type = (
+                    spectra_calc.calc.SourceType.elliptic_undulator
+                )
+                spectra_calc.calc.kx = kmax / _np.sqrt(
+                    1 + source.fields_ratio**2
+                )
+                spectra_calc.calc.ky = (
+                    spectra_calc.calc.kx * source.fields_ratio
+                )
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+        else:
+            spectra_calc.calc.by_peak = source.b_peak
+            spectra_calc.calc.length = 0.05
+
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.observation_angle = slit_position
+        spectra_calc.calc.slit_acceptance = slit_acceptance
+
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        partial_power = spectra_calc.calc.power
+        del spectra_calc
+        return partial_power
+
     def plot_brilliance_curve(  # noqa: C901
         self,
         process_curves=True,
