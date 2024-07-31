@@ -8,7 +8,6 @@ from spectrainterface.accelerator import StorageRingParameters
 import mathphys
 from spectrainterface.tools import SourceFunctions
 from spectrainterface.sources import Undulator
-from scipy.interpolate import interp1d
 from scipy.interpolate import make_interp_spline
 import json
 from spectrainterface import spectra
@@ -3739,6 +3738,129 @@ class SpectraInterface:
             data = parallel.map(self._parallel_calc_div_size, arglist)
         div_size = _np.array(data)
         return div_size, energies
+
+    def calc_degree_polarization(
+        self,
+        source,
+        slit_shape="retslit",
+        slit_position=(0, 0),
+        slit_acceptance=(0.060, 0.060),
+        distance_from_source=30,
+        energy_range=(0, 20e3),
+    ):
+        """Degree Polarization Function.
+
+        Args:
+            source: light source.
+            slit_shape (str): slit shape "retslit" or "circslit".
+                Defaults to "retslit".
+            slit_position (tuple): slit position [mrad].
+                Defaults to (0,0).
+            slit_acceptance (tuple): slit acceptance [mrad].
+                Defaults to (0.060, 0.060).
+            distance_from_source (float): distance from source [m].
+                Defaults to 30.
+            energy_range (tuple): energy range to calculate [eV].
+                Defaults to (0, 20e3).
+
+        Returns:
+            Tuple of three elements.
+                first element (numpy array): energies
+                second element (numpy array): degree linear polarization.
+                third element (numpy array): degree circular polarization.
+        """
+        spectra_calc: SpectraInterface = copy.deepcopy(self)
+        if source.source_type != "bendingmagnet":
+            kmax = source.calc_max_k(spectra_calc.accelerator)
+            if source.gap != 0:
+                kmax_gap = source.get_k()
+                kmax = kmax if kmax_gap > kmax else kmax_gap
+            if source.source_type == "wiggler":
+                spectra_calc.calc.source_type = source.source_type
+                spectra_calc.calc.method = (
+                    spectra_calc.calc.CalcConfigs.Method.far_field
+                )
+                spectra_calc.calc.indep_var = (
+                    spectra_calc.calc.CalcConfigs.Variable.energy
+                )
+                spectra_calc.calc.output_type = (
+                    spectra_calc.calc.CalcConfigs.Output.flux
+                )
+                spectra_calc.calc.slit_shape = slit_shape
+                spectra_calc.calc.period = source.period
+                spectra_calc.calc.ky = kmax
+                spectra_calc.calc.observation_angle = slit_position
+                spectra_calc.calc.slit_acceptance = slit_acceptance
+                spectra_calc.calc.energy_range = energy_range
+                spectra_calc.calc.energy_step = 1
+            else:
+                spectra_calc.calc._add_phase_errors = source.add_phase_errors
+                spectra_calc.calc._use_recovery_params = (
+                    source.use_recovery_params
+                )
+                spectra_calc.calc.output_type = (
+                    spectra_calc.calc.CalcConfigs.Output.flux
+                )
+                spectra_calc.calc.method = (
+                    spectra_calc.calc.CalcConfigs.Method.far_field
+                )
+                spectra_calc.calc.indep_var = (
+                    spectra_calc.calc.CalcConfigs.Variable.energy
+                )
+                spectra_calc.calc.source_type = source.source_type
+                spectra_calc.calc.slit_shape = slit_shape
+                spectra_calc.calc.period = source.period
+                if source.polarization == "hp":
+                    spectra_calc.calc.source_type = (
+                        spectra_calc.calc.SourceType.horizontal_undulator
+                    )
+                    spectra_calc.calc.ky = kmax
+                elif source.polarization == "vp":
+                    spectra_calc.calc.source_type = (
+                        spectra_calc.calc.SourceType.vertical_undulator
+                    )
+                    spectra_calc.calc.kx = kmax
+                else:
+                    spectra_calc.calc.source_type = (
+                        spectra_calc.calc.SourceType.elliptic_undulator
+                    )
+                    spectra_calc.calc.kx = kmax / _np.sqrt(
+                        1 + source.fields_ratio**2
+                    )
+                    spectra_calc.calc.ky = (
+                        spectra_calc.calc.kx * source.fields_ratio
+                    )
+                spectra_calc.calc.observation_angle = slit_position
+                spectra_calc.calc.slit_acceptance = slit_acceptance
+                spectra_calc.calc.energy_range = energy_range
+                spectra_calc.calc.energy_step = 1
+        else:
+            b = source.b_peak
+            spectra_calc.calc.source_type = source.source_type
+            spectra_calc.calc.method = (
+                spectra_calc.calc.CalcConfigs.Method.far_field
+            )
+            spectra_calc.calc.indep_var = (
+                spectra_calc.calc.CalcConfigs.Variable.energy
+            )
+            spectra_calc.calc.output_type = (
+                spectra_calc.calc.CalcConfigs.Output.flux
+            )
+            spectra_calc.calc.slit_shape = slit_shape
+            spectra_calc.calc.observation_angle = slit_position
+            spectra_calc.calc.slit_acceptance = slit_acceptance
+            spectra_calc.calc.energy_range = energy_range
+            spectra_calc.calc.energy_step = 1
+            spectra_calc.calc.by_peak = b
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.length = source.source_length
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        energies = spectra_calc.calc.energies
+        degree_pl = spectra_calc.calc._pl
+        degree_pc = spectra_calc.calc._pc
+        del spectra_calc
+        return energies, degree_pl, degree_pc
 
     def plot_brilliance_curve(  # noqa: C901
         self,
