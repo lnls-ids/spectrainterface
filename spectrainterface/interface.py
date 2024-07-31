@@ -4054,25 +4054,6 @@ class SpectraInterface:
             Flux distribuition 2D (Numpy array)
         """
         spectra_calc: SpectraInterface = copy.deepcopy(self)
-
-        fundamental_energy = source.get_harmonic_energy(
-            1,
-            spectra_calc.accelerator.gamma,
-            0,
-            source.period,
-            source.calc_max_k(spectra_calc.accelerator),
-        )
-        target_harmonic = int(target_energy / fundamental_energy)
-        target_harmonic = (
-            target_harmonic - 1
-            if target_harmonic % 2 == 0
-            else target_harmonic
-        )
-        target_harmonic = 1 if target_harmonic <= 0 else target_harmonic
-
-        if source.source_type != "bendingmagnet":
-            if source.use_recovery_params and source.add_phase_errors:
-                spectra_calc.use_recovery_params = True
         spectra_calc.calc.source_type = source.source_type
         spectra_calc.calc.output_type = (
             spectra_calc.calc.CalcConfigs.Output.flux_density
@@ -4108,12 +4089,12 @@ class SpectraInterface:
         spectra_calc.calc.x_nr_pts = x_nr_pts
         spectra_calc.calc.y_nr_pts = y_nr_pts
         spectra_calc.calc.x_range = [
-            x_range[0] / distance_from_source,
-            x_range[1] / distance_from_source,
+            x_range[0],
+            x_range[1],
         ]
         spectra_calc.calc.y_range = [
-            y_range[0] / distance_from_source,
-            y_range[1] / distance_from_source,
+            y_range[0],
+            y_range[1],
         ]
         spectra_calc.calc.distance_from_source = distance_from_source
         spectra_calc.calc.target_energy = target_energy
@@ -4122,6 +4103,23 @@ class SpectraInterface:
         flux_distribuition = spectra_calc.calc.flux
         if source.source_type != "bendingmagnet":
             if source.use_recovery_params and source.add_phase_errors:
+                fundamental_energy = source.get_harmonic_energy(
+                    1,
+                    spectra_calc.accelerator.gamma,
+                    0,
+                    source.period,
+                    source.calc_max_k(spectra_calc.accelerator),
+                )
+                target_harmonic = int(target_energy / fundamental_energy)
+                target_harmonic = (
+                    target_harmonic - 1
+                    if target_harmonic % 2 == 0
+                    else target_harmonic
+                )
+                target_harmonic = (
+                    1 if target_harmonic <= 0 else target_harmonic
+                )
+                spectra_calc.use_recovery_params = True
                 flux_distribuition = spectra_calc.apply_phase_error_matrix(
                     values=flux_distribuition,
                     harm=target_harmonic,
@@ -4129,6 +4127,109 @@ class SpectraInterface:
                 )
         del spectra_calc
         return flux_distribuition
+
+    def calc_partial_flux(
+        self,
+        source,
+        target_energy: float = 12e3,
+        target_k: float = 1.2,
+        slit_shape: str = "retslit",
+        slit_acceptance: tuple = (0.06, 0.060),
+        slit_position: tuple = (0, 0),
+        distance_from_source: float = 30,
+    ):
+        """Partial Flux with fixedpoint method.
+
+        Args:
+            source: light source.
+            target_energy (float): target energy [eV].
+            target_k (float): k deflection parameter.
+            slit_shape (str): slit shape "retslit" or "circslit".
+                Defaults to "retslit".
+            slit_acceptance (tuple): slit acceptance [mrad].
+                Defaults to (0.060, 0.060)
+            slit_position (tuple): slit position [mrad].
+                Defaults to (0, 0)
+            distance_from_source (float): distance from source [m].
+                Defaults to 30.
+
+        Return:
+            Partial Flux value (float)
+        """
+        spectra_calc: SpectraInterface = copy.deepcopy(self)
+        spectra_calc.calc.source_type = source.source_type
+        spectra_calc.calc.indep_var = (
+            spectra_calc.calc.CalcConfigs.Variable.energy
+        )
+        spectra_calc.calc.method = (
+            spectra_calc.calc.CalcConfigs.Method.fixedpoint_near_field
+        )
+        spectra_calc.calc.output_type = (
+            spectra_calc.calc.CalcConfigs.Output.flux
+        )
+
+        spectra_calc.calc.slit_shape = slit_shape
+        spectra_calc.calc.slit_acceptance = [
+            slit_acceptance[0],
+            slit_acceptance[1],
+        ]
+        spectra_calc.calc.observation_angle = [
+            slit_position[0],
+            slit_position[1],
+        ]
+
+        if source.source_type != "bendingmagnet":
+            target_k = target_k
+            source_polarization = source.polarization
+            spectra_calc.calc.period = source.period
+            spectra_calc.calc.length = source.source_length
+
+            if source_polarization == "hp":
+                spectra_calc.calc.ky = target_k
+            elif source_polarization == "vp":
+                spectra_calc.calc.kx = target_k
+            else:
+                spectra_calc.calc.kx = target_k / _np.sqrt(
+                    1 + source.fields_ratio**2
+                )
+                spectra_calc.calc.ky = (
+                    spectra_calc.calc.kx * source.fields_ratio
+                )
+        else:
+            spectra_calc.calc.by = source.b_peak
+
+        spectra_calc.calc.distance_from_source = distance_from_source
+        spectra_calc.calc.target_energy = target_energy
+
+        spectra_calc.calc.set_config()
+        spectra_calc.calc.run_calculation()
+        flux_total = spectra_calc.calc.flux
+        if source.source_type != "bendingmagnet":
+            if source.use_recovery_params and source.add_phase_errors:
+                fundamental_energy = source.get_harmonic_energy(
+                    1,
+                    spectra_calc.accelerator.gamma,
+                    0,
+                    source.period,
+                    source.calc_max_k(spectra_calc.accelerator),
+                )
+                target_harmonic = int(target_energy / fundamental_energy)
+                target_harmonic = (
+                    target_harmonic - 1
+                    if target_harmonic % 2 == 0
+                    else target_harmonic
+                )
+                target_harmonic = (
+                    1 if target_harmonic <= 0 else target_harmonic
+                )
+                spectra_calc.use_recovery_params = True
+                flux_total = spectra_calc.apply_phase_error_matrix(
+                    values=flux_total,
+                    harm=target_harmonic,
+                    rec_param=spectra_calc.use_recovery_params,
+                )
+        del spectra_calc
+        return flux_total
 
     def plot_brilliance_curve(  # noqa: C901
         self,
@@ -5100,107 +5201,20 @@ class FunctionsManipulation:
         figsize = args["figsize"] if "figsize" in args else (4.5, 4.5)
         dpi = args["dpi"] if "dpi" in args else 300
 
+        target_k = args["target_k"] if "target_k" in args else 0.1
+        target_k = target_k if source.source_type != "bendingmagnet" else 0
+
         spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
-
-        fundamental_energy = source.get_harmonic_energy(
-            1,
-            spectra_calc.accelerator.gamma,
-            0,
-            source.period,
-            source.calc_max_k(spectra_calc.accelerator),
+        result = spectra_calc.calc_flux_distribuition_2d(
+            source,
+            target_energy=target_energy,
+            target_k=target_k,
+            x_range=x_range,
+            x_nr_pts=x_nr_pts,
+            y_range=y_range,
+            y_nr_pts=y_nr_pts,
+            distance_from_source=distance_from_source,
         )
-
-        target_harmonic = int(target_energy / fundamental_energy)
-        target_harmonic = (
-            target_harmonic - 1
-            if target_harmonic % 2 == 0
-            else target_harmonic
-        )
-
-        if source.source_type != "bendingmagnet":
-            if source.use_recovery_params and source.add_phase_errors:
-                spectra_calc.use_recovery_params = True
-        spectra_calc.calc.source_type = source.source_type
-        spectra_calc.calc.output_type = (
-            spectra_calc.calc.CalcConfigs.Output.flux_density
-        )
-        spectra_calc.calc.indep_var = (
-            spectra_calc.calc.CalcConfigs.Variable.mesh_xy
-        )
-        if source.source_type != "bendingmagnet":
-            target_k = args["target_k"]
-            source_polarization = source.polarization
-            spectra_calc.calc.period = source.period
-            spectra_calc.calc.length = source.source_length
-
-            if source_polarization == "hp":
-                spectra_calc.calc.ky = target_k
-            elif source_polarization == "vp":
-                spectra_calc.calc.kx = target_k
-            else:
-                spectra_calc.calc.kx = target_k / _np.sqrt(
-                    1 + source.fields_ratio**2
-                )
-                spectra_calc.calc.ky = (
-                    spectra_calc.calc.kx * source.fields_ratio
-                )
-            spectra_calc.calc.method = (
-                spectra_calc.calc.CalcConfigs.Method.far_field
-            )
-            fig_name = (
-                "flux_density_{:}_{:.0f}m_{:.0f}mm_{:.0f}keV.png".format(
-                    source.label,
-                    source.source_length,
-                    source.period,
-                    target_energy * 1e-3,
-                )
-            )
-            title = "Flux Density\nEnergy: {:.2f} keV, z = {:.1f} m\n{:} ({:.1f} m, {:.2f} mm)".format(
-                target_energy * 1e-3,
-                distance_from_source,
-                source.label,
-                source.source_length,
-                source.period,
-            )
-        else:
-            spectra_calc.calc.by = source.b_peak
-            spectra_calc.calc.method = (
-                spectra_calc.calc.CalcConfigs.Method.near_field
-            )
-            fig_name = "flux_density_{:}_{:.0f}keV.png".format(
-                source.label,
-                target_energy * 1e-3,
-            )
-            title = (
-                "Flux Density\nEnergy: {:.2f} keV, z = {:.1f} m\n{:}".format(
-                    target_energy * 1e-3,
-                    distance_from_source,
-                    source.label,
-                )
-            )
-        spectra_calc.calc.x_nr_pts = x_nr_pts
-        spectra_calc.calc.y_nr_pts = y_nr_pts
-        spectra_calc.calc.x_range = [
-            x_range[0] / distance_from_source,
-            x_range[1] / distance_from_source,
-        ]
-        spectra_calc.calc.y_range = [
-            y_range[0] / distance_from_source,
-            y_range[1] / distance_from_source,
-        ]
-        spectra_calc.calc.distance_from_source = distance_from_source
-        spectra_calc.calc.target_energy = target_energy
-        spectra_calc.calc.set_config()
-        spectra_calc.calc.run_calculation()
-        result = spectra_calc.calc.flux
-        if source.source_type != "bendingmagnet":
-            if source.use_recovery_params and source.add_phase_errors:
-                result = spectra_calc.apply_phase_error_matrix(
-                    values=result,
-                    harm=target_harmonic,
-                    rec_param=spectra_calc.use_recovery_params,
-                )
-        del spectra_calc
 
         spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
         if source.source_type != "bendingmagnet":
