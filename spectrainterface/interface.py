@@ -5780,27 +5780,35 @@ class FunctionsManipulation:
     @staticmethod
     def process_degree_polarization(args):
         source = args["source"]
-        spectra_calc = copy.deepcopy(args["spectra"])
-        distance = (
+        spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+        distance_from_source = (
             args["distance_from_source"]
             if "distance_from_source" in args
-            else 23
+            else 30
         )
         slit_acceptance = (
-            args["slit_acceptance"] if "slit_acceptance" in args else [0, 0.04]
+            args["slit_acceptance"]
+            if "slit_acceptance" in args
+            else (1.8, 1.8)
         )
-        slit_acceptance = [i / distance for i in slit_acceptance]
-        slit_shape = args["slit_shape"] if "slit_shape" in args else "circslit"
-        xlim = args["e_range"] if "e_range" in args else [0, 20]
+        slit_acceptance = (
+            slit_acceptance[0] / distance_from_source,
+            slit_acceptance[1] / distance_from_source,
+        )
+        slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
+        xlim = args["e_range"] if "e_range" in args else (0, 20)
         energy_range = (
             args["energy_range"]
             if "energy_range" in args
-            else [xlim[0] * 1e3, xlim[1] * 1e3]
+            else (xlim[0] * 1e3, xlim[1] * 1e3)
         )
         slit_position = (
-            args["slit_position"] if "slit_position" in args else [0, 0]
+            args["slit_position"] if "slit_position" in args else (0, 0)
         )
-        slit_position = [i / distance for i in slit_position]
+        slit_position = (
+            slit_position[0] / distance_from_source,
+            slit_position[1] / distance_from_source,
+        )
         title = args["title"] if "title" in args else "Polarization Degree"
         xscale = args["xscale"] if "xscale" in args else "linear"
         yscale = args["yscale"] if "yscale" in args else "linear"
@@ -5822,76 +5830,15 @@ class FunctionsManipulation:
         )
         dpi = args["dpi"] if "dpi" in args else 300
         legend_fs = args["legend_fs"] if "legend_fs" in args else 9
-        if source.source_type != "bendingmagnet":
-            kmax = source.calc_max_k(spectra_calc.accelerator)
-            if source.gap != 0:
-                kmax_gap = source.get_k()
-                kmax = kmax if kmax_gap > kmax else kmax_gap
-            if source.source_type == "wiggler":
-                spectra_calc.calc.source_type = source.source_type
-                spectra_calc.calc.method = (
-                    spectra_calc.calc.CalcConfigs.Method.far_field
-                )
-                spectra_calc.calc.indep_var = (
-                    spectra_calc.calc.CalcConfigs.Variable.energy
-                )
-                spectra_calc.calc.output_type = (
-                    spectra_calc.calc.CalcConfigs.Output.flux
-                )
-                spectra_calc.calc.slit_shape = slit_shape
-                spectra_calc.calc.period = source.period
-                spectra_calc.calc.ky = kmax
-                spectra_calc.calc.observation_angle = slit_position
-                spectra_calc.calc.slit_acceptance = slit_acceptance
-                spectra_calc.calc.energy_range = energy_range
-                spectra_calc.calc.energy_step = 1
-            else:
-                spectra_calc.calc._add_phase_errors = source.add_phase_errors
-                spectra_calc.calc._use_recovery_params = (
-                    source.use_recovery_params
-                )
-                spectra_calc.calc.output_type = (
-                    spectra_calc.calc.CalcConfigs.Output.flux
-                )
-                spectra_calc.calc.method = (
-                    spectra_calc.calc.CalcConfigs.Method.far_field
-                )
-                spectra_calc.calc.indep_var = (
-                    spectra_calc.calc.CalcConfigs.Variable.energy
-                )
-                spectra_calc.calc.source_type = source.source_type
-                spectra_calc.calc.slit_shape = slit_shape
-                spectra_calc.calc.period = source.period
-                spectra_calc.calc.ky = kmax
-                spectra_calc.calc.observation_angle = slit_position
-                spectra_calc.calc.slit_acceptance = slit_acceptance
-                spectra_calc.calc.energy_range = energy_range
-                spectra_calc.calc.energy_step = 1
-        else:
-            b = source.b_peak
-            spectra_calc.calc.source_type = source.source_type
-            spectra_calc.calc.method = (
-                spectra_calc.calc.CalcConfigs.Method.far_field
-            )
-            spectra_calc.calc.indep_var = (
-                spectra_calc.calc.CalcConfigs.Variable.energy
-            )
-            spectra_calc.calc.output_type = (
-                spectra_calc.calc.CalcConfigs.Output.flux
-            )
-            spectra_calc.calc.slit_shape = slit_shape
-            spectra_calc.calc.observation_angle = slit_position
-            spectra_calc.calc.slit_acceptance = slit_acceptance
-            spectra_calc.calc.energy_range = energy_range
-            spectra_calc.calc.energy_step = 1
-            spectra_calc.calc.by_peak = b
-        spectra_calc.calc.length = source.source_length
-        spectra_calc.calc.set_config()
-        spectra_calc.calc.run_calculation()
-        energies = spectra_calc.calc.energies
-        degree_pl = spectra_calc.calc._pl
-        degree_pc = spectra_calc.calc._pc
-        del spectra_calc
+
+        energies, degree_pl, degree_pc = spectra_calc.calc_degree_polarization(
+            source=source,
+            slit_shape=slit_shape,
+            slit_position=slit_position,
+            slit_acceptance=slit_acceptance,
+            distance_from_source=distance_from_source,
+            energy_range=energy_range,
+        )
 
         _plt.figure(figsize=figsize)
         _plt.title(title)
