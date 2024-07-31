@@ -5182,18 +5182,34 @@ class FunctionsManipulation:
     def process_flux_distribuition_2d(args):
         source = args["source"]
         slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
+        distance_from_source = args["distance_from_source"]
         slit_acceptance = (
             args["slit_acceptance"]
             if "slit_acceptance" in args
-            else [0.06, 0.06]
+            else (0.06, 0.06)
+        )
+        slit_acceptance = (
+            slit_acceptance[0] / distance_from_source,
+            slit_acceptance[1] / distance_from_source,
         )
         slit_position = (
-            args["slit_position"] if "slit_position" in args else [0, 0]
+            args["slit_position"] if "slit_position" in args else (0, 0)
+        )
+        slit_position = (
+            slit_position[0] / distance_from_source,
+            slit_position[1] / distance_from_source,
         )
         target_energy = args["target_energy"]
-        distance_from_source = args["distance_from_source"]
         x_range = args["x_range"] if "x_range" in args else [-0.5, 0.5]
+        x_range = (
+            x_range[0] / distance_from_source,
+            x_range[1] / distance_from_source,
+        )
         y_range = args["y_range"] if "y_range" in args else [-0.5, 0.5]
+        y_range = (
+            y_range[0] / distance_from_source,
+            y_range[1] / distance_from_source,
+        )
         x_nr_pts = args["x_nr_pts"] if "x_nr_pts" in args else 301
         y_nr_pts = args["y_nr_pts"] if "y_nr_pts" in args else 301
 
@@ -5215,71 +5231,42 @@ class FunctionsManipulation:
             y_nr_pts=y_nr_pts,
             distance_from_source=distance_from_source,
         )
-
-        spectra_calc: SpectraInterface = copy.deepcopy(args["spectra"])
+        flux_total = spectra_calc.calc_partial_flux(
+            source,
+            target_energy=target_energy,
+            target_k=target_k,
+            slit_shape=slit_shape,
+            slit_acceptance=slit_acceptance,
+            slit_position=slit_position,
+            distance_from_source=distance_from_source,
+        )
         if source.source_type != "bendingmagnet":
-            if source.use_recovery_params and source.add_phase_errors:
-                spectra_calc.use_recovery_params = True
-        spectra_calc.calc.source_type = source.source_type
-        spectra_calc.calc.indep_var = (
-            spectra_calc.calc.CalcConfigs.Variable.energy
-        )
-        spectra_calc.calc.method = (
-            spectra_calc.calc.CalcConfigs.Method.fixedpoint_near_field
-        )
-        spectra_calc.calc.output_type = (
-            spectra_calc.calc.CalcConfigs.Output.flux
-        )
-
-        spectra_calc.calc.slit_shape = slit_shape
-        spectra_calc.calc.slit_acceptance = [
-            slit_acceptance[0] / distance_from_source,
-            slit_acceptance[1] / distance_from_source,
-        ]
-        spectra_calc.calc.observation_angle = [
-            slit_position[0] / distance_from_source,
-            slit_position[1] / distance_from_source,
-        ]
-
-        if source.source_type != "bendingmagnet":
-            target_k = args["target_k"]
-            source_polarization = source.polarization
-            spectra_calc.calc.period = source.period
-            spectra_calc.calc.length = source.source_length
-
-            if source_polarization == "hp":
-                spectra_calc.calc.ky = target_k
-            elif source_polarization == "vp":
-                spectra_calc.calc.kx = target_k
-            else:
-                spectra_calc.calc.kx = target_k / _np.sqrt(
-                    1 + source.fields_ratio**2
-                )
-                spectra_calc.calc.ky = (
-                    spectra_calc.calc.kx * source.fields_ratio
-                )
+            title = "Flux Density\nEnergy: {:.2f} keV, z = {:.1f}\n{:} ({:.1f} m, {:.2f} mm)".format(  # noqa: E501
+                target_energy * 1e-3,
+                distance_from_source,
+                source.label,
+                source.source_length,
+                source.period,
+            )
+            figname = "flux_density_{:}_{:.0f}m_{:.0f}mm_{:.0f}keV".format(
+                source.label,
+                source.source_length,
+                source.period,
+                target_energy * 1e-3,
+            )
         else:
-            spectra_calc.calc.by = source.b_peak
-
-        spectra_calc.calc.distance_from_source = distance_from_source
-        spectra_calc.calc.target_energy = target_energy
-
-        spectra_calc.calc.set_config()
-        spectra_calc.calc.run_calculation()
-        flux_total = spectra_calc.calc.flux
-        if source.source_type != "bendingmagnet":
-            if source.use_recovery_params and source.add_phase_errors:
-                flux_total = spectra_calc.apply_phase_error_matrix(
-                    values=flux_total,
-                    harm=target_harmonic,
-                    rec_param=spectra_calc.use_recovery_params,
-                )
-        del spectra_calc
-
+            title = "Flux Density\nEnergy: {:.2f} keV, z = {:.1f}\n{:}".format(  # noqa: E501
+                target_energy * 1e-3,
+                distance_from_source,
+                source.label,
+            )
+            figname = "flux_density_{:}_{:.0f}keV".format(
+                source.label, target_energy * 1e-3
+            )
         fig = _plt.figure(figsize=(figsize[0], figsize[0]))
         ax = fig.add_subplot(111)
 
-        ax.set_title(title)
+        ax.set_title(title, fontsize=9)
         im = ax.imshow(
             result,
             extent=[
@@ -5293,8 +5280,8 @@ class FunctionsManipulation:
         ax.text(
             x=x_range[0] * (1 - 0.05),
             y=y_range[1] * (1 - 0.13),
-            s="Total Flux: {:.2e} [ph/s/0.1%/100mA]".format(flux_total[0]),
-            fontsize=8.3,
+            s="Tot.Flux: {:.2e} [ph/s/0.1%/100mA]".format(flux_total[0]),
+            fontsize=8,
             c="white",
         )
 
@@ -5303,7 +5290,8 @@ class FunctionsManipulation:
                 x=x_range[0] * (1 - 0.05),
                 y=y_range[0] * (1 - 0.05),
                 s="{:.3f} x {:.3f} mm²".format(
-                    slit_acceptance[0], slit_acceptance[1]
+                    slit_acceptance[0] * distance_from_source,
+                    slit_acceptance[1] * distance_from_source,
                 ),
                 fontsize=8,
                 c="white",
@@ -5325,14 +5313,20 @@ class FunctionsManipulation:
             ax.text(
                 x=x_range[0] * (1 - 0.05),
                 y=y_range[0] * (1 - 0.17),
-                s=r"$R_1:$" + "{:.1f} mm".format(slit_acceptance[0]),
+                s=r"$R_1:$"
+                + "{:.1f} mm".format(
+                    slit_acceptance[0] * distance_from_source
+                ),
                 fontsize=8,
                 c="white",
             )
             ax.text(
                 x=x_range[0] * (1 - 0.05),
                 y=y_range[0] * (1 - 0.05),
-                s=r"$R_2:$" + "{:.1f} mm".format(slit_acceptance[1]),
+                s=r"$R_2:$"
+                + "{:.1f} mm".format(
+                    slit_acceptance[1] * distance_from_source
+                ),
                 fontsize=8,
                 c="white",
             )
@@ -5354,7 +5348,7 @@ class FunctionsManipulation:
                 ls=":",
             )
             ax.add_patch(patch)
-        ax.tick_params(labelsize=9)
+        ax.tick_params(labelsize=8)
         sm = _plt.cm.ScalarMappable(
             _plt.Normalize(
                 vmin=_np.min(result / (distance_from_source**2)),
@@ -5366,10 +5360,10 @@ class FunctionsManipulation:
         cbar = fig.colorbar(
             sm,
             ax=ax,
-            label="Flux Density [ph/s/mm²/0.1%/100mA]",
             format="%.1e",
             shrink=0.5,
         )
+        cbar.set_label(label="Flux Density [ph/s/mm²/0.1%/100mA]", size=8)
         cbar.set_ticks(
             _np.linspace(
                 _np.min(result / (distance_from_source**2)),
@@ -5377,12 +5371,12 @@ class FunctionsManipulation:
                 5,
             )
         )
-        cbar.ax.tick_params(labelsize=9)
-        ax.set_xlabel("X [mm]")
-        ax.set_ylabel("Y [mm]")
+        cbar.ax.tick_params(labelsize=8)
+        ax.set_xlabel("X [mm]", fontsize=8)
+        ax.set_ylabel("Y [mm]", fontsize=8)
         _plt.tight_layout()
         if savefig:
-            _plt.savefig(fig_name, dpi=dpi)
+            _plt.savefig(figname, dpi=dpi)
 
     @staticmethod
     def process_beam_size(args):
