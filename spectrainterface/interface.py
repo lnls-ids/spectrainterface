@@ -5964,8 +5964,8 @@ class FunctionsManipulation:
         source = args["source"]
         spectra = args["spectra"]
         k_max = args["k_max"] if "k_max" in args else 2.0
-        x_range = [-0.3, 0.3]
-        y_range = [-0.3, 0.3]
+        x_range = (-0.3, 0.3)
+        y_range = (-0.3, 0.3)
         distance_from_source = (
             args["distance_from_source"]
             if "distance_from_source" in args
@@ -5975,11 +5975,14 @@ class FunctionsManipulation:
         y_nr_pts = args["y_nr_pts"] if "y_nr_pts" in args else 501
         slit_shape = args["slit_shape"] if "slit_shape" in args else "retslit"
         slit_acceptance = (
-            args["slit_acceptance"] if "slit_acceptance" in args else [1, 1]
+            args["slit_acceptance"] if "slit_acceptance" in args else (1, 1)
         )
-        slit_acceptance = [i / distance_from_source for i in slit_acceptance]
+        slit_acceptance = (
+            slit_acceptance[0] / distance_from_source,
+            slit_acceptance[0] / distance_from_source,
+        )
         slit_position = (
-            args["slit_position"] if "slit_position" in args else [0, 0]
+            args["slit_position"] if "slit_position" in args else (0, 0)
         )
         figsize = args["figsize"] if "figsize" in args else (5, 4)
         savefig = args["savefig"] if "savefig" in args else True
