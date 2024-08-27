@@ -1379,7 +1379,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 self._x = _np.array(self._output_variables[0][:])
                 self._y = _np.array(self._output_variables[1][:])
                 self._power_density = _np.reshape(
-                    self._power_density, (len(self._y), len(self._x))
+                    self._power_density, (len(self._x), len(self._y))
                 )
                 self._power_density = _np.flip(self._power_density, axis=0)
 
@@ -1388,7 +1388,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 self._x = _np.array(self._output_variables[0][:])
                 self._y = _np.array(self._output_variables[1][:])
                 self._flux = _np.reshape(
-                    self._flux, (len(self._x), len(self._y))
+                    self._flux, (len(self._y), len(self._x))
                 )
                 self._flux = _np.flip(self._flux, axis=0)
                 self._pl = data[1, :]
