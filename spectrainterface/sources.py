@@ -173,6 +173,7 @@ class Undulator(SourceFunctions):
         self._label = "label"
         self._polarization = "hp"
         self._halbach_coef = dict()
+        self._material = None
         self._vc_thickness = 0.5
         self._vc_tolerance = 0.1
         self._add_phase_errors = False
@@ -240,6 +241,15 @@ class Undulator(SourceFunctions):
             str: Undulator polarization
         """
         return self._polarization
+
+    @property
+    def material(self):
+        """Undulator magnets material.
+
+        Returns:
+            str: String with material name.
+        """
+        return self._material
 
     @property
     def halbach_coef(self):
@@ -705,6 +715,7 @@ class DELTA(Elliptic):
             "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
             "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
         }
+        self._material = 'NdFeB'
         self._period = period
         self._source_length = length
         self._source_type = "ellipticundulator"
@@ -927,6 +938,7 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
         self._halbach_coef = {
             "hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}
         }
+        self._material = 'PrFeB'
         self._source_type = "linearundulator"
 
 
@@ -936,6 +948,7 @@ class UE44(APPLE2):
     def __init__(self, period=44, length=3.4):
         """Class constructor."""
         super().__init__(period, length)
+        self._material = 'NdFeB'
         self._label = "UE44"
         self._gap = 11.4
         self._br = 1.14
@@ -947,6 +960,7 @@ class VPU(Hybrid_Nd):
     def __init__(self, period=29, length=1.5):
         """Class constructor."""
         super().__init__(period, length)
+        self._material = 'NdFeB'
         self._polarization = "vp"
         self._source_type = "verticalundulator"
         self._label = "VPU"
@@ -1001,6 +1015,7 @@ class IVU18_2(IVU_NdFeB):
         self._halbach_coef = {
             "hp": {"a": 2.26223181, "b": -3.69776472, "c": 0.32867209},
         }
+        self._material = 'NdFeB'
 
 
 class IVU18_1(IVU_NdFeB):
@@ -1018,3 +1033,4 @@ class IVU18_1(IVU_NdFeB):
         self._halbach_coef = {
             "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
         }
+        self._material = 'NdFeB'
