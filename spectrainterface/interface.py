@@ -5,6 +5,7 @@ import matplotlib.pyplot as _plt
 from matplotlib import colors
 import matplotlib.patches as _patches
 from spectrainterface.accelerator import StorageRingParameters
+from spectrainterface.sirius import SIRIUS
 import mathphys
 from spectrainterface.tools import SourceFunctions
 from spectrainterface.sources import Undulator
@@ -1652,7 +1653,7 @@ class SpectraInterface:
 
     def __init__(self):
         """Class constructor."""
-        self._accelerator = StorageRingParameters()
+        self._accelerator = SIRIUS.StorageRing()
         self._calc = Calc(self._accelerator)
         self._sources = None
         self._energies = None
@@ -1788,6 +1789,10 @@ class SpectraInterface:
             Array: Undulators information to analyse.
         """
         return self._info_matrix_brilliance
+
+    @accelerator.setter
+    def accelerator(self, value):
+        self._accelerator = value
 
     @sources.setter
     def sources(self, value):
