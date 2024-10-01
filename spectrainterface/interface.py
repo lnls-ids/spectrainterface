@@ -1828,7 +1828,7 @@ class SpectraInterface:
     def _parallel_calc_brilliance_curve(  # noqa: C901
         self, args
     ):
-        source, beta_section, emax, harmonic_range, nr_pts_k, x_accep, kmin = (
+        source, extraction_point, emax, harmonic_range, nr_pts_k, x_accep, kmin = (
             args
         )
 
@@ -1927,19 +1927,11 @@ class SpectraInterface:
 
         spectra_calc.calc.length = source.source_length
 
-        if beta_section is not None:
-            if beta_section == "high":
-                spectra_calc.accelerator.set_high_beta_section()
-            elif beta_section == "low":
-                spectra_calc.accelerator.set_low_beta_section()
-            elif beta_section == "b2":
-                spectra_calc.accelerator.set_b2_section()
-            elif beta_section == "bc":
-                spectra_calc.accelerator.set_bc_section()
-            elif beta_section == "b1":
-                spectra_calc.accelerator.set_b1_section()
+        if extraction_point is not None:
+            if extraction_point in list(spectra_calc.accelerator.extraction_dict.keys()):
+                spectra_calc.accelerator.set_extraction_section(extraction_point)
             else:
-                raise ValueError("Invalid beta section.")
+                raise ValueError("Invalid extraction point.")
 
         spectra_calc.calc.set_config()
         spectra_calc.calc.run_calculation()
@@ -1957,7 +1949,7 @@ class SpectraInterface:
         kmin=0.2,
         emax=20e3,
         x_accep=1,
-        beta_sections=None,
+        extraction_points=None,
     ):
         """Calc brilliance curve.
 
@@ -1968,7 +1960,7 @@ class SpectraInterface:
             kmin (float): Minimum k value. Defaults to 0.2
             emax (float): Max value of energy for dipoles and wigglers.
             x_accep (float): X acceptance for bending magnet radiation.
-            beta_sections (list of string): List of beta sections for each
+            extraction_points (list of string): List of extraction points for each
              source.
 
         """
@@ -1990,7 +1982,7 @@ class SpectraInterface:
             arglist += [
                 (
                     source,
-                    beta_sections[i],
+                    extraction_points[i],
                     emax,
                     harmonic_range,
                     nr_pts_k,
@@ -2023,7 +2015,7 @@ class SpectraInterface:
     def _parallel_calc_flux_curve(self, args):
         (
             source,
-            beta_section,
+            extraction_point,
             energy_range,
             harmonic_range,
             nr_pts_k,
@@ -2035,19 +2027,11 @@ class SpectraInterface:
         # Spectra Parameters Copy
         spectra_calc = copy.deepcopy(self)
 
-        if beta_section is not None:
-            if beta_section == "high":
-                spectra_calc.accelerator.set_high_beta_section()
-            elif beta_section == "low":
-                spectra_calc.accelerator.set_low_beta_section()
-            elif beta_section == "b2":
-                spectra_calc.accelerator.set_b2_section()
-            elif beta_section == "bc":
-                spectra_calc.accelerator.set_bc_section()
-            elif beta_section == "b1":
-                spectra_calc.accelerator.set_b1_section()
+        if extraction_point is not None:
+            if extraction_point in list(spectra_calc.accelerator.extraction_dict.keys()):
+                spectra_calc.accelerator.set_extraction_section(extraction_point)
             else:
-                raise ValueError("Invalid beta section.")
+                raise ValueError("Invalid extraction point.")
 
         if source.source_type != "bendingmagnet":
             kmax = source.calc_max_k(spectra_calc.accelerator)
@@ -2157,7 +2141,7 @@ class SpectraInterface:
         kmin=0.2,
         slit_shape="circslit",
         slit_acceptances=[[0, 0.04]],
-        beta_sections=None,
+        extraction_points=None,
     ):
         """Calc flux curves.
 
@@ -2172,7 +2156,7 @@ class SpectraInterface:
              Defaults to "circslit".
             slit_acceptances (list, optional): Slit acceptance.
              Defaults to [0, 0.04].
-            beta_sections (list of string): List of beta sections for each
+            extraction_points (list of string): List of extraction points for each
              source.
 
         Raises:
@@ -2200,7 +2184,7 @@ class SpectraInterface:
             arglist += [
                 (
                     source,
-                    beta_sections[i],
+                    extraction_points[i],
                     energy_range,
                     harmonic_range,
                     nr_pts_k,
@@ -2256,10 +2240,7 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        if self.accelerator.beta_section == "low":
-            spectra.accelerator.set_low_beta_section()
-        else:
-            spectra.accelerator.set_high_beta_section()
+        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
@@ -2479,10 +2460,7 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        if self.accelerator.beta_section == "low":
-            spectra.accelerator.set_low_beta_section()
-        else:
-            spectra.accelerator.set_high_beta_section()
+        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
@@ -2749,10 +2727,7 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        if self.accelerator.beta_section == "low":
-            spectra.accelerator.set_low_beta_section()
-        else:
-            spectra.accelerator.set_high_beta_section()
+        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
@@ -2966,10 +2941,7 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        if self.accelerator.beta_section == "low":
-            spectra.accelerator.set_low_beta_section()
-        else:
-            spectra.accelerator.set_high_beta_section()
+        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
@@ -4831,7 +4803,7 @@ class FunctionsManipulation:
             kmin=kmin,
             slit_shape=slit_shape,
             slit_acceptances=[slit_acceptance],
-            beta_sections=[spectra_calc.accelerator.beta_section],
+            extraction_points=[spectra_calc.accelerator.extraction_point],
         )
         if (
             source.source_type != "wiggler"
@@ -4937,7 +4909,7 @@ class FunctionsManipulation:
             kmin=kmin,
             emax=emax,
             x_accep=x_accep,
-            beta_sections=[spectra_calc.accelerator.beta_section],
+            extraction_points=[spectra_calc.accelerator.extraction_point],
         )
         if (
             source.source_type != "wiggler"

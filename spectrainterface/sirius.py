@@ -13,6 +13,64 @@ class SIRIUS:
     """Class with SIRIUS parameters for radiation calculations."""
 
     class StorageRing(StorageRingParameters):
+
+        extraction_dict = {
+            "low_beta": {
+                "betax": 1.499,
+                "betay": 1.435,
+                "alphax": 0,
+                "alphay": 0,
+                "etax": 0,
+                "etay": 0,
+                "etapx": 0,
+                "etapy": 0,
+            },
+
+            "high_beta": {
+                "betax": 17.20,
+                "betay": 3.605,
+                "alphax": 0,
+                "alphay": 0,
+                "etax": 0,
+                "etay": 0,
+                "etapx": 0,
+                "etapy": 0,
+            },
+
+            "bc": {
+                "betax": 0.338,
+                "betay": 5.356,
+                "alphax": 0.003,
+                "alphay": 0,
+                "etax": 0.002,
+                "etay": 0,
+                "etapx": 0,
+                "etapy": 0,
+            },
+            
+            "b1": {
+                "betax": 1.660,
+                "betay": 26.820,
+                "alphax": 2.908,
+                "alphay": -6.564,
+                "etax": 0.122e-3,
+                "etay": 0,
+                "etapx": 3.211e-3,
+                "etapy": 0,
+            },
+
+            "b2": {
+                "betax": 1.265,
+                "betay": 25.5,
+                "alphax": 1.94,
+                "alphay": 0,
+                "etax": 0.025,
+                "etay": 0,
+                "etapx": 0,
+                "etapy": 0,
+            },
+        }
+
         def __init__(self):
             """Class constructor."""
             self._energy = 3  # [GeV]
@@ -30,19 +88,14 @@ class SIRIUS:
             self._etay = 0  # [m]
             self._etapx = 0
             self._etapy = 0
-            self._beta_section = "low"
+            self._extraction_point = "low_beta"
 
             self._zero_emittance = False
             self._zero_energy_spread = False
             self._injection_condition = "Align at Entrance"
 
             # BSC parameters
-            self._bsc0_h_lowbeta = 3.4529
-            self._bsc0_v_lowbeta = 1.5588
-            self._bsc0_h_highbeta = 11.6952
-            self._bsc0_v_highbeta = 2.4706
-            self._bsc0_h = 3.4529
-            self._bsc0_v = 1.5588
+            self.set_current_bsc()
 
         @property
         def bsc0_h_highbeta(self):
@@ -80,17 +133,8 @@ class SIRIUS:
             """
             return self._bsc0_v_lowbeta
 
-        @property
-        def beta_section(self):
-            """Beta section.
-
-            Returns:
-                str: Beta section (high, low or other)
-            """
-            return self._beta_section
-
         def set_current_bsc(self):
-            """Set current BSC (03/07/2024)."""
+            """Set current BSC (01/10/2024)."""
             self._bsc0_h_lowbeta = 3.4529
             self._bsc0_v_lowbeta = 1.8627
             self._bsc0_h_highbeta = 11.6952
@@ -105,77 +149,26 @@ class SIRIUS:
             self._bsc0_v_highbeta = 2.18
             self._update_bsc()
 
-        def set_low_beta_section(self):
-            """Set low beta section."""
-            self.betax = 1.499
-            self.betay = 1.435
-            self.alphax = 0
-            self.alphay = 0
-            self.etax = 0
-            self.etay = 0
-            self.etapx = 0
-            self.etapy = 0
-            self._beta_section = "low"
-            self._bsc0_h = self._bsc0_h_lowbeta
-            self._bsc0_v = self._bsc0_v_lowbeta
+        def set_extraction_point(self, value):
+            """Set extraction point."""
+            self._extraction_point = value
+            self.betax = self.extraction_dict[value]['betax']
+            self.betay = self.extraction_dict[value]['betay']
+            self.alphax = self.extraction_dict[value]['alphax']
+            self.alphay = self.extraction_dict[value]['alphay']
+            self.etax = self.extraction_dict[value]['etax']
+            self.etay = self.extraction_dict[value]['etay']
+            self.etapx = self.extraction_dict[value]['etapx']
+            self.etapy = self.extraction_dict[value]['etapy']
+            self._update_bsc()
 
-        def set_high_beta_section(self):
-            """Set high beta section."""
-            self.betax = 17.20
-            self.betay = 3.605
-            self.alphax = 0
-            self.alphay = 0
-            self.etax = 0
-            self.etay = 0
-            self.etapx = 0
-            self.etapy = 0
-            self._beta_section = "high"
-            self._bsc0_h = self._bsc0_h_highbeta
-            self._bsc0_v = self._bsc0_v_highbeta
-
-        def set_bc_section(self):
-            """Set bc section section."""
-            self.betax = 0.338
-            self.betay = 5.356
-            self.alphax = 0.003
-            self.alphay = 0
-            self.etax = 0.002
-            self.etay = 0
-            self.etapx = 0
-            self.etapy = 0
-            self._beta_section = "bc"
-
-        def set_b1_section(self):
-            """Set b1 section section."""
-            self.betax = 1.660
-            self.betay = 26.820
-            self.alphax = 2.908
-            self.alphay = -6.564
-            self.etax = 0.122e-3
-            self.etay = 0
-            self.etapx = 3.211e-3
-            self.etapy = 0
-            self._beta_section = "b1"
-
-        def set_b2_section(self):  # It is necessary to update these values.
-            """Set b2 section section."""
-            self.betax = 1.265
-            self.betay = 25.5
-            self.alphax = 1.94
-            self.alphay = 0
-            self.etax = 0.025
-            self.etay = 0
-            self.etapx = 0
-            self.etapy = 0
-            self._beta_section = "b2"
-        
         def _update_bsc(self):
-            if self.beta_section in ['low', 'high']:
-                if self.beta_section == 'low':
+            if self.extraction_point in ["low_beta", "high_beta"]:
+                if self.extraction_point == "low_beta":
                     self._bsc0_h = self._bsc0_h_lowbeta
                     self._bsc0_v = self._bsc0_v_lowbeta
-                elif self.beta_section == 'high':
+                elif self.extraction_point == "high_beta":
                     self._bsc0_h = self._bsc0_h_highbeta
                     self._bsc0_v = self._bsc0_v_highbeta
             else:
-                raise ValueError("A beta section must be selected")
+                raise ValueError("A valid beta section must be selected!")
