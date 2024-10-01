@@ -11,7 +11,7 @@ EREST = _constants.electron_rest_energy
 class StorageRingParameters:
     """Class with storage ring parameters for radiation calculations."""
 
-    def __init__(self, beta_section='low'):
+    def __init__(self, beta_section="low"):
         """Class constructor.
 
         Args:
@@ -32,7 +32,7 @@ class StorageRingParameters:
         self._etay = 0  # [m]
         self._etapx = 0
         self._etapy = 0
-        self._beta_section = 'low'
+        self._beta_section = "low"
 
         self._zero_emittance = False
         self._zero_energy_spread = False
@@ -47,9 +47,9 @@ class StorageRingParameters:
         self._bsc0_h_highbeta = 11.6952
         self._bsc0_v_highbeta = 2.4706
 
-        if beta_section == 'low':
+        if beta_section == "low":
             self.set_low_beta_section()
-        elif beta_section == 'high':
+        elif beta_section == "high":
             self.set_high_beta_section()
 
         self.set_bsc_with_ivu18()
@@ -395,17 +395,18 @@ class StorageRingParameters:
         self.update_bsc()
 
     def update_bsc(self):
-        """Set BSC depending on the section type"""
-        if(self.beta_section not in ['b1', 'b2', 'bc']):
-            if(self._beta_section == 'low'):
+        """Set BSC depending on the section type."""
+        if self.beta_section not in ["b1", "b2", "bc"]:
+            if self._beta_section == "low":
                 self.bsc0_h = self.bsc0_h_lowbeta
                 self.bsc0_v = self.bsc0_v_lowbeta
-            elif(self.beta_section == 'high'):
+            elif self.beta_section == "high":
                 self.bsc0_h = self.bsc0_h_highbeta
                 self.bsc0_v = self.bsc0_v_highbeta
             else:
-                raise ValueError('self._beta_section is not defined previously"')
-            
+                raise ValueError(
+                    'self._beta_section is not defined previously"'
+                )
 
     def set_low_beta_section(self):
         """Set low beta section."""
@@ -426,7 +427,7 @@ class StorageRingParameters:
         self.etapy = 0
         self.bsc0_h = self.bsc0_h_lowbeta
         self.bsc0_v = self.bsc0_v_lowbeta
-        self._beta_section = 'low'
+        self._beta_section = "low"
 
     def set_high_beta_section(self):
         """Set high beta section."""
@@ -447,7 +448,7 @@ class StorageRingParameters:
         self.etapy = 0
         self.bsc0_h = self.bsc0_h_highbeta
         self.bsc0_v = self.bsc0_v_highbeta
-        self._beta_section = 'high'
+        self._beta_section = "high"
 
     def set_bc_section(self):
         """Set bc section section."""
@@ -466,7 +467,7 @@ class StorageRingParameters:
         self.etay = 0
         self.etapx = 0
         self.etapy = 0
-        self._beta_section = 'bc'
+        self._beta_section = "bc"
 
     def set_b1_section(self):
         """Set b1 section section."""
@@ -485,7 +486,7 @@ class StorageRingParameters:
         self.etay = 0
         self.etapx = 3.211e-3
         self.etapy = 0
-        self._beta_section = 'b1'
+        self._beta_section = "b1"
 
     def set_b2_section(self):  # It is necessary to update these values.
         """Set b2 section section."""
@@ -504,7 +505,7 @@ class StorageRingParameters:
         self.etay = 0
         self.etapx = 0
         self.etapy = 0
-        self._beta_section = 'b2'
+        self._beta_section = "b2"
 
     def calc_beam_stay_clear(self, pos):
         """Calculate horizontal and vertical BSC at a given position.

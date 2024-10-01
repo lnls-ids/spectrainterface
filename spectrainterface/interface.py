@@ -2250,8 +2250,7 @@ class SpectraInterface:
         und: Undulator = self._und
 
         # Spectra Initialization
-        spectra = SpectraInterface()
-        spectra.accelerator.set_bsc_with_ivu18()
+        spectra = copy.deepcopy(self)
         if self.accelerator.beta_section == "low":
             spectra.accelerator.set_low_beta_section()
         else:
@@ -2474,8 +2473,7 @@ class SpectraInterface:
         und: Undulator = self._und
 
         # Spectra Initialization
-        spectra = SpectraInterface()
-        spectra.accelerator.set_bsc_with_ivu18()
+        spectra = copy.deepcopy(self)
         if self.accelerator.beta_section == "low":
             spectra.accelerator.set_low_beta_section()
         else:
@@ -2745,8 +2743,7 @@ class SpectraInterface:
         und: Undulator = self._und
 
         # Spectra Initialization
-        spectra = SpectraInterface()
-        spectra.accelerator.set_bsc_with_ivu18()
+        spectra = copy.deepcopy(self)
         if self.accelerator.beta_section == "low":
             spectra.accelerator.set_low_beta_section()
         else:
@@ -2963,8 +2960,7 @@ class SpectraInterface:
         und: Undulator = self._und
 
         # Spectra Initialization
-        spectra = SpectraInterface()
-        spectra.accelerator.set_bsc_with_ivu18()
+        spectra = copy.deepcopy(self)
         if self.accelerator.beta_section == "low":
             spectra.accelerator.set_low_beta_section()
         else:
