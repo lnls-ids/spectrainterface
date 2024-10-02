@@ -1793,6 +1793,7 @@ class SpectraInterface:
     @accelerator.setter
     def accelerator(self, value):
         self._accelerator = value
+        self._calc._accelerator = value
 
     @sources.setter
     def sources(self, value):
@@ -1828,12 +1829,13 @@ class SpectraInterface:
     def _parallel_calc_brilliance_curve(  # noqa: C901
         self, args
     ):
-        source, extraction_point, emax, harmonic_range, nr_pts_k, x_accep, kmin = (
+        source, accelerator, extraction_point, emax, harmonic_range, nr_pts_k, x_accep, kmin = (
             args
         )
 
         # Spectra Parameters Copy
         spectra_calc = copy.deepcopy(self)
+        spectra_calc.accelerator = accelerator
 
         if source.source_type != "bendingmagnet":
             if source.gap == 0:
@@ -1929,7 +1931,7 @@ class SpectraInterface:
 
         if extraction_point is not None:
             if extraction_point in list(spectra_calc.accelerator.extraction_dict.keys()):
-                spectra_calc.accelerator.set_extraction_section(extraction_point)
+                spectra_calc.accelerator.set_extraction_point(extraction_point)
             else:
                 raise ValueError("Invalid extraction point.")
 
@@ -1972,6 +1974,13 @@ class SpectraInterface:
         brilliances = list()
         flag_bend = False
 
+        if 'list' not in str(type(self.accelerator)):
+            accelerators = list()
+            for i, source in enumerate(source_list):
+                accelerators.append(self.accelerator)
+        else:
+            accelerators = self.accelerator
+
         arglist = []
         for i, source in enumerate(source_list):
             if (
@@ -1982,6 +1991,7 @@ class SpectraInterface:
             arglist += [
                 (
                     source,
+                    accelerators[i],
                     extraction_points[i],
                     emax,
                     harmonic_range,
@@ -2015,6 +2025,7 @@ class SpectraInterface:
     def _parallel_calc_flux_curve(self, args):
         (
             source,
+            accelerator,
             extraction_point,
             energy_range,
             harmonic_range,
@@ -2026,10 +2037,11 @@ class SpectraInterface:
 
         # Spectra Parameters Copy
         spectra_calc = copy.deepcopy(self)
+        spectra_calc.accelerator = accelerator
 
         if extraction_point is not None:
             if extraction_point in list(spectra_calc.accelerator.extraction_dict.keys()):
-                spectra_calc.accelerator.set_extraction_section(extraction_point)
+                spectra_calc.accelerator.set_extraction_point(extraction_point)
             else:
                 raise ValueError("Invalid extraction point.")
 
@@ -2174,6 +2186,13 @@ class SpectraInterface:
         slit_acceptances = slit_acceptances.tolist()
         flag_bend = False
 
+        if 'list' not in str(type(self.accelerator)):
+            accelerators = list()
+            for i, source in enumerate(source_list):
+                accelerators.append(self.accelerator)
+        else:
+            accelerators = self.accelerator
+
         arglist = []
         for i, source in enumerate(source_list):
             if (
@@ -2184,6 +2203,7 @@ class SpectraInterface:
             arglist += [
                 (
                     source,
+                    accelerators[i],
                     extraction_points[i],
                     energy_range,
                     harmonic_range,
