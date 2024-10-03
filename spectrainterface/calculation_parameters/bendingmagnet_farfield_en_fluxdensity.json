@@ -12,7 +12,8 @@
     "&eta;'<sub>x,y</sub>": [0,0],
     "Type": "Storage Ring",
     "Options": {
-      "Zero Emittance": false
+      "Zero Emittance": false,
+      "Zero Energy Spread": false
     }
   },
   "Light Source": {

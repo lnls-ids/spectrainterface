@@ -44,7 +44,7 @@
       "Accuracy": "Default"
     }
   },
-  "Output File": {
+  "Output File": { 
     "Format": "JSON",
     "Folder": "/home/gabriel/spectra/spectra11/tests_GUI",
     "Prefix": "power_density",

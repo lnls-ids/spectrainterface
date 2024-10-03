@@ -1069,8 +1069,7 @@ class Calc(GeneralConfigs, SpectraTools):
 
     def set_config(self):  # noqa: C901
         """Set calc config."""
-        config_name = REPOS_PATH + "/calculation_parameters/"
-        config_name += self.source_type
+        config_name = self.source_type
         config_name += "_"
         config_name += self.method
         config_name += "_"
@@ -1082,21 +1081,66 @@ class Calc(GeneralConfigs, SpectraTools):
             config_name += "_"
             config_name += self.slit_shape
 
-        config_name += ".json"
+        return config_name
+        # file = open(config_name)
+        # input_temp = json.load(file)
 
-        file = open(config_name)
-        input_temp = json.load(file)
+        # flag_bend = False
 
-        flag_bend = False
+        # input_temp = self._set_accelerator_config(
+        #     self._accelerator, input_temp, flag_bend
+        # )
 
-        input_temp = self._set_accelerator_config(
-            self._accelerator, input_temp, flag_bend
+        # if self.source_type == self.SourceType.bending_magnet:
+        #     del input_temp["Accelerator"]["Options"]["Zero Energy Spread"]
+        #     del input_temp["Accelerator"]["Options"]["Injection Condition"]
+        #     flag_bend = True
+
+        config_name = (
+            REPOS_PATH + "/calculation_parameters/parameters_template.json"
         )
 
-        if self.source_type == self.SourceType.bending_magnet:
-            del input_temp["Accelerator"]["Options"]["Zero Energy Spread"]
-            del input_temp["Accelerator"]["Options"]["Injection Condition"]
-            flag_bend = True
+        source_type = self.source_type
+
+        config_type = self.method
+        config_type += "::"
+        if (
+            self.method == self.CalcConfigs.Method.far_field
+            or self.method == self.CalcConfigs.Method.near_field
+        ):
+            config_type += self.indep_var
+            config_type += "::"
+            config_type += "Peak Flux Curve"
+            config_type += "::"
+        elif self.method == self.CalcConfigs.Method.wigner:
+            config_type += self.indep_var
+            config_type += "::"
+
+        config_type += self.output_type
+
+        if (
+            self.output_type == self.CalcConfigs.Output.flux
+            or self.output_type == self.CalcConfigs.Output.power
+        ):
+            config_type += "::"
+            config_type += self.slit_shape
+
+        # return config_type
+
+        # file = open(config_name)
+        # input_temp = json.load(file)
+
+        # flag_bend = False
+
+        # input_temp = self._set_accelerator_config(
+        #     self._accelerator, input_temp, flag_bend
+        # )
+
+        # input_temp["Configurations"]["Type"] = config_type
+
+        # # return input_temp
+
+        # input_temp["Light Source"]["Type"] = source_type
 
         if self.field is not None:
             data = _np.zeros((3, len(self.field[:, 0])))

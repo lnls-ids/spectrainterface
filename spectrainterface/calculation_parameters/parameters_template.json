@@ -12,7 +12,10 @@
       "&eta;'<sub>x,y</sub>": [0,0],
       "Type": "Storage Ring",
       "Options": {
-        "Zero Emittance": false
+          "Zero Energy Spread": false,
+          "Zero Emittance": false,
+          "Bunch Profile": "Gaussian",
+          "Injection Condition": "Automatic"
       }
     },
     "Light Source": {
@@ -20,9 +23,21 @@
       "&rho; (m)": 10.006920000000001,
       "BM Length (m)": 2.8,
       "BM Fringe Length (m)": 0.05,
+
+      "&lambda;<sub>u</sub> (mm)": 20,
+      "Device Length (m)": 1,
+      "K value": 1.867458,
+
       "Type": "Bending Magnet",
       "Options": {
-        "Tandem Arrangement": false
+        "Tandem Arrangement": false,
+        "Field Structure": "Antisymmetric",
+        "End Correction Magnet": true,
+        "Segmentation": "None",
+        "Natural Focusing": "None",
+        "Field Offset & Taper": false,
+        "Add Phase Error": false,
+        "Gap-Field Relation": "None"
       }
     },
     "Configurations": {
@@ -43,6 +58,13 @@
       "Points (x)": 201,
       "&theta;<sub>y</sub> Range (mrad)": [-0.5,0.5],
       "Points (y)": 201,
+      "Energy Pitch (eV)": 1,
+      "Harmonic Range": [1,5],
+      "K Range": [0,3],
+      "Points (K)": 21,
+      "Target Harmonic": 1,
+      "Detuning": 0,
+      
       "Type": "Far Field & Ideal Condition::Energy Dependence::Angular Flux Density",
       "Options": {
         "Filtering": "None",
@@ -50,7 +72,10 @@
         "Energy Step": "Linear",
         "Optimize &Delta;X' for Computation": true,
         "Level of Smoothing Along X": 1,
-        "Accuracy": "Default"
+        "Accuracy": "Default",
+        "Wiggler Approximation": false,
+        "Slit Aperture Size": "Fixed",
+        "Normalize Photon Energy": false
       }
     },
     "Output File": {
