@@ -85,8 +85,17 @@
       "Target Harmonic": 1,
       "Detuning": 0,
 
-   
       "K<sub>&perp;</sub> Range": [0,5],
+
+      "X Range (mm)": [-1,1],
+      "Points (X)": 101,
+      "X' Range (mrad)": [-0.05,0.05],
+      "Points (X')": 101,
+
+      "Y Range (mm)": [-0.05,0.05],
+      "Points (Y)": 101,
+      "Y' Range (mrad)": [-0.05,0.05],
+      "Points (Y')": 101,
       
       "Type": "Far Field & Ideal Condition::Energy Dependence::Angular Flux Density",
       "Options": {
@@ -98,7 +107,22 @@
         "Accuracy": "Default",
         "Wiggler Approximation": false,
         "Slit Aperture Size": "Fixed",
-        "Normalize Photon Energy": false
+        "Normalize Photon Energy": false,
+        "Perform CMD?": true,
+        "Apply GS Model": false,
+        "Export Field Profile": "JSON",
+        "Export Intensity Profile": false,
+        "CMD Parameter": {
+          "HG Order Limit (X)": 80,
+          "Maximum CMD Order": 80,
+          "Flux Cutoff": 0.0001,
+          "Amplitude Cutoff": 0.00001,
+          "Export Step: X (mm)": 0.001,
+          "HG Order Limit (Y)": 80,
+          "Export Step: Y (mm)": 0.001
+        },
+        "Compare Wigner Function": false,
+        "Compare Intensity Profile": false
       }
     },
     "Output File": {
