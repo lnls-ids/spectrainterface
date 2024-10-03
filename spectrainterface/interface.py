@@ -6532,7 +6532,7 @@ class FunctionsManipulation:
         _plt.figure(figsize=figsize)
         _plt.title(
             "Beam Divergence ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
-                spectra_calc.accelerator.beta_section,
+                spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
                 source.period,
@@ -6575,7 +6575,7 @@ class FunctionsManipulation:
                     source.label,
                     source.source_length,
                     source.period,
-                    spectra_calc.accelerator.beta_section,
+                    spectra_calc.accelerator._extraction_point,
                 ),
                 dpi=dpi,
             )
@@ -6584,7 +6584,7 @@ class FunctionsManipulation:
         _plt.figure(figsize=figsize)
         _plt.title(
             "Beam Size ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
-                spectra_calc.accelerator.beta_section,
+                spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
                 source.period,
@@ -6629,7 +6629,7 @@ class FunctionsManipulation:
                     source.label,
                     source.source_length,
                     source.period,
-                    spectra_calc.accelerator.beta_section,
+                    spectra_calc.accelerator._extraction_point,
                 ),
                 dpi=dpi,
             )
@@ -6736,7 +6736,7 @@ class FunctionsManipulation:
         _plt.figure(figsize=figsize)
         _plt.title(
             "Flux curve ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
-                spectra_calc.accelerator.beta_section,
+                spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
                 source.period,
@@ -6793,7 +6793,7 @@ class FunctionsManipulation:
                     source.label,
                     source.source_length,
                     source.period,
-                    spectra_calc.accelerator.beta_section,
+                    spectra_calc.accelerator._extraction_point,
                 ),
                 dpi=dpi,
             )
