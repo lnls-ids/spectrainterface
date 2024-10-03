@@ -1,0 +1,68 @@
+{
+  "Accelerator": {
+    "Energy (GeV)": 3,
+    "Current (mA)": 100,
+    "&sigma;<sub>z</sub> (mm)": 2.9,
+    "Nat. Emittance (m.rad)": 2.5e-10,
+    "Coupling Constant": 0.01,
+    "Energy Spread": 0.00084,
+    "&beta;<sub>x,y</sub> (m)": [1.5,1.4],
+    "&alpha;<sub>x,y</sub>": [0,0],
+    "&eta;<sub>x,y</sub> (m)": [0,0],
+    "&eta;'<sub>x,y</sub>": [0,0],
+    "Type": "Storage Ring",
+    "Options": {
+      "Bunch Profile": "Gaussian",
+      "Injection Condition": "Automatic",
+      "Zero Emittance": false,
+      "Zero Energy Spread": false
+    }
+  },
+  "Light Source": {
+    "&lambda;<sub>u</sub> (mm)": 14,
+    "Device Length (m)": 2.05,
+    "K<sub>x,y</sub>": [1.3,1.3],
+    "Type": "Elliptic Undulator",
+    "Options": {
+      "APPLE Configuration": false,
+      "Field Structure": "Antisymmetric",
+      "End Correction Magnet": true,
+      "Natural Focusing": "None",
+      "Field Offset & Taper": false,
+      "Add Phase Error": false,
+      "Segmentation": "None"
+    }
+  },
+  "Configurations": {
+    "Target Harmonic": 3,
+    "Detuning": 0,
+    "Y Range (mm)": [-0.05,0.05],
+    "Points (Y)": 101,
+    "Y' Range (mrad)": [-0.05,0.05],
+    "Points (Y')": 101,
+    "Type": "Characterization at the Source Point::Wigner Function::Phase-Space Distribution::Y-Y' (Projected)",
+    "Options": {
+      "Accuracy": "Default",
+      "Perform CMD?": true,
+      "Apply GS Model": false,
+      "Export Field Profile": "JSON",
+      "Export Intensity Profile": false,
+      "CMD Parameter": {
+        "HG Order Limit (Y)": 80,
+        "Maximum CMD Order": 80,
+        "Flux Cutoff": 0.0001,
+        "Amplitude Cutoff": 0.00001,
+        "Export Step: Y (mm)": 0.001
+      },
+      "Compare Wigner Function": false,
+      "Compare Intensity Profile": false
+    }
+  },
+  "Output File": {
+    "Format": "JSON",
+    "Folder": "/home/jefferson.vieira/Documents/",
+    "Prefix": "",
+    "Serial Number": -1,
+    "Comment": ""
+  }
+}
