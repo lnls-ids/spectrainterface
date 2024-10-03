@@ -11,12 +11,24 @@ EREST = _constants.electron_rest_energy
 class StorageRingParameters:
     """Class with storage ring parameters for radiation calculations."""
 
-    def __init__(self, beta_section="low"):
-        """Class constructor.
+    extraction_dict = {
+            "default": {
+                "betax": 1.499,
+                "betay": 1.435,
+                "alphax": 0,
+                "alphay": 0,
+                "etax": 0,
+                "etay": 0,
+                "etapx": 0,
+                "etapy": 0,
+                "bsc0_h": 3.4529,
+                "bsc0_v": 1.5588,
+            },
+        }
+    
+    def __init__(self):
+        """Class constructor."""
 
-        Args:
-            beta_section (str, optional): Beta section. Defaults to 'low'.
-        """
         self._energy = 3  # [GeV]
         self._current = 100  # [mA]
         self._sigmaz = 2.9  # [mm]
@@ -32,27 +44,15 @@ class StorageRingParameters:
         self._etay = 0  # [m]
         self._etapx = 0
         self._etapy = 0
-        self._beta_section = "low"
+        self._extraction_point = "default"
 
         self._zero_emittance = False
         self._zero_energy_spread = False
         self._injection_condition = "Align at Entrance"
 
         # BSC parameters
-        self._bsc0_h = 0
-        self._bsc0_v = 0
-
-        self._bsc0_h_lowbeta = 3.4529
-        self._bsc0_v_lowbeta = 1.5588
-        self._bsc0_h_highbeta = 11.6952
-        self._bsc0_v_highbeta = 2.4706
-
-        if beta_section == "low":
-            self.set_low_beta_section()
-        elif beta_section == "high":
-            self.set_high_beta_section()
-
-        self.set_bsc_with_ivu18()
+        self._bsc0_h = 3.4529
+        self._bsc0_v = 1.5588
 
     @property
     def energy(self):
@@ -215,10 +215,19 @@ class StorageRingParameters:
             string: Initial condition of electron in magnetic fields.
         """
         return self._injection_condition
+    
+    @property
+    def extraction_point(self):
+        """Extraction point.
+
+        Returns:
+            str: Extraction point (default)
+        """
+        return self._extraction_point
 
     @property
     def bsc0_h(self):
-        """Hozizontal Beam Stay Clear at center of straight section.
+        """Horizontal BSC at center of straight section.
 
         Returns:
             float: Horizontal BSC [mm]
@@ -227,57 +236,12 @@ class StorageRingParameters:
 
     @property
     def bsc0_v(self):
-        """Vertical Beam Stay Clear at center of straight section.
+        """Vertical BSC at center of straight section.
 
         Returns:
             float: Vertical BSC [mm]
         """
         return self._bsc0_v
-
-    @property
-    def bsc0_h_highbeta(self):
-        """Horizontal BSC at center of high beta section.
-
-        Returns:
-            float: Horizontal BSC High Beta [mm]
-        """
-        return self._bsc0_h_highbeta
-
-    @property
-    def bsc0_v_highbeta(self):
-        """Vertical BSC at center of high beta section.
-
-        Returns:
-            float: Vertical BSC High Beta [mm]
-        """
-        return self._bsc0_v_highbeta
-
-    @property
-    def bsc0_h_lowbeta(self):
-        """Horizontal BSC at center of low beta section.
-
-        Returns:
-            float: Horizontal BSC low Beta [mm]
-        """
-        return self._bsc0_h_lowbeta
-
-    @property
-    def bsc0_v_lowbeta(self):
-        """Vertical BSC at center of low beta section.
-
-        Returns:
-            float: Vertical BSC low Beta [mm]
-        """
-        return self._bsc0_v_lowbeta
-
-    @property
-    def beta_section(self):
-        """Beta section.
-
-        Returns:
-            str: Beta section (high or low)
-        """
-        return self._beta_section
 
     @energy.setter
     def energy(self, value):
@@ -340,6 +304,14 @@ class StorageRingParameters:
     @etapy.setter
     def etapy(self, value):
         self._etapy = value
+    
+    @bsc0_h.setter
+    def bsc0_h(self, value):
+        self._bsc0_h = value
+
+    @bsc0_v.setter
+    def bsc0_v(self, value):
+        self._bsc0_v = value
 
     @zero_emittance.setter
     def zero_emittance(self, value):
@@ -361,151 +333,20 @@ class StorageRingParameters:
             raise ValueError("Argument must be str!")
         else:
             self._injection_condition = value
-
-    @bsc0_h.setter
-    def bsc0_h(self, value):
-        self._bsc0_h = value
-
-    @bsc0_v.setter
-    def bsc0_v(self, value):
-        self._bsc0_v = value
-
-    def set_current_bsc(self):
-        """Set current BSC (03/07/2024)."""
-        self._bsc0_h_lowbeta = 3.4529
-        self._bsc0_v_lowbeta = 1.8627
-        self._bsc0_h_highbeta = 11.6952
-        self._bsc0_v_highbeta = 2.9524
-        self.update_bsc()
-
-    def set_bsc_with_ivu18(self):
-        """Set BSC with IVU18."""
-        self._bsc0_h_lowbeta = 3.4529
-        self._bsc0_v_lowbeta = 1.5588
-        self._bsc0_h_highbeta = 11.6952
-        self._bsc0_v_highbeta = 2.4706
-        self.update_bsc()
-
-    def set_bsc_orion_reduction(self):
-        """Set BSC after changes due to ORION."""
-        self._bsc0_h_lowbeta = 3.4529
-        self._bsc0_v_lowbeta = 1.38
-        self._bsc0_h_highbeta = 11.6952
-        self._bsc0_v_highbeta = 2.18
-        self.update_bsc()
-
-    def update_bsc(self):
-        """Set BSC depending on the section type."""
-        if self.beta_section not in ["b1", "b2", "bc"]:
-            if self._beta_section == "low":
-                self.bsc0_h = self.bsc0_h_lowbeta
-                self.bsc0_v = self.bsc0_v_lowbeta
-            elif self.beta_section == "high":
-                self.bsc0_h = self.bsc0_h_highbeta
-                self.bsc0_v = self.bsc0_v_highbeta
-            else:
-                raise ValueError(
-                    'self._beta_section is not defined previously"'
-                )
-
-    def set_low_beta_section(self):
-        """Set low beta section."""
-        self.energy = 3
-        self.current = 100
-        self.sigmaz = 2.9
-        self.nat_emittance = 2.5e-10
-        self.coupling_constant = 0.01
-        self.energy_spread = 0.00084
-        self.gamma = 5870.8535507
-        self.betax = 1.499
-        self.betay = 1.435
-        self.alphax = 0
-        self.alphay = 0
-        self.etax = 0
-        self.etay = 0
-        self.etapx = 0
-        self.etapy = 0
-        self.bsc0_h = self.bsc0_h_lowbeta
-        self.bsc0_v = self.bsc0_v_lowbeta
-        self._beta_section = "low"
-
-    def set_high_beta_section(self):
-        """Set high beta section."""
-        self.energy = 3
-        self.current = 100
-        self.sigmaz = 2.9
-        self.nat_emittance = 2.5e-10
-        self.coupling_constant = 0.01
-        self.energy_spread = 0.00084
-        self.gamma = 5870.8535507
-        self.betax = 17.20
-        self.betay = 3.605
-        self.alphax = 0
-        self.alphay = 0
-        self.etax = 0
-        self.etay = 0
-        self.etapx = 0
-        self.etapy = 0
-        self.bsc0_h = self.bsc0_h_highbeta
-        self.bsc0_v = self.bsc0_v_highbeta
-        self._beta_section = "high"
-
-    def set_bc_section(self):
-        """Set bc section section."""
-        self.energy = 3
-        self.current = 100
-        self.sigmaz = 2.9
-        self.nat_emittance = 2.5e-10
-        self.coupling_constant = 0.01
-        self.energy_spread = 0.00084
-        self.gamma = 5870.8535507
-        self.betax = 0.338
-        self.betay = 5.356
-        self.alphax = 0.003
-        self.alphay = 0
-        self.etax = 0.002
-        self.etay = 0
-        self.etapx = 0
-        self.etapy = 0
-        self._beta_section = "bc"
-
-    def set_b1_section(self):
-        """Set b1 section section."""
-        self.energy = 3
-        self.current = 100
-        self.sigmaz = 2.9
-        self.nat_emittance = 2.5e-10
-        self.coupling_constant = 0.01
-        self.energy_spread = 0.00084
-        self.gamma = 5870.8535507
-        self.betax = 1.660
-        self.betay = 26.820
-        self.alphax = 2.908
-        self.alphay = -6.564
-        self.etax = 0.122e-3
-        self.etay = 0
-        self.etapx = 3.211e-3
-        self.etapy = 0
-        self._beta_section = "b1"
-
-    def set_b2_section(self):  # It is necessary to update these values.
-        """Set b2 section section."""
-        self.energy = 3
-        self.current = 100
-        self.sigmaz = 2.9
-        self.nat_emittance = 2.5e-10
-        self.coupling_constant = 0.01
-        self.energy_spread = 0.00084
-        self.gamma = 5870.8535507
-        self.betax = 1.265
-        self.betay = 25.5
-        self.alphax = 1.94
-        self.alphay = 0
-        self.etax = 0.025
-        self.etay = 0
-        self.etapx = 0
-        self.etapy = 0
-        self._beta_section = "b2"
+    
+    def set_extraction_point(self, value):
+        """Set extraction point."""
+        self._extraction_point = value
+        self.betax = self.extraction_dict[value]['betax']
+        self.betay = self.extraction_dict[value]['betay']
+        self.alphax = self.extraction_dict[value]['alphax']
+        self.alphay = self.extraction_dict[value]['alphay']
+        self.etax = self.extraction_dict[value]['etax']
+        self.etay = self.extraction_dict[value]['etay']
+        self.etapx = self.extraction_dict[value]['etapx']
+        self.etapy = self.extraction_dict[value]['etapy']
+        self.bsc0_h = self.extraction_dict[value]['bsc0_h']
+        self.bsc0_v = self.extraction_dict[value]['bsc0_v']
 
     def calc_beam_stay_clear(self, pos):
         """Calculate horizontal and vertical BSC at a given position.

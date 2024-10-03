@@ -4,9 +4,7 @@ import mathphys.constants as _constants
 import numpy as _np
 from spectrainterface.tools import SourceFunctions
 from spectrainterface.accelerator import StorageRingParameters
-import os
 
-REPOS_PATH = os.path.dirname(os.path.abspath(__file__))
 ECHARGE = _constants.elementary_charge
 EMASS = _constants.electron_mass
 LSPEED = _constants.light_speed
@@ -108,51 +106,6 @@ class BendingMagnet(SourceFunctions):
         )
 
         return total_power
-
-
-class BC(BendingMagnet):
-    """BC class.
-
-    Args:
-        BendingMagnet (Bending magnet class): BM class
-    """
-
-    def __init__(self):
-        """Class constructor."""
-        super().__init__()
-        self._b_peak = 3.2
-        self._label = "BC"
-        self._meas_fname = REPOS_PATH + "/files/field_bc.txt"
-
-
-class B2(BendingMagnet):
-    """B2 class.
-
-    Args:
-        BendingMagnet (Bending magnet class): BM class
-    """
-
-    def __init__(self):
-        """Class constructor."""
-        super().__init__()
-        self._b_peak = 0.5665
-        self._label = "B2"
-        self._meas_fname = REPOS_PATH + "/files/field_b2.txt"
-
-
-class B1(BendingMagnet):
-    """B1 class.
-
-    Args:
-        BendingMagnet (Bending magnet class): BM class
-    """
-
-    def __init__(self):
-        """Class constructor."""
-        super().__init__()
-        self._b_peak = 0.5642
-        self._label = "B1"
-        self._meas_fname = REPOS_PATH + "/files/field_b1.txt"
 
 
 class Undulator(SourceFunctions):
@@ -797,6 +750,19 @@ class Hybrid_Nd(Undulator):
         self._source_type = "linearundulator"
 
 
+class VPU(Hybrid_Nd):
+    """VPU class."""
+
+    def __init__(self, period=29, length=1.5):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._material = 'NdFeB'
+        self._polarization = "vp"
+        self._source_type = "verticalundulator"
+        self._label = "VPU"
+        self._gap = 9.7
+
+
 class Hybrid_SmCo(Undulator):
     """Hybrid SmCo Undulator class.
 
@@ -940,97 +906,3 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
         }
         self._material = 'PrFeB'
         self._source_type = "linearundulator"
-
-
-class UE44(APPLE2):
-    """UE44  class."""
-
-    def __init__(self, period=44, length=3.4):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._material = 'NdFeB'
-        self._label = "UE44"
-        self._gap = 11.4
-        self._br = 1.14
-
-
-class VPU(Hybrid_Nd):
-    """VPU class."""
-
-    def __init__(self, period=29, length=1.5):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._material = 'NdFeB'
-        self._polarization = "vp"
-        self._source_type = "verticalundulator"
-        self._label = "VPU"
-        self._gap = 9.7
-
-
-class APU58(Halbach):
-    """APU58 class."""
-
-    def __init__(self, period=58, length=1):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._label = "APU58"
-        self._gap = 15.8
-        self._br = 1.34
-
-
-class EPU50(APPLE2):
-    """EPU50 class."""
-
-    def __init__(self, period=50, length=3):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._label = "EPU50"
-        self._br = 1.24
-        self._gap = 10.3
-
-
-class EPU50_UVX(APPLE2):
-    """EPU50 UVX class."""
-
-    def __init__(self, period=50, length=2.7):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._label = "EPU50 (UVX)"
-        self._br = 1.135
-        self._gap = 22
-
-
-class IVU18_2(IVU_NdFeB):
-    """IVU18 class."""
-
-    def __init__(self, period=18.5, length=2):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._label = "IVU18-2"
-        self._br = 1.27
-        self._gap = 4.5
-        self.vc_thickness = 0
-        self.vc_tolerance = 0.35
-        self._polarization = "hp"
-        self._halbach_coef = {
-            "hp": {"a": 2.26223181, "b": -3.69776472, "c": 0.32867209},
-        }
-        self._material = 'NdFeB'
-
-
-class IVU18_1(IVU_NdFeB):
-    """IVU18 class."""
-
-    def __init__(self, period=18.5, length=2):
-        """Class constructor."""
-        super().__init__(period, length)
-        self._label = "IVU18-1"
-        self._br = 1.27
-        self._gap = 4.5
-        self._vc_thickness = 0
-        self._vc_tolerance = 0.35
-        self._polarization = "hp"
-        self._halbach_coef = {
-            "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
-        }
-        self._material = 'NdFeB'
