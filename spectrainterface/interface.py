@@ -488,6 +488,41 @@ class Calc(GeneralConfigs, SpectraTools):
         self._k = None
         self._output_kx = None
         self._output_ky = None
+        self._dict_configs = {
+            # Source Type
+            "source_type": {
+                "bendingmagnet": "Bending Magnet",
+                "linearundulator": "Linear Undulator",
+                "verticalundulator": "Vertical Undulator",
+                "ellipticundulator": "Elliptic Undulator",
+                "helicalundulator": "Helical Undulator",
+                "figure8undulator": "Figure-8 Undulator",
+                "userdefined": "User Defined",
+            },
+            # Configurations
+            "configurations": {
+                # Method
+                "farfield": "Far Field & Ideal Condition",
+                "fpfarfield": "Fixed Point Calculation::Far Field & Ideal Condition",
+                "nearfield": "Near Field",
+                "fpnearfield": "Fixed Point Calculation::Near Field",
+                "wigner": "Characterization at the Source Point::Wigner Function",
+                "fpwigner": "Fixed Point Calculation::Wigner Function",
+                # Variable
+                "en": "Energy Dependence",
+                "k": "K Dependence::Peak Flux Curve",  # if not wigner ::Peak Flux Curve
+                "xy": "Spatial Dependence",
+                # Output
+                "fluxdensity": "Angular Flux Density",
+                "partialflux": "Partial Flux",
+                "partialpower": "Partial Power",
+                "powerdensity": "Spatial Power Density",  # or Angular Power Density
+                "brilliance": "Sliced",  # or Target Harmonics
+                # Slit Shape
+                "circslit": "Circular Slit",
+                "retslit": "Rectangular Slit",
+            },
+        }
 
     @property
     def method(self):
@@ -1067,6 +1102,31 @@ class Calc(GeneralConfigs, SpectraTools):
                 "Slice y' can only be defined if the variable is k or energy."
             )
 
+    def _reset_class(self):
+        """Reset Class Function."""
+        # Energy related
+        self._target_harmonic = None
+        self._energy_range = None
+        self._energy_step = None
+        self._slit_position = None
+        self._slit_acceptance = None
+
+        #  Mesh xy related
+        self._target_energy = None
+        self._x_range = None
+        self._y_range = None
+        self._x_nr_pts = None
+        self._y_nr_pts = None
+
+        #  K related
+        self._harmonic_range = None
+        self._k_range = None
+        self._k_nr_pts = None
+        self._slice_x = None
+        self._slice_y = None
+        self._slice_px = None
+        self._slice_py = None
+
     def set_config(self):  # noqa: C901
         """Set calc config."""
         config_name = self.source_type
@@ -1081,66 +1141,98 @@ class Calc(GeneralConfigs, SpectraTools):
             config_name += "_"
             config_name += self.slit_shape
 
-        return config_name
-        # file = open(config_name)
-        # input_temp = json.load(file)
+        # Assembly of source and configuration type
+        keys = config_name.split("_")
 
-        # flag_bend = False
+        source_type = self._dict_configs["source_type"][keys[0]]
 
-        # input_temp = self._set_accelerator_config(
-        #     self._accelerator, input_temp, flag_bend
-        # )
-
-        # if self.source_type == self.SourceType.bending_magnet:
-        #     del input_temp["Accelerator"]["Options"]["Zero Energy Spread"]
-        #     del input_temp["Accelerator"]["Options"]["Injection Condition"]
-        #     flag_bend = True
-
-        config_name = (
-            REPOS_PATH + "/calculation_parameters/parameters_template.json"
+        config = [
+            "::" + self._dict_configs["configurations"][key]
+            if key in self._dict_configs["configurations"]
+            else ""
+            for key in keys[1::]
+        ]
+        config[0] = config[0][2::]
+        config_type = "".join(config)
+        config_type = (
+            config_type.replace("Energy Dependence::", "")
+            if ("fpfarfield" in keys)
+            or ("fpnearfield" in keys)
+            or ("fpwigner" in keys)
+            else config_type
+        )
+        config_type = (
+            config_type.replace("::Circular Slit", "")
+            if ("fpwigner" in keys)
+            else config_type
+        )
+        config_type = (
+            config_type.replace("::Rectangular Slit", "")
+            if ("fpwigner" in keys)
+            else config_type
+        )
+        config_type = (
+            config_type.replace(
+                "Angular Flux Density", "Spatial Flux Density::Mesh: x-y"
+            )
+            if "xy" in keys
+            else config_type
+        )
+        config_type = (
+            config_type.replace(
+                "Spatial Power Density", "Spatial Power Density::Mesh: x-y"
+            )
+            if "xy" in keys
+            else config_type
+        )
+        config_type = (
+            config_type + "::Target Harmonics" if "k" in keys else config_type
+        )
+        config_type = (
+            config_type.replace("Spatial Flux Density", "Angular Flux Density")
+            if "farfield" in keys
+            else config_type
+        )
+        config_type = (
+            config_type.replace(
+                "Spatial Power Density", "Angular Power Density"
+            )
+            if "farfield" in keys
+            else config_type
+        )
+        config_type = (
+            config_type.replace("Angular Flux Density", "Spatial Flux Density")
+            if "nearfield" in keys
+            else config_type
+        )
+        config_type = (
+            config_type.replace(
+                "Angular Power Density", "Spatial Power Density"
+            )
+            if "nearfield" in keys
+            else config_type
+        )
+        config_type = (
+            config_type.replace("Peak Flux Curve::Sliced::", "")
+            if "wigner" in keys
+            else config_type
         )
 
-        source_type = self.source_type
+        # Open template file
+        template_file_name = (
+            REPOS_PATH + "/calculation_parameters/parameters_template.json"
+        )
+        file = open(template_file_name)
+        input_temp = json.load(file)
 
-        config_type = self.method
-        config_type += "::"
-        if (
-            self.method == self.CalcConfigs.Method.far_field
-            or self.method == self.CalcConfigs.Method.near_field
-        ):
-            config_type += self.indep_var
-            config_type += "::"
-            config_type += "Peak Flux Curve"
-            config_type += "::"
-        elif self.method == self.CalcConfigs.Method.wigner:
-            config_type += self.indep_var
-            config_type += "::"
+        # Setting accelerator parameters
+        input_temp = self._set_accelerator_config(
+            self._accelerator, input_temp, False
+        )
 
-        config_type += self.output_type
-
-        if (
-            self.output_type == self.CalcConfigs.Output.flux
-            or self.output_type == self.CalcConfigs.Output.power
-        ):
-            config_type += "::"
-            config_type += self.slit_shape
-
-        # return config_type
-
-        # file = open(config_name)
-        # input_temp = json.load(file)
-
-        # flag_bend = False
-
-        # input_temp = self._set_accelerator_config(
-        #     self._accelerator, input_temp, flag_bend
-        # )
-
-        # input_temp["Configurations"]["Type"] = config_type
-
-        # # return input_temp
-
-        # input_temp["Light Source"]["Type"] = source_type
+        # Setting configuration and source type
+        input_temp["Configurations"]["Type"] = config_type
+        input_temp["Light Source"]["Type"] = source_type
 
         if self.field is not None:
             data = _np.zeros((3, len(self.field[:, 0])))
@@ -1383,6 +1475,7 @@ class Calc(GeneralConfigs, SpectraTools):
         self._output_captions = captions
         self._output_data = data
         self._output_variables = variables
+        self._reset_class()
         self._set_outputs()
 
     def _set_outputs(self):  # noqa: C901
