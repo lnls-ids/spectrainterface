@@ -520,12 +520,15 @@ class Calc(GeneralConfigs, SpectraTools):
                 "en": "Energy Dependence",
                 "k": "K Dependence::Peak Flux Curve",  # if not wigner ::Peak Flux Curve
                 "xy": "Spatial Dependence",
+                "xxp": "X-X' (Projected)",
+                "yyp": "Y-Y' (Projected)",
                 # Output
                 "fluxdensity": "Angular Flux Density",
                 "partialflux": "Partial Flux",
                 "partialpower": "Partial Power",
                 "powerdensity": "Spatial Power Density",  # or Angular Power Density
                 "brilliance": "Sliced",  # or Target Harmonics
+                "phasespace": "Phase-Space Distribution",
                 # Slit Shape
                 "circslit": "Circular Slit",
                 "retslit": "Rectangular Slit",
@@ -1346,6 +1349,22 @@ class Calc(GeneralConfigs, SpectraTools):
             if "wigner" in keys
             else config_type
         )
+        config_type = (
+            config_type.replace(
+                "Y-Y' (Projected)::Phase-Space Distribution",
+                "Phase-Space Distribution::Y-Y' (Projected)",
+            )
+            if "phasespace" in keys
+            else config_type
+        )
+        config_type = (
+            config_type.replace(
+                "X-X' (Projected)::Phase-Space Distribution",
+                "Phase-Space Distribution::X-X' (Projected)",
+            )
+            if "phasespace" in keys
+            else config_type
+        )
 
         # Open template file
         template_file_name = (
@@ -1358,7 +1377,6 @@ class Calc(GeneralConfigs, SpectraTools):
         input_temp = self._set_accelerator_config(
             self._accelerator, input_temp, False
         )
-
         # Setting configuration and source type
         input_temp["Configurations"]["Type"] = config_type
         input_temp["Light Source"]["Type"] = source_type
@@ -1638,7 +1656,7 @@ class Calc(GeneralConfigs, SpectraTools):
         self._output_captions = captions
         self._output_data = data
         self._output_variables = variables
-        self._reset_class()
+        # self._reset_class()
         self._set_outputs()
 
         return solver
