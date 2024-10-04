@@ -1,0 +1,135 @@
+{
+    "Accelerator": {
+      "Energy (GeV)": 3,
+      "Current (mA)": 100,
+      "&sigma;<sub>z</sub> (mm)": 2.9,
+      "Nat. Emittance (m.rad)": 2.5e-10,
+      "Coupling Constant": 0.01,
+      "Energy Spread": 0.00084,
+      "&beta;<sub>x,y</sub> (m)": [0.338,5.355],
+      "&alpha;<sub>x,y</sub>": [0,0],
+      "&eta;<sub>x,y</sub> (m)": [0,0],
+      "&eta;'<sub>x,y</sub>": [0,0],
+      "Type": "Storage Ring",
+      "Options": {
+          "Zero Energy Spread": false,
+          "Zero Emittance": false,
+          "Bunch Profile": "Gaussian",
+          "Injection Condition": "Automatic"
+      }
+    },
+    "Light Source": {
+      "B (T)": 1,
+      "&rho; (m)": 10.006920000000001,
+      "BM Length (m)": 2.8,
+      "BM Fringe Length (m)": 0.05,
+
+      "&lambda;<sub>u</sub> (mm)": 20,
+      "Device Length (m)": 1,
+      "K value": 1.867458,
+
+      "K<sub>x,y</sub>": [0.8403560999999999,1.6807121999999999],
+      
+      
+      "Field Profile": {
+      "titles": ["z (m)","Bx (T)","By (T)"],
+      "data": [
+          [-0.015,-0.0140625,-0.013125,-0.0121875,-0.01125,-0.0103125,-0.009375,-0.0084375,-0.0075,-0.0065625,-0.005625,-0.0046875,-0.00375,-0.0028125,-0.001875,-0.0009375,0,0.0009375,0.001875,0.0028125,0.00375,0.0046875,0.005625,0.0065625,0.0075,0.0084375,0.009375,0.0103125,0.01125,0.0121875,0.013125,0.0140625,0.015],
+          [-1.415e-17,-0.09644,-0.2166,-0.292,-0.2349,0,0.3529,0.6591,0.7345,0.4913,1.083e-16,-1.225e-16,-0.5878,-0.9511,-0.9511,-0.5878,0,0.5878,0.9511,0.9511,0.5878,1.225e-16,-1.083e-16,-0.4913,-0.7345,-0.6591,-0.3529,0,0.2349,0.292,0.2166,0.09644,1.415e-17],
+          [-7.076e-18,-0.04822,-0.1083,-0.146,-0.1174,0,0.1764,0.3295,0.3672,0.2457,5.416e-17,-6.123e-17,-0.2939,-0.4755,-0.4755,-0.2939,0,0.2939,0.4755,0.4755,0.2939,6.123e-17,-5.416e-17,-0.2457,-0.3672,-0.3295,-0.1764,0,0.1174,0.146,0.1083,0.04822,7.076e-18]
+        ],
+        "Section": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+      },
+
+      "Type": "Bending Magnet",
+      "Options": {
+        "Tandem Arrangement": false,
+        "Field Structure": "Antisymmetric",
+        "End Correction Magnet": true,
+        "Segmentation": "None",
+        "Natural Focusing": "None",
+        "Field Offset & Taper": false,
+        "Add Phase Error": false,
+        "Gap-Field Relation": "None",
+        "APPLE Configuration": false
+      }
+    },
+    "Configurations": {
+      "Distance from the Source (m)": 50,
+      "Target Energy (eV)": 101.48553719008262,
+      "Energy Range (eV)": [1,20000],
+      "Energy Pitch (eV)": 1,
+      "Points (Energy)": 501,
+
+      "Angle &theta;<sub>x,y</sub> (mrad)": [0,0],
+      "X' Acceptance (mrad)": 1,
+      "Slit Pos.: &theta;<sub>x,y</sub> (mrad)": [0,0],
+      "Slit &theta;<sub>1,2</sub> (mrad)": [0,0.04],
+      "&Delta;&theta;<sub>x,y</sub> (mrad)": [0.04,0.04],
+
+      "Slice X (mm)": 0,
+      "Slice Y (mm)": 0,
+      "Slice X' (mrad)": 0,
+      "Slice Y' (mrad)": 0,
+
+      
+      "&gamma;&Delta;&theta;<sub>x,y</sub>": [1,1],
+      "&theta;<sub>x</sub> Range (mrad)": [-0.5,0.5],
+      "Points (x)": 201,
+      "&theta;<sub>y</sub> Range (mrad)": [-0.5,0.5],
+      "Points (y)": 201,
+
+      "Harmonic Range": [1,5],
+      "K Range": [0,3],
+      "Points (K)": 21,
+      "Target Harmonic": 1,
+      "Detuning": 0,
+
+      "K<sub>&perp;</sub> Range": [0,5],
+
+      "X Range (mm)": [-1,1],
+      "Points (X)": 101,
+      "X' Range (mrad)": [-0.05,0.05],
+      "Points (X')": 101,
+
+      "Y Range (mm)": [-0.05,0.05],
+      "Points (Y)": 101,
+      "Y' Range (mrad)": [-0.05,0.05],
+      "Points (Y')": 101,
+      
+      "Type": "Far Field & Ideal Condition::Energy Dependence::Angular Flux Density",
+      "Options": {
+        "Filtering": "None",
+        "Define Obs. Point in": "Angle",
+        "Energy Step": "Linear",
+        "Optimize &Delta;X' for Computation": true,
+        "Level of Smoothing Along X": 1,
+        "Accuracy": "Default",
+        "Wiggler Approximation": false,
+        "Slit Aperture Size": "Fixed",
+        "Normalize Photon Energy": false,
+        "Perform CMD?": true,
+        "Apply GS Model": false,
+        "Export Field Profile": "JSON",
+        "Export Intensity Profile": false,
+        "CMD Parameter": {
+          "HG Order Limit (X)": 80,
+          "Maximum CMD Order": 80,
+          "Flux Cutoff": 0.0001,
+          "Amplitude Cutoff": 0.00001,
+          "Export Step: X (mm)": 0.001,
+          "HG Order Limit (Y)": 80,
+          "Export Step: Y (mm)": 0.001
+        },
+        "Compare Wigner Function": false,
+        "Compare Intensity Profile": false
+      }
+    },
+    "Output File": {
+      "Format": "JSON",
+      "Folder": "/home/jefferson.vieira/Documents/",
+      "Prefix": "bm",
+      "Serial Number": 1,
+      "Comment": ""
+    }
+  }
