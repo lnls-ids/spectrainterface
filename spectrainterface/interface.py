@@ -975,7 +975,8 @@ class Calc(GeneralConfigs, SpectraTools):
     @target_harmonic.setter
     def target_harmonic(self, value):
         if self.indep_var == self.CalcConfigs.Variable.energy:
-            if self.method == self.CalcConfigs.Method.fixedpoint_wigner:
+            if (self.method == self.CalcConfigs.Method.fixedpoint_wigner or 
+                self.method == self.CalcConfigs.Method.wigner):
                 self._target_harmonic = value
             else:
                 raise ValueError(

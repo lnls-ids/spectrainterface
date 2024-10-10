@@ -237,7 +237,17 @@ class SIRIUS:
                 super().__init__(period, length)
                 self._label = "APU58"
                 self._gap = 15.8
-                self._br = 1.34
+                self._br = 1.32
+        
+        class APU22(sources.Halbach):
+            """APU22 class."""
+
+            def __init__(self, period=22, length=1.3):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "APU22"
+                self._gap = 8.0
+                self._br = 1.32
 
         class EPU50(sources.APPLE2):
             """EPU50 class."""
