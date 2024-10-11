@@ -1375,9 +1375,14 @@ class Calc(GeneralConfigs, SpectraTools):
         input_temp = json.load(file)
 
         # Setting accelerator parameters
+        flag_bend = False
+        if self.source_type == self.SourceType.bending_magnet:
+            flag_bend = True
+
         input_temp = self._set_accelerator_config(
-            self._accelerator, input_temp, False
+            self._accelerator, input_temp, flag_bend
         )
+
         # Setting configuration and source type
         input_temp["Configurations"]["Type"] = config_type
         input_temp["Light Source"]["Type"] = source_type
@@ -2176,9 +2181,16 @@ class SpectraInterface:
     def _parallel_calc_brilliance_curve(  # noqa: C901
         self, args
     ):
-        source, accelerator, extraction_point, emax, harmonic_range, nr_pts_k, x_accep, kmin = (
-            args
-        )
+        (
+            source,
+            accelerator,
+            extraction_point,
+            emax,
+            harmonic_range,
+            nr_pts_k,
+            x_accep,
+            kmin,
+        ) = args
 
         # Spectra Parameters Copy
         spectra_calc = copy.deepcopy(self)
@@ -2277,7 +2289,9 @@ class SpectraInterface:
         spectra_calc.calc.length = source.source_length
 
         if extraction_point is not None:
-            if extraction_point in list(spectra_calc.accelerator.extraction_dict.keys()):
+            if extraction_point in list(
+                spectra_calc.accelerator.extraction_dict.keys()
+            ):
                 spectra_calc.accelerator.set_extraction_point(extraction_point)
             else:
                 raise ValueError("Invalid extraction point.")
@@ -2321,7 +2335,7 @@ class SpectraInterface:
         brilliances = list()
         flag_bend = False
 
-        if 'list' not in str(type(self.accelerator)):
+        if "list" not in str(type(self.accelerator)):
             accelerators = list()
             for i, source in enumerate(source_list):
                 accelerators.append(self.accelerator)
@@ -2387,7 +2401,9 @@ class SpectraInterface:
         spectra_calc.accelerator = accelerator
 
         if extraction_point is not None:
-            if extraction_point in list(spectra_calc.accelerator.extraction_dict.keys()):
+            if extraction_point in list(
+                spectra_calc.accelerator.extraction_dict.keys()
+            ):
                 spectra_calc.accelerator.set_extraction_point(extraction_point)
             else:
                 raise ValueError("Invalid extraction point.")
@@ -2533,7 +2549,7 @@ class SpectraInterface:
         slit_acceptances = slit_acceptances.tolist()
         flag_bend = False
 
-        if 'list' not in str(type(self.accelerator)):
+        if "list" not in str(type(self.accelerator)):
             accelerators = list()
             for i, source in enumerate(source_list):
                 accelerators.append(self.accelerator)
@@ -2843,7 +2859,9 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
+        spectra.accelerator.set_extraction_point(
+            self.accelerator.extraction_point
+        )
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
@@ -3063,7 +3081,9 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
+        spectra.accelerator.set_extraction_point(
+            self.accelerator.extraction_point
+        )
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
@@ -3330,7 +3350,9 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
+        spectra.accelerator.set_extraction_point(
+            self.accelerator.extraction_point
+        )
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
@@ -3544,7 +3566,9 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
+        spectra.accelerator.set_extraction_point(
+            self.accelerator.extraction_point
+        )
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
