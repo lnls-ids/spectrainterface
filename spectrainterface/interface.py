@@ -506,6 +506,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 "ellipticundulator": "Elliptic Undulator",
                 "helicalundulator": "Helical Undulator",
                 "figure8undulator": "Figure-8 Undulator",
+                "wiggler": "Wiggler",
                 "userdefined": "User Defined",
             },
             # Configurations
