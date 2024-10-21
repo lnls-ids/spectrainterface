@@ -6696,7 +6696,7 @@ class FunctionsManipulation:
         # Plot Beam Divergence
         _plt.figure(figsize=figsize)
         _plt.title(
-            "Beam Divergence ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
+            "Beam Divergence ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
                 spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
@@ -6748,7 +6748,7 @@ class FunctionsManipulation:
         # Plot Beam Size
         _plt.figure(figsize=figsize)
         _plt.title(
-            "Beam Size ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
+            "Beam Size ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
                 spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
@@ -6900,7 +6900,7 @@ class FunctionsManipulation:
         # Plot flux curve
         _plt.figure(figsize=figsize)
         _plt.title(
-            "Flux curve ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
+            "Flux curve ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
                 spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
