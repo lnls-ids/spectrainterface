@@ -5898,8 +5898,9 @@ class FunctionsManipulation:
         figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
         dpi = args["dpi"] if "dpi" in args else 300
 
+        gapmax = 25
         gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-        gaps = _np.linspace(gapv, 14, 501)
+        gaps = _np.linspace(gapv, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         gamma = spectra_calc.accelerator.gamma
@@ -5934,8 +5935,7 @@ class FunctionsManipulation:
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
-        _plt.ylim(0, 14)
-        _plt.yticks([0, 2, 4, 6, 8, 10, 12, 14])
+        _plt.ylim(0, gapmax)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
@@ -5949,7 +5949,7 @@ class FunctionsManipulation:
             )
 
         # Fundamental Energy
-        gaps = _np.linspace(gapv, 20, 501)
+        gaps = _np.linspace(gapv, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         Es = source.get_harmonic_energy(
@@ -5977,11 +5977,10 @@ class FunctionsManipulation:
         _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.ylim(0, Es[-1] * 1e-3)
+        _plt.ylim(0, int(Es[-1] * 1e-3) + 1)
         _plt.yscale(yscale)
-        _plt.xlim(0, 14)
+        _plt.xlim(0, gapmax)
         _plt.xscale(xscale)
-        _plt.xticks([0, 2, 4, 6, 8, 10, 12, 14])
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
