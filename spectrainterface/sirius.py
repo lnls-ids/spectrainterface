@@ -229,7 +229,7 @@ class SIRIUS:
                 self._gap = 11.4
                 self._br = 1.14
 
-        class APU58(sources.Halbach):
+        class APU58(sources.APU):
             """APU58 class."""
 
             def __init__(self, period=58, length=1):
@@ -238,6 +238,19 @@ class SIRIUS:
                 self._label = "APU58"
                 self._gap = 15.8
                 self._br = 1.34
+                self._z0 = 0
+        
+        class APU22_SAPUCAIA(sources.APU):
+            """APU22 1991d class."""
+
+            def __init__(self, period=22, length=1.2):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "APU22"
+                self._gap = 8
+                self._br = 1.34
+                self._z0 = 0.321
+                self._efficiency = 0.9981
 
         class EPU50(sources.APPLE2):
             """EPU50 class."""
