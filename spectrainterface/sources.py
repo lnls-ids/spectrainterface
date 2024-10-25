@@ -299,18 +299,14 @@ class Undulator(SourceFunctions):
     @add_phase_errors.setter
     def add_phase_errors(self, value):
         if type(value) is not bool:
-            raise ValueError(
-                "Add phase error must be a boolean"  # noqa: E501
-            )
+            raise ValueError("Add phase error must be a boolean")  # noqa: E501
         else:
             self._add_phase_errors = value
 
     @use_recovery_params.setter
     def use_recovery_params(self, value):
         if type(value) is not bool:
-            raise ValueError(
-                "Use recovery params must be a boolean"  # noqa: E501
-            )
+            raise ValueError("Use recovery params must be a boolean")  # noqa: E501
         else:
             self._use_rec_params = value
 
@@ -524,11 +520,7 @@ class Undulator(SourceFunctions):
         )
 
         total_power = (
-            const
-            * (b**2)
-            * self._source_length
-            * (current * 1e-3)
-            / (1e3 * ECHARGE)
+            const * (b**2) * self._source_length * (current * 1e-3) / (1e3 * ECHARGE)
         )
 
         return total_power
@@ -584,6 +576,54 @@ class Halbach(Undulator):
         self._period = period
         self._source_length = length
         self._source_type = "linearundulator"
+
+
+class APU(Halbach):
+    """APU class."""
+
+    def __init__(self, period=22, length=1):
+        """Class constructor."""
+        super().__init__(period, length)
+        self._undulator_type = "APU"
+        self._phase = 0
+        self._label = "APU"
+        self._gap = 8
+        self._br = 1.34
+        self._z0 = 0
+        self._efficiency = 1
+
+    @property
+    def phase(self):
+        """Undulator phase [mm].
+
+        Returns:
+            float: Phase [mm]
+        """
+        return self._phase
+
+    def get_beff(self, gap_over_period, phase=None):
+        """Get peak magnetic field for a given device and gap.
+
+        Args:
+            gap_over_period (float): gap normalized by the undulator period.
+
+        Returns:
+            _type_: _description_
+        """
+        phase = self.phase if phase is None else phase
+        br = self.br
+        z0 = self._z0
+        a = self.halbach_coef[self.polarization]["a"]
+        b = self.halbach_coef[self.polarization]["b"]
+        c = self.halbach_coef[self.polarization]["c"]
+        efficiency = self.efficiency
+        return (
+            efficiency
+            * SourceFunctions.beff_function(
+                gap_over_period=gap_over_period, br=br, a=a, b=b, c=c
+            )
+            * _np.abs(_np.cos(_np.pi / self._period * (phase - z0)))
+        )
 
 
 class Elliptic(Undulator):
@@ -668,7 +708,7 @@ class DELTA(Elliptic):
             "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
             "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
         }
-        self._material = 'NdFeB'
+        self._material = "NdFeB"
         self._period = period
         self._source_length = length
         self._source_type = "ellipticundulator"
@@ -756,7 +796,7 @@ class VPU(Hybrid_Nd):
     def __init__(self, period=29, length=1.5):
         """Class constructor."""
         super().__init__(period, length)
-        self._material = 'NdFeB'
+        self._material = "NdFeB"
         self._polarization = "vp"
         self._source_type = "verticalundulator"
         self._label = "VPU"
@@ -901,8 +941,6 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
         self._br = 1.71
         self._polarization = "hp"
         self._efficiency = 1.0
-        self._halbach_coef = {
-            "hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}
-        }
-        self._material = 'PrFeB'
+        self._halbach_coef = {"hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}}
+        self._material = "PrFeB"
         self._source_type = "linearundulator"
