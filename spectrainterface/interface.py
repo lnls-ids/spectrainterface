@@ -5641,9 +5641,6 @@ class FunctionsManipulation:
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("RMS beam size [\u03bcm]")
         _plt.legend(loc=1, ncol=2, fontsize=9)
-        _plt.minorticks_on()
-        _plt.grid(which="major", alpha=0.3)
-        _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
         _plt.xscale(xscale)
         _plt.ylim(0, y_lim - y_lim % 5 + 15)
@@ -5652,6 +5649,9 @@ class FunctionsManipulation:
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.tight_layout()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.minorticks_on()
         if savefig:
             _plt.savefig(
                 "beam_size_{:}_{:.0f}m_{:.0f}mm.png".format(
@@ -5750,9 +5750,6 @@ class FunctionsManipulation:
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("RMS beam divergence [\u03bcrad]")
         _plt.legend(loc=1, ncol=2, fontsize=9)
-        _plt.minorticks_on()
-        _plt.grid(which="major", alpha=0.3)
-        _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
         _plt.xscale(xscale)
         _plt.ylim(0, y_lim - y_lim % 5 + 10)
@@ -5761,6 +5758,9 @@ class FunctionsManipulation:
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.tight_layout()
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
         if savefig:
             _plt.savefig(
                 "beam_div_{:}_{:.0f}m_{:.0f}mm.png".format(
