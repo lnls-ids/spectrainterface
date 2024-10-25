@@ -5641,9 +5641,6 @@ class FunctionsManipulation:
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("RMS beam size [\u03bcm]")
         _plt.legend(loc=1, ncol=2, fontsize=9)
-        _plt.minorticks_on()
-        _plt.grid(which="major", alpha=0.3)
-        _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
         _plt.xscale(xscale)
         _plt.ylim(0, y_lim - y_lim % 5 + 15)
@@ -5652,6 +5649,9 @@ class FunctionsManipulation:
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.tight_layout()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.minorticks_on()
         if savefig:
             _plt.savefig(
                 "beam_size_{:}_{:.0f}m_{:.0f}mm.png".format(
@@ -5750,9 +5750,6 @@ class FunctionsManipulation:
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("RMS beam divergence [\u03bcrad]")
         _plt.legend(loc=1, ncol=2, fontsize=9)
-        _plt.minorticks_on()
-        _plt.grid(which="major", alpha=0.3)
-        _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
         _plt.xscale(xscale)
         _plt.ylim(0, y_lim - y_lim % 5 + 10)
@@ -5761,6 +5758,9 @@ class FunctionsManipulation:
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.tight_layout()
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
         if savefig:
             _plt.savefig(
                 "beam_div_{:}_{:.0f}m_{:.0f}mm.png".format(
@@ -5898,8 +5898,9 @@ class FunctionsManipulation:
         figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
         dpi = args["dpi"] if "dpi" in args else 300
 
+        gapmax = 25
         gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-        gaps = _np.linspace(gapv, 14, 501)
+        gaps = _np.linspace(gapv, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         gamma = spectra_calc.accelerator.gamma
@@ -5934,8 +5935,7 @@ class FunctionsManipulation:
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
-        _plt.ylim(0, 14)
-        _plt.yticks([0, 2, 4, 6, 8, 10, 12, 14])
+        _plt.ylim(0, gapmax)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
@@ -5949,7 +5949,7 @@ class FunctionsManipulation:
             )
 
         # Fundamental Energy
-        gaps = _np.linspace(gapv, 20, 501)
+        gaps = _np.linspace(gapv, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         Es = source.get_harmonic_energy(
@@ -5974,21 +5974,161 @@ class FunctionsManipulation:
         _plt.ylabel("Energy [keV]")
         _plt.xlabel("Gap [mm]")
         _plt.legend(loc=4, ncol=1, fontsize=9)
-        _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.ylim(0, Es[-1] * 1e-3)
+        _plt.ylim(0, int(Es[-1] * 1e-3) + 1)
         _plt.yscale(yscale)
-        _plt.xlim(0, 14)
+        _plt.xlim(0, gapmax)
         _plt.xscale(xscale)
-        _plt.xticks([0, 2, 4, 6, 8, 10, 12, 14])
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
+        _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
                 "gap_fundamental_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+    @staticmethod
+    def process_gap_k(args):
+        source = args["source"]
+        spectra_calc = args["spectra"]
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        title = (
+            args["title"]
+            if "title" in args
+            else "Gap vs K\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        gapmax = 25
+        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+        gaps = _np.linspace(gapv, gapmax, 501)
+        Bs = source.get_beff(gaps / source.period)
+        Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        _plt.plot(
+            gaps,
+            Ks,
+            "-C0",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            [gaps[0], gaps[0]],
+            [0, Ks[0]],
+            "--C1",
+            linewidth=linewidth,
+            label="Min. gap: {:.2f} mm".format(gaps[0]),
+        )
+        _plt.ylabel("K")
+        _plt.xlabel("Gap [mm]")
+        _plt.legend(loc=1, ncol=1, fontsize=9)
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.ylim(0, Ks[0])
+        _plt.yscale(yscale)
+        _plt.xlim(0, gapmax)
+        _plt.xscale(xscale)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.minorticks_on()
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "gap_k_parameter_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+    @staticmethod
+    def process_gap_field(args):
+        source = args["source"]
+        spectra_calc = args["spectra"]
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        title = (
+            args["title"]
+            if "title" in args
+            else "Gap vs B\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        gapmax = 25
+        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+        gaps = _np.linspace(gapv, gapmax, 501)
+        Bs = source.get_beff(gaps / source.period)
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        _plt.plot(
+            gaps,
+            Bs,
+            "-C0",
+            linewidth=linewidth,
+        )
+        _plt.plot(
+            [gaps[0], gaps[0]],
+            [0, Bs[0]],
+            "--C1",
+            linewidth=linewidth,
+            label="Min. gap: {:.2f} mm".format(gaps[0]),
+        )
+        _plt.ylabel("B[T]")
+        _plt.xlabel("Gap [mm]")
+        _plt.legend(loc=1, ncol=1, fontsize=9)
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.ylim(0, Bs[0])
+        _plt.yscale(yscale)
+        _plt.xlim(0, gapmax)
+        _plt.xscale(xscale)
+        text = r"$B(g)=B_r\cdot a\cdot \exp{\left(b\frac{g}{\lambda_u}+c\frac{g^2}{\lambda_u^2}\right)}$"
+        text += "\n"
+        text += r"$B_r=$ {:.2f}        a={:.4f}".format(
+            source.br, source.halbach_coef["hp"]["a"]
+        )
+        text += "\n"
+        text += r"$b=$ {:.4f}    c={:.4f}".format(
+            source.halbach_coef["hp"]["b"], source.halbach_coef["hp"]["c"]
+        )
+        _plt.text(x=gapmax / 3, y=(Bs[0] - Bs[-1]) / 2, s=text, fontsize=10)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.minorticks_on()
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "gap_field_{:}_{:.0f}m_{:.0f}mm.png".format(
                     source.label, source.source_length, source.period
                 ),
                 dpi=dpi,
@@ -6556,7 +6696,7 @@ class FunctionsManipulation:
         # Plot Beam Divergence
         _plt.figure(figsize=figsize)
         _plt.title(
-            "Beam Divergence ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
+            "Beam Divergence ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
                 spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
@@ -6608,7 +6748,7 @@ class FunctionsManipulation:
         # Plot Beam Size
         _plt.figure(figsize=figsize)
         _plt.title(
-            "Beam Size ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
+            "Beam Size ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
                 spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
@@ -6760,7 +6900,7 @@ class FunctionsManipulation:
         # Plot flux curve
         _plt.figure(figsize=figsize)
         _plt.title(
-            "Flux curve ({:}-beta)\n{:} ({:.2f} m, {:.2f} mm)".format(
+            "Flux curve ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
                 spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
