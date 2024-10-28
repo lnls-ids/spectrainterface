@@ -2700,10 +2700,10 @@ class SpectraInterface:
         Returns:
             tuple: Fluxes, and Energies.
         """
-        if und.undulator_type == "APU":
-            source_k_max = und.get_k()
-        else:
+        if und.gap == 0:
             source_k_max = und.calc_max_k(self.accelerator)
+        else:
+            source_k_max = und.get_k()
         first_hamonic_energy = und.get_harmonic_energy(
             1, self.accelerator.gamma, 0, und.period, source_k_max
         )
@@ -5582,7 +5582,10 @@ class FunctionsManipulation:
 
         source_period = source.period
         source_length = source.source_length
-        source_k_max = source.calc_max_k(spectra_calc.accelerator)
+        if source.gap == 0:
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+        else:
+            source_k_max = source.get_k()
 
         coupling_const = spectra_calc.accelerator.coupling_constant
         nat_emittance = spectra_calc.accelerator.nat_emittance
@@ -5690,7 +5693,10 @@ class FunctionsManipulation:
 
         source_period = source.period
         source_length = source.source_length
-        source_k_max = source.calc_max_k(spectra_calc.accelerator)
+        if source.gap == 0:
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+        else:
+            source_k_max = source.get_k()
 
         coupling_const = spectra_calc.accelerator.coupling_constant
         nat_emittance = spectra_calc.accelerator.nat_emittance
@@ -5781,7 +5787,10 @@ class FunctionsManipulation:
 
         if source.source_type != "bendingmagnet":
             fig, ax = _plt.subplots(figsize=figsize)
-            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            if source.gap == 0:
+                source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            else:
+                source_k_max = source.get_k()
             gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
             rows = 7
             col = 1.3
@@ -6410,10 +6419,10 @@ class FunctionsManipulation:
             source.source_type != "wiggler"
             and source.source_type != "bendingmagnet"
         ):
-            if source.undulator_type == "APU":
-                source_k_max = source.get_k()
-            else:
+            if source.gap == 0:
                 source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            else:
+                source_k_max = source.get_k()
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
@@ -6522,10 +6531,10 @@ class FunctionsManipulation:
             source.source_type != "wiggler"
             and source.source_type != "bendingmagnet"
         ):
-            if source.undulator_type == "APU":
-                source_k_max = source.get_k()
-            else:
+            if source.gap == 0:
                 source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            else:
+                source_k_max = source.get_k()
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
