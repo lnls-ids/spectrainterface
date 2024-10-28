@@ -251,6 +251,18 @@ class SIRIUS:
                 self._br = 1.34
                 self._z0 = 0.321
                 self._efficiency = 0.9981
+        
+        class APU22_MANACA(sources.APU):
+            """APU22 1991d class."""
+
+            def __init__(self, period=22, length=1.2):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "APU22"
+                self._gap = 8
+                self._br = 1.34
+                self._z0 = -0.300609
+                self._efficiency = 1.0022029
 
         class EPU50(sources.APPLE2):
             """EPU50 class."""
