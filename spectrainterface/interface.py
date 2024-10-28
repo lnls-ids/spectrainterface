@@ -7001,14 +7001,14 @@ class FunctionsManipulation:
             div_size_y[:, 1] * 1e3,
             "-C1",
             label=r"$\sigma_y$",
-            linewidth=2,
+            linewidth=linewidth,
         )
         _plt.plot(
             energies * 1e-3,
             div_size_x[:, 1] * 1e3,
             "-C0",
             label=r"$\sigma_x$",
-            linewidth=2,
+            linewidth=linewidth,
         )
         _plt.legend()
 
