@@ -327,6 +327,7 @@ class SourceFunctions:
         polarizations["Hybrid"] = ["hp", "vp"]
         polarizations["CPMU"] = ["hp"]
         polarizations["wiggler"] = ["hp"]
+        polarizations["APU"] = ["hp"]
 
         return polarizations[undulator_type]
 
