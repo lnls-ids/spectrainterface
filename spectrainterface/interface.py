@@ -6165,7 +6165,11 @@ class FunctionsManipulation:
         _plt.figure(figsize=figsize)
         _plt.title(title)
 
-        _plt.title("Phase vs B \nAPU22 (1.2 m, 22 mm)")
+        _plt.title(
+            "Phase vs B \nAPU22 ({:.1f} m, {:.1f} mm)".format(
+                source.source_length, source.period
+            )
+        )
         _plt.plot(
             phases,
             Bs,
@@ -6234,7 +6238,11 @@ class FunctionsManipulation:
         _plt.figure(figsize=figsize)
         _plt.title(title)
 
-        _plt.title("Phase vs K \nAPU22 (1.2 m, 22 mm)")
+        _plt.title(
+            "Phase vs K \nAPU22 ({:.1f} m, {:.1f} mm)".format(
+                source.source_length, source.period
+            )
+        )
         _plt.plot(
             phases,
             Ks,
@@ -6252,7 +6260,7 @@ class FunctionsManipulation:
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.xlim(0, source.period / 2)
-        _plt.ylim(0, _np.round(Ks[0]+0.2, 1))
+        _plt.ylim(0, _np.round(Ks[0] + 0.2, 1))
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
@@ -6275,7 +6283,7 @@ class FunctionsManipulation:
         title = (
             args["title"]
             if "title" in args
-            else "Gap vs Energy\n{:} ({:.1f} m, {:.2f} mm)".format(
+            else "Phase vs Energy\n{:} ({:.1f} m, {:.2f} mm)".format(
                 source.label, source.source_length, source.period
             )
         )
@@ -6309,12 +6317,11 @@ class FunctionsManipulation:
         _plt.xscale(xscale)
         _plt.ylabel("Phase [mm]")
         _plt.yscale(yscale)
-        _plt.legend(loc=4, ncol=1, fontsize=9)
         _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
-        _plt.ylim(0, source.period/2)
+        _plt.ylim(0, source.period / 2)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
@@ -6347,12 +6354,11 @@ class FunctionsManipulation:
         )
         _plt.ylabel("Energy [keV]")
         _plt.xlabel("Phase [mm]")
-        _plt.legend(loc=4, ncol=1, fontsize=9)
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.ylim(int(Es[0]) * 1e-3 - 1, int(Es[-1] * 1e-3) + 1)
+        _plt.ylim(int(Es[0]) * 1e-3 -0.1, int(Es[-1] * 1e-3) + 1)
         _plt.yscale(yscale)
-        _plt.xlim(0, source.period/2)
+        _plt.xlim(0, source.period / 2)
         _plt.xscale(xscale)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
@@ -6366,7 +6372,6 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
-
 
     @staticmethod
     def process_flux(args):
