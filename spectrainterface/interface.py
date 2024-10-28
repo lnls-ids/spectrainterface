@@ -5931,7 +5931,6 @@ class FunctionsManipulation:
         _plt.ylabel("Gap [mm]")
         _plt.yscale(yscale)
         _plt.legend(loc=4, ncol=1, fontsize=9)
-        _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
@@ -5939,6 +5938,7 @@ class FunctionsManipulation:
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
+        _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
@@ -6191,12 +6191,13 @@ class FunctionsManipulation:
         _plt.xscale(xscale)
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.minorticks_on()
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.xlim(0, source.period / 2)
+        _plt.xticks(range(0, int(source.period/2), 1))
         _plt.ylim(0, _np.round(_np.max(Bs) + 0.2, 1))
+        _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
@@ -6253,14 +6254,15 @@ class FunctionsManipulation:
         _plt.yscale(yscale)
         _plt.xlabel("Phase [mm]")
         _plt.xscale(xscale)
+        _plt.xticks(range(0, int(source.period/2), 1))
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.minorticks_on()
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.xlim(0, source.period / 2)
         _plt.ylim(0, _np.round(Ks[0] + 0.2, 1))
+        _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
@@ -6317,7 +6319,6 @@ class FunctionsManipulation:
         _plt.xscale(xscale)
         _plt.ylabel("Phase [mm]")
         _plt.yscale(yscale)
-        _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
@@ -6325,6 +6326,7 @@ class FunctionsManipulation:
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
+        _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
