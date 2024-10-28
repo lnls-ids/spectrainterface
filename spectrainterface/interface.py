@@ -6410,7 +6410,10 @@ class FunctionsManipulation:
             source.source_type != "wiggler"
             and source.source_type != "bendingmagnet"
         ):
-            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            if source.undulator_type == "APU":
+                source_k_max = source.get_k()
+            else:
+                source_k_max = source.calc_max_k(spectra_calc.accelerator)
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
@@ -6497,8 +6500,9 @@ class FunctionsManipulation:
             figsize=figsize,
             legend_fs=legend_fs,
             legend_properties=legend_properties,
+            xlim=xlim,
             ylim=ylim,
-            xlim=[xlim[0], xlim[1]],
+            # xlim=[xlim[0], xlim[1]],
         )
         del spectra_calc
 
@@ -6518,7 +6522,10 @@ class FunctionsManipulation:
             source.source_type != "wiggler"
             and source.source_type != "bendingmagnet"
         ):
-            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            if source.undulator_type == "APU":
+                source_k_max = source.get_k()
+            else:
+                source_k_max = source.calc_max_k(spectra_calc.accelerator)
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
