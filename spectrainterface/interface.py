@@ -6135,6 +6135,75 @@ class FunctionsManipulation:
             )
 
     @staticmethod
+    def process_phase_field(args):
+        source = args["source"]
+        spectra_calc = args["spectra"]
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        title = (
+            args["title"]
+            if "title" in args
+            else "Phase vs B\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        phases = _np.linspace(0, source.period / 2, 501)
+        Bs = source.get_beff(
+            gap_over_period=source.gap / source.period, phase=phases
+        )
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+
+        _plt.title("Phase vs B \nAPU22 (1.2 m, 22 mm)")
+        _plt.plot(
+            phases,
+            Bs,
+            "-C0",
+            linewidth=linewidth,
+        )
+        text = r"$B(z) = B_0|\cos\left(\frac{\pi}{\lambda_u}(z-z_0)\right)|$"
+        text += "\n" + r"$B_0 = $" + "{:.4f}   ".format(Bs[0])
+        text += r"$z_0 = $" + "{:.4f}".format(source._z0)
+        _plt.text(
+            x=1.9 * source.period / 2 / 5,
+            y=14 * (Bs[0] - Bs[-1]) / 15,
+            s=text,
+            fontsize=11,
+        )
+        _plt.ylabel("B [T]")
+        _plt.yscale(yscale)
+        _plt.xlabel("Phase [mm]")
+        _plt.xscale(xscale)
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.minorticks_on()
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.xlim(0, source.period / 2)
+        _plt.ylim(0, _np.round(_np.max(Bs), 1) + 0.1)
+        _plt.tight_layout()
+
+        if savefig:
+            _plt.savefig(
+                "phase_field_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+    @staticmethod
     def process_flux(args):
         source = args["source"]
         spectra_calc = copy.deepcopy(args["spectra"])
