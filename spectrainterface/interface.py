@@ -2700,7 +2700,10 @@ class SpectraInterface:
         Returns:
             tuple: Fluxes, and Energies.
         """
-        source_k_max = und.calc_max_k(self.accelerator)
+        if und.undulator_type == "APU":
+            source_k_max = und.get_k()
+        else:
+            source_k_max = und.calc_max_k(self.accelerator)
         first_hamonic_energy = und.get_harmonic_energy(
             1, self.accelerator.gamma, 0, und.period, source_k_max
         )
