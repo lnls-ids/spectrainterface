@@ -5794,22 +5794,26 @@ class FunctionsManipulation:
                 source_k_max = source.calc_max_k(spectra_calc.accelerator)
             else:
                 source_k_max = source.get_k()
-            gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
             rows = 7
             col = 1.3
             ax.set_ylim(0, rows)
             ax.set_xlim(0, col + 0.2)
-            data = {
-                "Máx. B [T]": _np.round(
-                    source.undulator_k_to_b(source_k_max, source.period), 2
-                ),
-                "Min. gap [mm]": _np.round(gapv, 2),
-                "Máx. K": _np.round(source_k_max, 2),
-                "Polarization": source.polarization,
-                "Length [m]": _np.round(source.source_length, 2),
-                "Period [mm]": _np.round(source.period, 2),
-                "Source": source.material,
-            }
+            data = dict()
+            data["Máx. B [T]"] = _np.round(
+                source.undulator_k_to_b(source_k_max, source.period), 2
+            )
+            data["Máx. K"] = _np.round(source_k_max, 2)
+            if source.undulator_type != "APU":
+                gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+                data["Min. gap [mm]"] = _np.round(gapv, 2)
+            else:
+                gapv = source.gap
+                data["Gap [mm]"] = _np.round(gapv, 2)
+            data["Polarization"] = source.polarization
+            data["Length [m]"] = _np.round(source.source_length, 2)
+            data["Period [mm]"] = _np.round(source.period, 2)
+            data["Source"] = source.material
+
             for i, info in enumerate(data):
                 ax.text(
                     x=col, y=0.5 + i, s=data[info], va="center", ha="right"
@@ -6210,7 +6214,7 @@ class FunctionsManipulation:
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.xlim(0, source.period / 2)
-        _plt.xticks(range(0, int(source.period/2), 1))
+        _plt.xticks(range(0, int(source.period / 2), 1))
         _plt.ylim(0, _np.round(_np.max(Bs) + 0.2, 1))
         _plt.minorticks_on()
         _plt.tight_layout()
@@ -6269,7 +6273,7 @@ class FunctionsManipulation:
         _plt.yscale(yscale)
         _plt.xlabel("Phase [mm]")
         _plt.xscale(xscale)
-        _plt.xticks(range(0, int(source.period/2), 1))
+        _plt.xticks(range(0, int(source.period / 2), 1))
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.tick_params(
@@ -6373,7 +6377,7 @@ class FunctionsManipulation:
         _plt.xlabel("Phase [mm]")
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.ylim(int(Es[0]) * 1e-3 -0.1, int(Es[-1] * 1e-3) + 1)
+        _plt.ylim(int(Es[0]) * 1e-3 - 0.1, int(Es[-1] * 1e-3) + 1)
         _plt.yscale(yscale)
         _plt.xlim(0, source.period / 2)
         _plt.xscale(xscale)
