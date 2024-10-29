@@ -3838,7 +3838,10 @@ class SpectraInterface:
             div_size (numpy array): Div. at 1th pos. and Size at 2nd pos.
             energies (numpy array).
         """
-        kmax_source = source.calc_max_k(self.accelerator)
+        if source.gap == 0:
+            kmax_source = source.calc_max_k(self.accelerator)
+        else:
+            kmax_source = source.get_k()
 
         # Automatic range adjust
         r_lim = 0.01
