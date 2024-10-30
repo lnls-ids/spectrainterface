@@ -5764,7 +5764,7 @@ class FunctionsManipulation:
         _plt.legend(loc=1, ncol=2, fontsize=9)
         _plt.xlim(*xlim)
         _plt.xscale(xscale)
-        _plt.ylim(0, y_lim - y_lim % 5 + 10)
+        _plt.ylim(0, y_lim - y_lim % 5 + 15)
         _plt.yscale(yscale)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
@@ -5856,13 +5856,12 @@ class FunctionsManipulation:
                 )
         else:
             fig, ax = _plt.subplots(figsize=(figsize[0], figsize[1] / 1.7))
-            rows = 2
+            rows = 1
             col = 1.2
             ax.set_ylim(0, rows)
             ax.set_xlim(0, col + 0.2)
             data = {
-                "Máx. B [T]": _np.round(source.b_peak, 2),
-                "Source": source.material,
+                "Máx. B [T]": _np.round(source.b_peak, 4)
             }
             for i, info in enumerate(data):
                 ax.text(
@@ -6435,9 +6434,9 @@ class FunctionsManipulation:
             )
             n = int(xlim[1] * 1e3 / first_hamonic_energy)
             n_harmonic = n - 1 if n % 2 == 0 else n
+            if source.polarization == "cp":
+                n_harmonic = 1
         else:
-            n_harmonic = 1
-        if source.polarization == "cp":
             n_harmonic = 1
         harmonic_range = (
             args["harmonic_range"]
@@ -6547,9 +6546,9 @@ class FunctionsManipulation:
             )
             n = int(xlim[1] * 1e3 / first_hamonic_energy)
             n_harmonic = n - 1 if n % 2 == 0 else n
+            if source.polarization == "cp":
+                n_harmonic = 1
         else:
-            n_harmonic = 1
-        if source.polarization == "cp":
             n_harmonic = 1
         harmonic_range = (
             args["harmonic_range"]
@@ -6748,8 +6747,6 @@ class FunctionsManipulation:
         source = args["source"]
         spectra = args["spectra"]
         k_max = args["k_max"] if "k_max" in args else 2.0
-        x_range = (-0.3, 0.3)
-        y_range = (-0.3, 0.3)
         distance_from_source = (
             args["distance_from_source"]
             if "distance_from_source" in args
@@ -6788,6 +6785,12 @@ class FunctionsManipulation:
                 )
             )
         )
+        if source.source_type == "bendingmagnet":
+            x_range = (-1, 1)
+            y_range = (-0.3, 0.3)
+        else:
+            x_range = (-0.3, 0.3)
+            y_range = (-0.3, 0.3)
 
         # Calc Power Density and Partial Power
         spectra_calc: SpectraInterface = copy.deepcopy(spectra)
@@ -6818,7 +6821,7 @@ class FunctionsManipulation:
                 source.label, source.source_length, source.period, k_max
             )
             if source.source_type != "bendingmagnet"
-            else "Power Density @ 350 mA\n{:}".format(source.label)
+            else "Power Density @ 350 mA\n{:}\n".format(source.label)
         )
         ax.set_title(title, fontsize=11)
         ax.text(
@@ -6831,13 +6834,17 @@ class FunctionsManipulation:
         im = ax.imshow(
             power_densities,
             extent=[*x_range, *y_range],
-            aspect="equal",
+            aspect="auto" if source.source_type == "bendingmagnet" else "equal",
             norm=colors.Normalize(
                 vmin=_np.min(power_densities), vmax=_np.max(power_densities)
             ),
         )
-        ax.set_xticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
-        ax.set_yticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+        if source.source_type == "bendingmagnet":
+            ax.set_xticks([-1, -0.7, -0.4, 0.0, 0.4, 0.7, 1])
+            ax.set_yticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+        else:
+            ax.set_xticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+            ax.set_yticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
         ax.tick_params(labelsize=9)
         sm = _plt.cm.ScalarMappable(
             _plt.Normalize(
