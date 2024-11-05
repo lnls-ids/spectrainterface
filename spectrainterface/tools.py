@@ -91,7 +91,7 @@ class SourceFunctions:
                 gaps_major = _np.min(gaps_major, axis=0)
 
                 gaps_minor = _np.array([gap1[idx_minor], gap2[idx_minor]])
-                gaps_minor = _np.min(gaps_minor, axis=0)
+                gaps_minor = _np.max(gaps_minor, axis=0)
 
                 new_gaps = _np.zeros(k.shape)
                 if idx_major.shape[0] > 0:
