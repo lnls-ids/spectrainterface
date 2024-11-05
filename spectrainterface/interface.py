@@ -2308,7 +2308,7 @@ class SpectraInterface:
 
     def calc_brilliance_curve(
         self,
-        harmonic_range=[1, 5],
+        harmonic_range=(1, 5),
         nr_pts_k=15,
         kmin=0.2,
         emax=20e3,
@@ -2342,6 +2342,13 @@ class SpectraInterface:
                 accelerators.append(self.accelerator)
         else:
             accelerators = self.accelerator
+        
+        if "list" not in str(type(harmonic_range)):
+            harmonic_ranges = list()
+            for i, source in enumerate(source_list):
+                harmonic_ranges.append(harmonic_range)
+        else:
+            harmonic_ranges = harmonic_range
 
         arglist = []
         for i, source in enumerate(source_list):
@@ -2356,7 +2363,7 @@ class SpectraInterface:
                     accelerators[i],
                     extraction_points[i],
                     emax,
-                    harmonic_range,
+                    harmonic_ranges[i],
                     nr_pts_k,
                     x_accep,
                     kmin,
@@ -6133,6 +6140,240 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
+
+    @staticmethod
+    def process_phase_field(args):
+        source = args["source"]
+        spectra_calc = args["spectra"]
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        title = (
+            args["title"]
+            if "title" in args
+            else "Phase vs B\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        phases = _np.linspace(0, source.period / 2, 501)
+        Bs = source.get_beff(
+            gap_over_period=source.gap / source.period, phase=phases
+        )
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+
+        _plt.title("Phase vs B \nAPU22 (1.2 m, 22 mm)")
+        _plt.plot(
+            phases,
+            Bs,
+            "-C0",
+            linewidth=linewidth,
+        )
+        text = r"$B(z) = B_0|\cos\left(\frac{\pi}{\lambda_u}(z-z_0)\right)|$"
+        text += "\n" + r"$B_0 = $" + "{:.4f}   ".format(Bs[0])
+        text += r"$z_0 = $" + "{:.4f}".format(source._z0)
+        _plt.text(
+            x=1.9 * source.period / 2 / 5,
+            y=14 * (Bs[0] - Bs[-1]) / 15,
+            s=text,
+            fontsize=11,
+        )
+        _plt.ylabel("B [T]")
+        _plt.yscale(yscale)
+        _plt.xlabel("Phase [mm]")
+        _plt.xscale(xscale)
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.minorticks_on()
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.xlim(0, source.period / 2)
+        _plt.ylim(0, _np.round(_np.max(Bs) + 0.2, 1))
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "phase_field_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+    @staticmethod
+    def process_phase_k(args):
+        source = args["source"]
+        spectra_calc = args["spectra"]
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        title = (
+            args["title"]
+            if "title" in args
+            else "Phase vs K\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        phases = _np.linspace(0, source.period / 2, 501)
+        Bs = source.get_beff(
+            gap_over_period=source.gap / source.period, phase=phases
+        )
+        Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+
+        _plt.title("Phase vs K \nAPU22 (1.2 m, 22 mm)")
+        _plt.plot(
+            phases,
+            Ks,
+            "-C0",
+            linewidth=linewidth,
+        )
+        _plt.ylabel("K")
+        _plt.yscale(yscale)
+        _plt.xlabel("Phase [mm]")
+        _plt.xscale(xscale)
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.minorticks_on()
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.xlim(0, source.period / 2)
+        _plt.ylim(0, _np.round(Ks[0]+0.2, 1))
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "phase_k_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+    @staticmethod
+    def process_phase_energy(args):
+        source = args["source"]
+        spectra_calc = args["spectra"]
+        if (
+            source.source_type == "bendingmagnet"
+            or source.source_type == "wiggler"
+        ):
+            return 0
+        xlim = args["e_range"]
+        title = (
+            args["title"]
+            if "title" in args
+            else "Gap vs Energy\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+        )
+        xscale = args["xscale"] if "xscale" in args else "linear"
+        yscale = args["yscale"] if "yscale" in args else "linear"
+        linewidth = args["linewidth"] if "linewidth" in args else 3
+        savefig = args["savefig"] if "savefig" in args else True
+        figsize = args["figsize"] if "figsize" in args else (4.5, 3.0)
+        dpi = args["dpi"] if "dpi" in args else 300
+
+        phases = _np.linspace(0, source.period / 2, 501)
+        Bs = source.get_beff(
+            gap_over_period=source.gap / source.period, phase=phases
+        )
+        Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
+        gamma = spectra_calc.accelerator.gamma
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        for i in range(17):
+            Es = source.get_harmonic_energy(
+                n=2 * i + 1, gamma=gamma, theta=0, period=source.period, k=Ks
+            )
+            _plt.plot(
+                Es * 1e-3,
+                phases,
+                "-C0",
+                linewidth=linewidth,
+            )
+        _plt.xlabel("Energy [keV]")
+        _plt.xscale(xscale)
+        _plt.ylabel("Phase [mm]")
+        _plt.yscale(yscale)
+        _plt.legend(loc=4, ncol=1, fontsize=9)
+        _plt.minorticks_on()
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.xlim(*xlim)
+        _plt.ylim(0, source.period/2)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "phase_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
+        # Fundamental Energy
+        phases = _np.linspace(0, source.period / 2, 501)
+        Bs = source.get_beff(
+            gap_over_period=source.gap / source.period, phase=phases
+        )
+        Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
+        Es = source.get_harmonic_energy(
+            n=1, gamma=gamma, theta=0, period=source.period, k=Ks
+        )
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        _plt.plot(
+            phases,
+            Es * 1e-3,
+            "-C0",
+            linewidth=linewidth,
+        )
+        _plt.ylabel("Energy [keV]")
+        _plt.xlabel("Phase [mm]")
+        _plt.legend(loc=4, ncol=1, fontsize=9)
+        _plt.grid(which="major", alpha=0.3)
+        _plt.grid(which="minor", alpha=0.1)
+        _plt.ylim(int(Es[0]) * 1e-3 - 1, int(Es[-1] * 1e-3) + 1)
+        _plt.yscale(yscale)
+        _plt.xlim(0, source.period/2)
+        _plt.xscale(xscale)
+        _plt.tick_params(
+            which="both", axis="both", direction="in", right=True, top=True
+        )
+        _plt.minorticks_on()
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                "phase_fundamental_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                ),
+                dpi=dpi,
+            )
+
 
     @staticmethod
     def process_flux(args):

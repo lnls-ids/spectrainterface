@@ -251,6 +251,18 @@ class SIRIUS:
                 self._br = 1.34
                 self._z0 = 0.321
                 self._efficiency = 0.9981
+        
+        class APU22_MANACA(sources.APU):
+            """APU22 1991d class."""
+
+            def __init__(self, period=22, length=1.2):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "APU22"
+                self._gap = 8
+                self._br = 1.34
+                self._z0 = -0.300609
+                self._efficiency = 1.0022029
 
         class EPU50(sources.APPLE2):
             """EPU50 class."""
@@ -305,3 +317,65 @@ class SIRIUS:
                     "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
                 }
                 self._material = 'NdFeB'
+
+        class DELTA52(sources.Elliptic):
+            """DELTA Undulator class."""
+
+            def __init__(self, period, length):
+                """Class constructor.
+
+                Args:
+                    period (float, optional): Undulator period [mm].
+                    length (float, optional): Undulator length [m].
+                """
+                super().__init__()
+                self._undulator_type = "DELTA"
+                self._label = "DELTA"
+                self._br = 1.37
+                self._polarization = "hp"
+                self._efficiency = 1
+                self._halbach_coef = {
+                    "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
+                    "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
+                    "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
+                }
+                self._material = "NdFeB"
+                self._period = period
+                self._source_length = length
+                self._source_type = "ellipticundulator"
+
+            def calc_min_gap(
+                self,
+                si_parameters=None,
+                vc_thickness=None,
+                vc_tolerance=None,
+            ):
+                """Calculate minimum gap of undulator.
+
+                Args:
+                si_parameters (StorageRingParameters, optional): StorageRingParameters
+                 object. Defaults to None.
+                vc_thickness (float, optional): Vacuum chamber thickness.
+                 Defaults to None.
+                vc_tolerance (float, optional): Extra delta in gap. Defaults to None.
+
+                Returns:
+                  float: (min gap vertical, min gap horizontal) minimum gap allowed.
+                """
+                pos = self.source_length / 2
+        
+                if si_parameters is None:
+                    raise ValueError("Accelerator must be selected")
+                else:
+                    acc = si_parameters
+
+                if vc_thickness is None:
+                    vc_thickness = self.vc_thickness
+                if vc_tolerance is None:
+                    vc_tolerance = self.vc_tolerance
+
+                bsch, bscv = acc.calc_beam_stay_clear(pos)
+                gap = _np.sqrt(2 * (bsch**2 + bscv**2))
+                gap = gap + vc_thickness + vc_tolerance
+
+                return gap, gap
