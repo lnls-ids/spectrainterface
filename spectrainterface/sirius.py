@@ -282,7 +282,7 @@ class SIRIUS:
                 self._br = 1.27
                 self._gap = 4.5
                 self.vc_thickness = 0
-                self.vc_tolerance = 0.35
+                self.vc_tolerance = 0.2501
                 self._polarization = "hp"
                 self._halbach_coef = {
                     "hp": {"a": 2.26223181, "b": -3.69776472, "c": 0.32867209},
@@ -299,7 +299,7 @@ class SIRIUS:
                 self._br = 1.27
                 self._gap = 4.5
                 self._vc_thickness = 0
-                self._vc_tolerance = 0.35
+                self._vc_tolerance = 0.2501
                 self._polarization = "hp"
                 self._halbach_coef = {
                     "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
