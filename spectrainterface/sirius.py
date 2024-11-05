@@ -139,9 +139,9 @@ class SIRIUS:
         def set_current_bsc(self):
             """Set current BSC (01/10/2024)."""
             self._bsc0_h_lowbeta = 3.4529
-            self._bsc0_v_lowbeta = 1.8627
+            self._bsc0_v_lowbeta = 1.5588
             self._bsc0_h_highbeta = 11.6952
-            self._bsc0_v_highbeta = 2.9524
+            self._bsc0_v_highbeta = 2.4706
             self._update_bsc()
 
         def set_bsc_orion_reduction(self):

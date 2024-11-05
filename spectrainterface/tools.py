@@ -101,7 +101,7 @@ class SourceFunctions:
 
                 return new_gaps
             else:
-                raise ValueError("Must be array numpy or number")
+                raise ValueError("k must be array numpy or number")
         else:
             return (period / b) * _np.log(beff / (a * br))
 
