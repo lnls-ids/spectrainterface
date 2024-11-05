@@ -72,10 +72,36 @@ class SourceFunctions:
             gap1 = period * (-b + _np.sqrt(delta)) / (2 * c)
             gap2 = period * (-b - _np.sqrt(delta)) / (2 * c)
 
-            if gap1 > 0 and gap2 > 0:
-                return _np.min([gap1, gap2])
+            if type(k) is float or type(k) is _np.float64:
+                if gap1 > 0 and gap2 > 0:
+                    return _np.min([gap1, gap2])
+                else:
+                    return _np.max([gap1, gap2])
+            elif type(k) is _np.ndarray:
+                gap1_mask = _np.zeros(gap1.shape)
+                gap1_mask[gap1 > 0] = 1
+
+                gap2_mask = _np.zeros(gap2.shape)
+                gap2_mask[gap2 > 0] = 1
+
+                idx_major = _np.where(gap1_mask * gap2_mask == 1)[0]
+                idx_minor = _np.where(gap1_mask * gap2_mask == 0)[0]
+
+                gaps_major = _np.array([gap1[idx_major], gap2[idx_major]])
+                gaps_major = _np.min(gaps_major, axis=0)
+
+                gaps_minor = _np.array([gap1[idx_minor], gap2[idx_minor]])
+                gaps_minor = _np.min(gaps_minor, axis=0)
+
+                new_gaps = _np.zeros(k.shape)
+                if idx_major.shape[0] > 0:
+                    new_gaps[idx_major] = gaps_major
+                if idx_minor.shape[0] > 0:
+                    new_gaps[idx_minor] = gaps_minor
+
+                return new_gaps
             else:
-                return _np.max([gap1, gap2])
+                raise ValueError("Must be array numpy or number")
         else:
             return (period / b) * _np.log(beff / (a * br))
 

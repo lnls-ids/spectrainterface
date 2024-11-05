@@ -446,6 +446,48 @@ class Undulator(SourceFunctions):
         k_max = self.undulator_b_to_k(b_max, self.period)
         return k_max
 
+    def energy_to_gaps(
+        self,
+        target_energy: float,
+        si_parameters: StorageRingParameters,
+        h_max: int = 31,
+    ):
+        """Calc max K achieved by undulator.
+
+        Args:
+            target_energy (float): Target Energy
+            si_parameters (StorageRingParameters): StorageRingParameters
+             object.
+            h_max (int): max harmonic to search gap
+        Return:
+            Harmonic with gaps matrix (array numpy)
+        """
+        n = _np.arange(1, h_max, 2)
+
+        k_max = self.calc_max_k(si_parameters)
+        ks = self.calc_k_target(
+            si_parameters.gamma, n, self.period, target_energy
+        )
+        isnan = _np.isnan(ks)
+        idcs_nan = _np.argwhere(~isnan)
+        idcs_max = _np.argwhere(ks < k_max)
+        idcs_kmin = _np.argwhere(ks > 0)
+        idcs = _np.intersect1d(
+            idcs_nan.ravel(),
+            _np.intersect1d(idcs_max.ravel(), idcs_kmin.ravel()),
+        )
+        kres = ks[idcs]
+        gaps = self.undulator_k_to_gap(
+            k=kres,
+            period=self.period,
+            br=self.br,
+            a=self.halbach_coef["hp"]["a"],
+            b=self.halbach_coef["hp"]["b"],
+            c=self.halbach_coef["hp"]["c"],
+        )
+        harms = n[idcs]
+        return _np.array([harms, gaps]).T
+
     def get_k(self):
         """Get K for configured gap.
 
@@ -520,7 +562,11 @@ class Undulator(SourceFunctions):
         )
 
         total_power = (
-            const * (b**2) * self._source_length * (current * 1e-3) / (1e3 * ECHARGE)
+            const
+            * (b**2)
+            * self._source_length
+            * (current * 1e-3)
+            / (1e3 * ECHARGE)
         )
 
         return total_power
@@ -941,6 +987,8 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
         self._br = 1.71
         self._polarization = "hp"
         self._efficiency = 1.0
-        self._halbach_coef = {"hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}}
+        self._halbach_coef = {
+            "hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}
+        }
         self._material = "PrFeB"
         self._source_type = "linearundulator"
