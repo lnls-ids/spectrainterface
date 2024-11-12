@@ -6525,11 +6525,11 @@ class FunctionsManipulation:
             n_harmonic = 1
         if source.polarization == "cp":
             n_harmonic = 1
-        harmonic_range = (
+        harmonic_range = [(
             args["harmonic_range"]
             if "harmonic_range" in args
             else [1, n_harmonic]
-        )
+        )]
         x_accep = args["x_accep"] if "x_accep" in args else 1
 
         process_curves = (
