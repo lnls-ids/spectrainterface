@@ -2308,7 +2308,7 @@ class SpectraInterface:
 
     def calc_brilliance_curve(
         self,
-        harmonic_range=[1, 5],
+        harmonic_range=(1, 5),
         nr_pts_k=15,
         kmin=0.2,
         emax=20e3,
@@ -2342,6 +2342,13 @@ class SpectraInterface:
                 accelerators.append(self.accelerator)
         else:
             accelerators = self.accelerator
+        
+        if "list" not in str(type(harmonic_range)):
+            harmonic_ranges = list()
+            for i, source in enumerate(source_list):
+                harmonic_ranges.append(harmonic_range)
+        else:
+            harmonic_ranges = harmonic_range
 
         arglist = []
         for i, source in enumerate(source_list):
@@ -2356,7 +2363,8 @@ class SpectraInterface:
                     accelerators[i],
                     extraction_points[i],
                     emax,
-                    harmonic_range,
+                    (1, 2) if hasattr(source, 'polarization') and 
+                    source.polarization == "cp" else harmonic_ranges[i],
                     nr_pts_k,
                     x_accep,
                     kmin,
@@ -2556,7 +2564,14 @@ class SpectraInterface:
                 accelerators.append(self.accelerator)
         else:
             accelerators = self.accelerator
-
+        
+        if "list" not in str(type(harmonic_range)):
+            harmonic_ranges = list()
+            for i, source in enumerate(source_list):
+                harmonic_ranges.append(harmonic_range)
+        else:
+            harmonic_ranges = harmonic_range
+            
         arglist = []
         for i, source in enumerate(source_list):
             if (
@@ -2570,7 +2585,8 @@ class SpectraInterface:
                     accelerators[i],
                     extraction_points[i],
                     energy_range,
-                    harmonic_range,
+                    (1, 2) if hasattr(source, 'polarization') and 
+                    source.polarization == "cp" else harmonic_ranges[i],
                     nr_pts_k,
                     slit_shape,
                     slit_acceptances[i],
@@ -6550,11 +6566,11 @@ class FunctionsManipulation:
                 n_harmonic = 1
         else:
             n_harmonic = 1
-        harmonic_range = (
+        harmonic_range = [(
             args["harmonic_range"]
             if "harmonic_range" in args
             else [1, n_harmonic]
-        )
+        )]
         x_accep = args["x_accep"] if "x_accep" in args else 1
 
         process_curves = (

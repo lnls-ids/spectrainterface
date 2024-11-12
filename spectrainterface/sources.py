@@ -332,7 +332,6 @@ class Undulator(SourceFunctions):
     def calc_min_gap(
         self,
         si_parameters=None,
-        section="SB",
         vc_thickness=None,
         vc_tolerance=None,
     ):
@@ -341,8 +340,6 @@ class Undulator(SourceFunctions):
         Args:
         si_parameters (StorageRingParameters, optional): StorageRingParameters
          object. Defaults to None.
-        section (str, optional): Straight section (SB, SP or SA).
-         Defaults to 'SB'.
         vc_thickness (float, optional): Vacuum chamber thickness.
          Defaults to None.
         vc_tolerance (float, optional): Extra delta in gap. Defaults to None.
@@ -351,17 +348,9 @@ class Undulator(SourceFunctions):
             float: (min gap vertical, min gap horizontal) minimum gap allowed.
         """
         pos = self.source_length / 2
-        section = section.lower()
 
         if si_parameters is None:
-            acc = StorageRingParameters()
-            acc.set_bsc_with_ivu18()
-            if section == "sb" or section == "sp":
-                acc.set_low_beta_section()
-            elif section == "sa":
-                acc.set_high_beta_section()
-            else:
-                raise ValueError("Section not defined.")
+            raise ValueError("Accelerator must be selected.")
         else:
             acc = si_parameters
 
@@ -446,6 +435,48 @@ class Undulator(SourceFunctions):
         k_max = self.undulator_b_to_k(b_max, self.period)
         return k_max
 
+    def energy_to_gaps(
+        self,
+        target_energy: float,
+        si_parameters: StorageRingParameters,
+        h_max: int = 31,
+    ):
+        """Calc max K achieved by undulator.
+
+        Args:
+            target_energy (float): Target Energy
+            si_parameters (StorageRingParameters): StorageRingParameters
+             object.
+            h_max (int): max harmonic to search gap
+        Return:
+            Harmonic with gaps matrix (array numpy)
+        """
+        n = _np.arange(1, h_max, 2)
+
+        k_max = self.calc_max_k(si_parameters)
+        ks = self.calc_k_target(
+            si_parameters.gamma, n, self.period, target_energy
+        )
+        isnan = _np.isnan(ks)
+        idcs_nan = _np.argwhere(~isnan)
+        idcs_max = _np.argwhere(ks < k_max)
+        idcs_kmin = _np.argwhere(ks > 0)
+        idcs = _np.intersect1d(
+            idcs_nan.ravel(),
+            _np.intersect1d(idcs_max.ravel(), idcs_kmin.ravel()),
+        )
+        kres = ks[idcs]
+        gaps = self.undulator_k_to_gap(
+            k=kres,
+            period=self.period,
+            br=self.br,
+            a=self.halbach_coef["hp"]["a"],
+            b=self.halbach_coef["hp"]["b"],
+            c=self.halbach_coef["hp"]["c"],
+        )
+        harms = n[idcs]
+        return _np.array([harms, gaps]).T
+
     def get_k(self):
         """Get K for configured gap.
 
@@ -520,7 +551,11 @@ class Undulator(SourceFunctions):
         )
 
         total_power = (
-            const * (b**2) * self._source_length * (current * 1e-3) / (1e3 * ECHARGE)
+            const
+            * (b**2)
+            * self._source_length
+            * (current * 1e-3)
+            / (1e3 * ECHARGE)
         )
 
         return total_power
@@ -681,84 +716,6 @@ class APPLE2(Elliptic):
         self._period = period
         self._source_length = length
         self._source_type = "ellipticundulator"
-
-
-class DELTA(Elliptic):
-    """DELTA Undulator class.
-
-    Args:
-        Undulator (Undulator class): Undulator class
-    """
-
-    def __init__(self, period, length):
-        """Class constructor.
-
-        Args:
-            period (float, optional): Undulator period [mm].
-            length (float, optional): Undulator length [m].
-        """
-        super().__init__()
-        self._undulator_type = "DELTA"
-        self._label = "DELTA"
-        self._br = 1.37
-        self._polarization = "hp"
-        self._efficiency = 1
-        self._halbach_coef = {
-            "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
-            "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
-            "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
-        }
-        self._material = "NdFeB"
-        self._period = period
-        self._source_length = length
-        self._source_type = "ellipticundulator"
-
-    def calc_min_gap(
-        self,
-        si_parameters=None,
-        section="SB",
-        vc_thickness=None,
-        vc_tolerance=None,
-    ):
-        """Calculate minimum gap of undulator.
-
-        Args:
-        si_parameters (StorageRingParameters, optional): StorageRingParameters
-         object. Defaults to None.
-        section (str, optional): Straight section (SB, SP or SA).
-         Defaults to 'SB'.
-        vc_thickness (float, optional): Vacuum chamber thickness.
-         Defaults to None.
-        vc_tolerance (float, optional): Extra delta in gap. Defaults to None.
-
-        Returns:
-            float: (min gap vertical, min gap horizontal) minimum gap allowed.
-        """
-        pos = self.source_length / 2
-        section = section.lower()
-
-        if si_parameters is None:
-            acc = StorageRingParameters()
-            acc.set_bsc_with_ivu18()
-            if section == "sb" or section == "sp":
-                acc.set_low_beta_section()
-            elif section == "sa":
-                acc.set_high_beta_section()
-            else:
-                raise ValueError("Section not defined.")
-        else:
-            acc = si_parameters
-
-        if vc_thickness is None:
-            vc_thickness = self.vc_thickness
-        if vc_tolerance is None:
-            vc_tolerance = self.vc_tolerance
-
-        bsch, bscv = acc.calc_beam_stay_clear(pos)
-        gap = _np.sqrt(2 * (bsch**2 + bscv**2))
-        gap = gap + vc_thickness + vc_tolerance
-
-        return gap, gap
 
 
 class Hybrid_Nd(Undulator):
@@ -941,6 +898,8 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
         self._br = 1.71
         self._polarization = "hp"
         self._efficiency = 1.0
-        self._halbach_coef = {"hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}}
+        self._halbach_coef = {
+            "hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}
+        }
         self._material = "PrFeB"
         self._source_type = "linearundulator"
