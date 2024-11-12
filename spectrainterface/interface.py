@@ -2707,7 +2707,10 @@ class SpectraInterface:
         Returns:
             tuple: Fluxes, and Energies.
         """
-        source_k_max = und.calc_max_k(self.accelerator)
+        if und.gap == 0:
+            source_k_max = und.calc_max_k(self.accelerator)
+        else:
+            source_k_max = und.get_k()
         first_hamonic_energy = und.get_harmonic_energy(
             1, self.accelerator.gamma, 0, und.period, source_k_max
         )
@@ -3842,7 +3845,10 @@ class SpectraInterface:
             div_size (numpy array): Div. at 1th pos. and Size at 2nd pos.
             energies (numpy array).
         """
-        kmax_source = source.calc_max_k(self.accelerator)
+        if source.gap == 0:
+            kmax_source = source.calc_max_k(self.accelerator)
+        else:
+            kmax_source = source.get_k()
 
         # Automatic range adjust
         r_lim = 0.01
@@ -5586,7 +5592,10 @@ class FunctionsManipulation:
 
         source_period = source.period
         source_length = source.source_length
-        source_k_max = source.calc_max_k(spectra_calc.accelerator)
+        if source.gap == 0:
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+        else:
+            source_k_max = source.get_k()
 
         coupling_const = spectra_calc.accelerator.coupling_constant
         nat_emittance = spectra_calc.accelerator.nat_emittance
@@ -5694,7 +5703,10 @@ class FunctionsManipulation:
 
         source_period = source.period
         source_length = source.source_length
-        source_k_max = source.calc_max_k(spectra_calc.accelerator)
+        if source.gap == 0:
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+        else:
+            source_k_max = source.get_k()
 
         coupling_const = spectra_calc.accelerator.coupling_constant
         nat_emittance = spectra_calc.accelerator.nat_emittance
@@ -5759,7 +5771,7 @@ class FunctionsManipulation:
         _plt.legend(loc=1, ncol=2, fontsize=9)
         _plt.xlim(*xlim)
         _plt.xscale(xscale)
-        _plt.ylim(0, y_lim - y_lim % 5 + 10)
+        _plt.ylim(0, y_lim - y_lim % 5 + 15)
         _plt.yscale(yscale)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
@@ -5785,23 +5797,30 @@ class FunctionsManipulation:
 
         if source.source_type != "bendingmagnet":
             fig, ax = _plt.subplots(figsize=figsize)
-            source_k_max = source.calc_max_k(spectra_calc.accelerator)
-            gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+            if source.gap == 0:
+                source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            else:
+                source_k_max = source.get_k()
             rows = 7
             col = 1.3
             ax.set_ylim(0, rows)
             ax.set_xlim(0, col + 0.2)
-            data = {
-                "Máx. B [T]": _np.round(
-                    source.undulator_k_to_b(source_k_max, source.period), 2
-                ),
-                "Min. gap [mm]": _np.round(gapv, 2),
-                "Máx. K": _np.round(source_k_max, 2),
-                "Polarization": source.polarization,
-                "Length [m]": _np.round(source.source_length, 2),
-                "Period [mm]": _np.round(source.period, 2),
-                "Source": source.material,
-            }
+            data = dict()
+            data["Máx. B [T]"] = _np.round(
+                source.undulator_k_to_b(source_k_max, source.period), 2
+            )
+            data["Máx. K"] = _np.round(source_k_max, 2)
+            if source.undulator_type != "APU":
+                gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+                data["Min. gap [mm]"] = _np.round(gapv, 2)
+            else:
+                gapv = source.gap
+                data["Gap [mm]"] = _np.round(gapv, 2)
+            data["Polarization"] = source.polarization
+            data["Length [m]"] = _np.round(source.source_length, 2)
+            data["Period [mm]"] = _np.round(source.period, 2)
+            data["Source"] = source.material
+
             for i, info in enumerate(data):
                 ax.text(
                     x=col, y=0.5 + i, s=data[info], va="center", ha="right"
@@ -5844,13 +5863,12 @@ class FunctionsManipulation:
                 )
         else:
             fig, ax = _plt.subplots(figsize=(figsize[0], figsize[1] / 1.7))
-            rows = 2
+            rows = 1
             col = 1.2
             ax.set_ylim(0, rows)
             ax.set_xlim(0, col + 0.2)
             data = {
-                "Máx. B [T]": _np.round(source.b_peak, 2),
-                "Source": source.material,
+                "Máx. B [T]": _np.round(source.b_peak, 4)
             }
             for i, info in enumerate(data):
                 ax.text(
@@ -5938,7 +5956,6 @@ class FunctionsManipulation:
         _plt.ylabel("Gap [mm]")
         _plt.yscale(yscale)
         _plt.legend(loc=4, ncol=1, fontsize=9)
-        _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
@@ -5946,6 +5963,7 @@ class FunctionsManipulation:
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
+        _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
@@ -6172,7 +6190,11 @@ class FunctionsManipulation:
         _plt.figure(figsize=figsize)
         _plt.title(title)
 
-        _plt.title("Phase vs B \nAPU22 (1.2 m, 22 mm)")
+        _plt.title(
+            "Phase vs B \nAPU22 ({:.1f} m, {:.1f} mm)".format(
+                source.source_length, source.period
+            )
+        )
         _plt.plot(
             phases,
             Bs,
@@ -6194,12 +6216,13 @@ class FunctionsManipulation:
         _plt.xscale(xscale)
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.minorticks_on()
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.xlim(0, source.period / 2)
+        _plt.xticks(range(0, int(source.period / 2), 1))
         _plt.ylim(0, _np.round(_np.max(Bs) + 0.2, 1))
+        _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
@@ -6241,7 +6264,11 @@ class FunctionsManipulation:
         _plt.figure(figsize=figsize)
         _plt.title(title)
 
-        _plt.title("Phase vs K \nAPU22 (1.2 m, 22 mm)")
+        _plt.title(
+            "Phase vs K \nAPU22 ({:.1f} m, {:.1f} mm)".format(
+                source.source_length, source.period
+            )
+        )
         _plt.plot(
             phases,
             Ks,
@@ -6252,14 +6279,15 @@ class FunctionsManipulation:
         _plt.yscale(yscale)
         _plt.xlabel("Phase [mm]")
         _plt.xscale(xscale)
+        _plt.xticks(range(0, int(source.period / 2), 1))
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.minorticks_on()
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.xlim(0, source.period / 2)
-        _plt.ylim(0, _np.round(Ks[0]+0.2, 1))
+        _plt.ylim(0, _np.round(Ks[0] + 0.2, 1))
+        _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
@@ -6282,7 +6310,7 @@ class FunctionsManipulation:
         title = (
             args["title"]
             if "title" in args
-            else "Gap vs Energy\n{:} ({:.1f} m, {:.2f} mm)".format(
+            else "Phase vs Energy\n{:} ({:.1f} m, {:.2f} mm)".format(
                 source.label, source.source_length, source.period
             )
         )
@@ -6316,15 +6344,14 @@ class FunctionsManipulation:
         _plt.xscale(xscale)
         _plt.ylabel("Phase [mm]")
         _plt.yscale(yscale)
-        _plt.legend(loc=4, ncol=1, fontsize=9)
-        _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
-        _plt.ylim(0, source.period/2)
+        _plt.ylim(0, source.period / 2)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
+        _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
@@ -6354,12 +6381,11 @@ class FunctionsManipulation:
         )
         _plt.ylabel("Energy [keV]")
         _plt.xlabel("Phase [mm]")
-        _plt.legend(loc=4, ncol=1, fontsize=9)
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.ylim(int(Es[0]) * 1e-3 - 1, int(Es[-1] * 1e-3) + 1)
+        _plt.ylim(int(Es[0]) * 1e-3 - 0.1, int(Es[-1] * 1e-3) + 1)
         _plt.yscale(yscale)
-        _plt.xlim(0, source.period/2)
+        _plt.xlim(0, source.period / 2)
         _plt.xscale(xscale)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
@@ -6373,7 +6399,6 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
-
 
     @staticmethod
     def process_flux(args):
@@ -6407,15 +6432,18 @@ class FunctionsManipulation:
             source.source_type != "wiggler"
             and source.source_type != "bendingmagnet"
         ):
-            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            if source.gap == 0:
+                source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            else:
+                source_k_max = source.get_k()
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
             n = int(xlim[1] * 1e3 / first_hamonic_energy)
             n_harmonic = n - 1 if n % 2 == 0 else n
+            if source.polarization == "cp":
+                n_harmonic = 1
         else:
-            n_harmonic = 1
-        if source.polarization == "cp":
             n_harmonic = 1
         harmonic_range = (
             args["harmonic_range"]
@@ -6494,8 +6522,9 @@ class FunctionsManipulation:
             figsize=figsize,
             legend_fs=legend_fs,
             legend_properties=legend_properties,
+            xlim=xlim,
             ylim=ylim,
-            xlim=[xlim[0], xlim[1]],
+            # xlim=[xlim[0], xlim[1]],
         )
         del spectra_calc
 
@@ -6515,15 +6544,18 @@ class FunctionsManipulation:
             source.source_type != "wiggler"
             and source.source_type != "bendingmagnet"
         ):
-            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            if source.gap == 0:
+                source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            else:
+                source_k_max = source.get_k()
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
             n = int(xlim[1] * 1e3 / first_hamonic_energy)
             n_harmonic = n - 1 if n % 2 == 0 else n
+            if source.polarization == "cp":
+                n_harmonic = 1
         else:
-            n_harmonic = 1
-        if source.polarization == "cp":
             n_harmonic = 1
         harmonic_range = [(
             args["harmonic_range"]
@@ -6722,8 +6754,6 @@ class FunctionsManipulation:
         source = args["source"]
         spectra = args["spectra"]
         k_max = args["k_max"] if "k_max" in args else 2.0
-        x_range = (-0.3, 0.3)
-        y_range = (-0.3, 0.3)
         distance_from_source = (
             args["distance_from_source"]
             if "distance_from_source" in args
@@ -6762,6 +6792,12 @@ class FunctionsManipulation:
                 )
             )
         )
+        if source.source_type == "bendingmagnet":
+            x_range = (-1, 1)
+            y_range = (-0.3, 0.3)
+        else:
+            x_range = (-0.3, 0.3)
+            y_range = (-0.3, 0.3)
 
         # Calc Power Density and Partial Power
         spectra_calc: SpectraInterface = copy.deepcopy(spectra)
@@ -6792,7 +6828,7 @@ class FunctionsManipulation:
                 source.label, source.source_length, source.period, k_max
             )
             if source.source_type != "bendingmagnet"
-            else "Power Density @ 350 mA\n{:}".format(source.label)
+            else "Power Density @ 350 mA\n{:}\n".format(source.label)
         )
         ax.set_title(title, fontsize=11)
         ax.text(
@@ -6805,13 +6841,17 @@ class FunctionsManipulation:
         im = ax.imshow(
             power_densities,
             extent=[*x_range, *y_range],
-            aspect="equal",
+            aspect="auto" if source.source_type == "bendingmagnet" else "equal",
             norm=colors.Normalize(
                 vmin=_np.min(power_densities), vmax=_np.max(power_densities)
             ),
         )
-        ax.set_xticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
-        ax.set_yticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+        if source.source_type == "bendingmagnet":
+            ax.set_xticks([-1, -0.7, -0.4, 0.0, 0.4, 0.7, 1])
+            ax.set_yticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+        else:
+            ax.set_xticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
+            ax.set_yticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3])
         ax.tick_params(labelsize=9)
         sm = _plt.cm.ScalarMappable(
             _plt.Normalize(
@@ -7001,14 +7041,14 @@ class FunctionsManipulation:
             div_size_y[:, 1] * 1e3,
             "-C1",
             label=r"$\sigma_y$",
-            linewidth=2,
+            linewidth=linewidth,
         )
         _plt.plot(
             energies * 1e-3,
             div_size_x[:, 1] * 1e3,
             "-C0",
             label=r"$\sigma_x$",
-            linewidth=2,
+            linewidth=linewidth,
         )
         _plt.legend()
 
