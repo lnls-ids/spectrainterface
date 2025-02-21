@@ -6490,7 +6490,7 @@ class FunctionsManipulation:
         spectra_calc.sources = [source]
         spectra_calc.calc_flux_curve(
             energy_range=energy_range,
-            harmonic_range=harmonic_range,
+            harmonic_range=[harmonic_range],
             nr_pts_k=nr_pts_k,
             kmin=kmin,
             slit_shape=slit_shape,
@@ -6533,7 +6533,6 @@ class FunctionsManipulation:
             legend_properties=legend_properties,
             xlim=xlim,
             ylim=ylim,
-            # xlim=[xlim[0], xlim[1]],
         )
         del spectra_calc
 
