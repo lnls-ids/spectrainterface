@@ -1844,3 +1844,161 @@ class IDParameters:
     def vc_tolerance(self, value):
         self._vc_tolerance = value
 
+
+class Calculations:
+
+    def __init__(self):
+        self._gap_energy = False
+        self._gap_field = False
+        self._gap_k = False
+        self._phase_energy = False
+        self._phase_field = False
+        self._phase_k = False
+        self._table_parameters = False
+        self._flux = False
+        self._flux_curve_generic = False
+        self._brilliance = False
+        self._beam_size = False
+        self._beam_divergence = False
+        self._beam_div_size_wigner = False
+        self._power = False
+        self._degree_polarization = False
+        self._degree_coherence = False
+        self._flux_distribuition_2d = False
+    
+    @property
+    def gap_energy(self):
+        return self._gap_energy
+    
+    @property
+    def gap_field(self):
+        return self._gap_field
+
+    @property
+    def gap_k(self):
+        return self._gap_k
+
+    @property
+    def phase_energy(self):
+        return self._phase_energy
+
+    @property
+    def phase_k(self):
+        return self._phase_k
+    
+    @property
+    def phase_field(self):
+        return self._phase_field
+
+    @property 
+    def table_parameters(self):
+        return self._table_parameters
+
+    @property 
+    def flux(self):
+        return self._flux
+
+    @property 
+    def flux_curve_generic(self):
+        return self._flux_curve_generic
+
+    @property 
+    def brilliance(self):
+        return self._brilliance
+
+    @property 
+    def beam_size(self):
+        return self._beam_size
+
+    @property 
+    def beam_divergence(self):
+        return self._beam_divergence
+
+    @property 
+    def beam_div_size_wigner(self):
+        return self._beam_div_size_wigner
+
+    @property 
+    def power(self):
+        return self._power
+
+    @property 
+    def degree_polarization(self):
+        return self._degree_polarization
+
+    @property 
+    def degree_coherence(self):
+        return self._degree_coherence
+
+    @property 
+    def flux_distribuition_2d(self):
+        return self._flux_distribuition_2d
+
+    @gap_energy.setter
+    def gap_energy(self, value):
+        self._gap_energy = value
+    
+    @gap_field.setter
+    def gap_field(self, value):
+        self._gap_field = value
+    
+    @gap_k.setter
+    def gap_k(self, value):
+        self._gap_k = value
+
+    @phase_energy.setter
+    def phase_energy(self, value):
+        self._phase_energy = value
+
+    @phase_field.setter
+    def phase_field(self, value):
+        self._phase_field = value
+
+    @phase_k.setter
+    def phase_k(self, value):
+        self._phase_k = value
+
+    @table_parameters.setter
+    def table_parameters(self, value):
+        self._table_parameters = value
+
+    @flux.setter
+    def flux(self, value):
+        self._flux = value
+
+    @flux_curve_generic.setter
+    def flux_curve_generic(self, value):
+        self._flux_curve_generic = value
+
+    @brilliance.setter
+    def brilliance(self, value):
+        self._brilliance = value
+
+    @beam_size.setter
+    def beam_size(self, value):
+        self._beam_size = value
+
+    @beam_divergence.setter
+    def beam_divergence(self, value):
+        self._beam_divergence = value
+
+    @beam_div_size_wigner.setter
+    def beam_div_size_wigner(self, value):
+        self._beam_div_size_wigner = value
+
+    @power.setter
+    def power(self, value):
+        self._power = value
+
+    @degree_polarization.setter
+    def degree_polarization(self, value):
+        self._degree_polarization = value
+
+    @degree_coherence.setter
+    def degree_coherence(self, value):
+        self._degree_coherence = value
+
+    @flux_distribuition_2d.setter
+    def flux_distribuition_2d(self, value):
+        self._flux_distribuition_2d = value
+
