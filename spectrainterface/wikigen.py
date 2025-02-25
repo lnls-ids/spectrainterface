@@ -2160,3 +2160,177 @@ class CalcParameters:
     def dpi(self, value):
         self._dpi = value
 
+
+class Process(FunctionsManipulation):
+
+    def __init__(self):
+        super().__init__()
+        self._calc_options = Calculations()
+        self._id_params = IDParameters()
+        self._calc_params = CalcParameters()
+        self._spectra = SpectraInterface()
+        self._source = None
+    
+    @property
+    def calc_options(self):
+        return self._calc_options
+    
+    @property
+    def id_params(self):
+        return self._id_params
+
+    @property
+    def calc_params(self):
+        return self._calc_params
+
+    @calc_options.setter
+    def calc_options(self, value):
+        self._calc_options = value
+
+    @id_params.setter
+    def id_params(self, value):
+        self._id_params = value
+
+    @calc_params.setter
+    def calc_params(self, value):
+        self._calc_params = value
+
+    def _initialize_spectra(self):
+        self._spectra.accelerator.zero_emittance = False
+        self._spectra.accelerator.zero_energy_spread = False
+
+        if self._calc_params.beta_section == "bc":
+            self._spectra.accelerator.set_extraction_point('bc')
+        elif self._calc_params.beta_section == "b1":
+            self._spectra.accelerator.set_extraction_point('b1')
+        elif self._calc_params.beta_section == "b2":
+            self._spectra.accelerator.set_extraction_point('b2')
+        elif self._calc_params.beta_section == "high":
+            self._spectra.accelerator.set_extraction_point('high_beta')
+        elif self._calc_params.beta_section == "low":
+            self._spectra.accelerator.set_extraction_point('low_beta')
+        else:
+            raise ValueError(
+                "Beta section '{:}' does not exist. Choose one of these: 'bc', 'b1', 'b2', 'high', 'low'".format(  # noqa: E501
+                    self._calc_params.beta_section
+                )
+            )
+    
+    def _initialize_source(self, verb=True):
+        # Und Type Assembly
+        und_class = self._id_params.type + (
+            "_" + self._id_params.material if len(self._id_params.material) > 0 else ""
+        )
+        
+        # Mount Module
+        sources = importlib.import_module("spectrainterface.sources")
+
+        # Get Source Classes inside Module Sources
+        source_classes = _np.array(
+            [name for name, obj in inspect.getmembers(sources, inspect.isclass)]
+        )
+        idx_intersec = _np.intersect1d(
+            source_classes,
+            [
+                "SourceFunctions",
+                "StorageRingParameters",
+                "BendingMagnet",
+                "Undulator",
+            ],
+            return_indices=True,
+        )[1]
+        source_classes = _np.delete(source_classes, idx_intersec)
+
+        # Verify if exist Und type inside Module Sources
+        source_class_exist = list(
+            map(lambda x: und_class.upper() in x.upper(), source_classes)
+        )
+        idxs = _np.where(source_class_exist)[0]
+        if len(idxs) == 0:
+            raise ValueError(
+                "Source classe: '{:}' does not exist.\nChoose one of these:\n {:}".format(  # noqa: E501
+                    und_class, source_classes
+                )
+            )
+        idx = idxs[0]
+        source_selected = source_classes[idx]
+
+        # Source Initialization
+        if source_selected in ["B1", "B2", "BC"]:
+            source = getattr(sources, source_selected)()
+            source.label = self._id_params.label
+            source.material = source_selected
+
+            if verb:
+                print("Source Selected: {:}".format(source.material))
+                print("B Peak: {:.4f} T".format(source.b_peak))
+        else:
+            source = getattr(sources, source_selected)(self._id_params.period, self._id_params.length)
+            source.label = self._id_params.label
+            source.vc_tolerance = self._id_params.vc_tolerance
+            source.polarization = self._id_params.polarization
+            # Phase Errors
+            if self._id_params.phase_error > 0:
+                source.add_phase_errors = True
+                source.use_recovery_params = True
+            # Verify min gap and max k values
+            gapv, gaph = source.calc_min_gap(self._spectra.accelerator)
+            kmax = source.calc_max_k(self._spectra.accelerator)
+
+            if verb:
+                print("Source Selected: {:}".format(source_selected))
+                print(
+                    "Period: {:.2f} mm | Length: {:.2f} m".format(
+                        source.period, source.source_length
+                    )
+                )
+                if source.polarization == "cp":
+                    print("Min. gapv: {:.4f} mm | Min gaph: {:.3f} mm".format(gapv, gaph))
+                elif source.polarization == "hp":
+                    print("Min. gapv: {:.4f} mm".format(gapv))
+                else:
+                    print("Min. gaph: {:.3f} mm".format(gaph))
+                print(
+                    "Máx. k: {:.4f} | Máx. B: {:.2f} T".format(
+                        kmax, source.undulator_k_to_b(kmax, source.period)
+                    )
+                )
+        
+        self._source = source
+
+    def _pre_configuration(self, verb=True):
+        self._initialize_spectra()
+        self._initialize_source(verb)
+
+        if self._source.source_type != "bendingmagnet":
+            k_max = self._source.calc_max_k(self._spectra.accelerator)
+            if self._calc_params.target_k is None:
+                first_hamonic_energy = self._source.get_harmonic_energy(
+                    1, self._spectra.accelerator.gamma, 0, self._source.period, k_max
+                )
+                n = int(self._calc_params.target_energy / first_hamonic_energy)
+                if n > 0:
+                    n_harmonic = n - 1 if n % 2 == 0 else n
+                else:
+                    n_harmonic = 1
+                self._calc_params.target_k = self._source.calc_k_target(
+                    gamma=self._spectra.accelerator.gamma,
+                    n=n_harmonic,
+                    period=self._source.period,
+                    target_energy=self._calc_params.target_energy,
+                )
+
+            if verb:
+                print("\nTarget Energy: ", self._calc_params.target_energy, "eV")
+                print("Target k: ", self._calc_params.target_k)
+        else:
+            self._calc_params.target_k = 0
+        
+    def run(self, verb=True):
+        self._pre_configuration(verb)
+
+        for option in self.calc_options.__dict__:
+            if self.calc_options.__dict__[option]:
+                function = dict(inspect.getmembers(self, inspect.isfunction))['process'+option]
+                function(self._spectra, self._source, self._calc_params)
+
