@@ -2002,3 +2002,161 @@ class Calculations:
     def flux_distribuition_2d(self, value):
         self._flux_distribuition_2d = value
 
+
+class CalcParameters:
+
+    def __init__(self):
+        self._beta_section = None
+        self._target_energy = None
+        self._target_k = None
+        self._distance_from_source = None
+        self._slit_shape = None
+        self._slit_acceptance = None
+        self._slit_position = None
+        self._x_range = None
+        self._x_nr_pts = None
+        self._y_range = None
+        self._y_nr_pts = None
+        self._e_range = None
+        self._e_nr_pts = None
+        self._figsize = None
+        self._savefig = None
+        self._linewidth = None
+        self._dpi = None
+
+    @property
+    def beta_section(self):
+        return self._beta_section
+
+    @property
+    def target_energy(self):
+        return self._target_energy
+
+    @property
+    def target_k(self):
+        return self._target_k
+
+    @property
+    def distance_from_source(self):
+        return self._distance_from_source
+
+    @property
+    def slit_shape(self):
+        return self._slit_shape
+
+    @property
+    def slit_acceptance(self):
+        return self._slit_acceptance
+
+    @property
+    def slit_position(self):
+        return self._slit_position
+
+    @property
+    def x_range(self):
+        return self._x_range
+
+    @property
+    def x_nr_pts(self):
+        return self._x_nr_pts
+
+    @property
+    def y_range(self):
+        return self._y_range
+
+    @property
+    def y_nr_pts(self):
+        return self._y_nr_pts
+
+    @property
+    def e_range(self):
+        return self._e_range
+
+    @property
+    def e_nr_pts(self):
+        return self._e_nr_pts
+
+    @property
+    def figsize(self):
+        return self._figsize
+
+    @property
+    def savefig(self):
+        return self._savefig
+
+    @property
+    def linewidth(self):
+        return self._linewidth
+
+    @property
+    def dpi(self):
+        return self._dpi
+    
+    @beta_section.setter
+    def beta_section(self, value):
+        self._beta_section = value
+
+    @target_energy.setter
+    def target_energy(self, value):
+        self._target_energy = value
+
+    @target_k.setter
+    def target_k(self, value):
+        self._target_k = value
+
+    @distance_from_source.setter
+    def distance_from_source(self, value):
+        self._distance_from_source = value
+
+    @slit_shape.setter
+    def slit_shape(self, value):
+        self._slit_shape = value
+
+    @slit_acceptance.setter
+    def slit_acceptance(self, value):
+        self._slit_acceptance = value
+
+    @slit_position.setter
+    def slit_position(self, value):
+        self._slit_position = value
+
+    @x_range.setter
+    def x_range(self, value):
+        self._x_range = value
+
+    @x_nr_pts.setter
+    def x_nr_pts(self, value):
+        self._x_nr_pts = value
+
+    @y_range.setter
+    def y_range(self, value):
+        self._y_range = value
+
+    @y_nr_pts.setter
+    def y_nr_pts(self, value):
+        self._y_nr_pts = value
+
+    @e_range.setter
+    def e_range(self, value):
+        self._e_range = value
+
+    @e_nr_pts.setter
+    def e_nr_pts(self, value):
+        self._e_nr_pts = value
+
+    @figsize.setter
+    def figsize(self, value):
+        self._figsize = value
+
+    @savefig.setter
+    def savefig(self, value):
+        self._savefig = value
+
+    @linewidth.setter
+    def linewidth(self, value):
+        self._linewidth = value
+
+    @dpi.setter
+    def dpi(self, value):
+        self._dpi = value
+
