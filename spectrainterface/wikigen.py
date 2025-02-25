@@ -1767,3 +1767,80 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
+
+class IDParameters:
+
+    def __init__(self):
+        self._polarization = None
+        self._type = None
+        self._material = None
+        self._period = None
+        self._length = None
+        self._phase_error = None
+        self._label = None
+        self._vc_tolerance = None
+    
+    @property
+    def polarization(self):
+        return self._polarization
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def material(self):
+        return self._material
+
+    @property
+    def period(self):
+        return self._period
+
+    @property
+    def length(self):
+        return self._length
+
+    @property
+    def phase_error(self):
+        return self._phase_error
+
+    @property
+    def label(self):
+        return self._label
+
+    @property
+    def vc_tolerance(self):
+        return self._vc_tolerance
+
+    @polarization.setter
+    def polarization(self, value):
+        self._polarization = value
+
+    @type.setter
+    def type(self, value):
+        self._type = value
+
+    @material.setter
+    def material(self, value):
+        self._material = value
+
+    @period.setter
+    def period(self, value):
+        self._period = value
+
+    @length.setter
+    def length(self, value):
+        self._length = value
+
+    @phase_error.setter
+    def phase_error(self, value):
+        self._phase_error = value
+
+    @label.setter
+    def label(self, value):
+        self._label = value
+
+    @vc_tolerance.setter
+    def vc_tolerance(self, value):
+        self._vc_tolerance = value
+
