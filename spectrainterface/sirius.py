@@ -333,10 +333,13 @@ class SIRIUS:
                 self._label = "DELTA"
                 self._br = 1.39
                 self._polarization = "hp"
-                self._efficiency = 1.01381
+                self._phase_coef = {
+                    "hp": {"ef": 1.01381, "z0": 0},
+                    "vp": {"ef": 1.01381, "z0": 0},
+                    "cp": {"ef": 1.01381, "z0": 0},
+                }
                 self._gap = 13.6
                 self._phase = 0
-                self._z0 = 0
                 self._halbach_coef = {
                     "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
                     "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
@@ -355,19 +358,21 @@ class SIRIUS:
                     float: Phase [mm]
                 """
                 return self._phase
-            @property
-            def z0(self):
-                """Undulator phase z0 offset [mm].
-                
-                Returns:
-                    float: z0 [mm]
-                """
-                return self._z0
             
+            @property
+            def phase_coef(self):
+                """Undulator calibration coefficients."""
+                return self._phase_coef
+
             @phase.setter
             def phase(self, value):
                 """Undulator phase setter [mm]."""
                 self._phase = value
+
+            @phase_coef.setter
+            def phase_coef(self, value):
+                """Undulator calibration coefficients setter."""
+                self._phase_coef = value
 
             def calc_min_gap(
                 self,
@@ -416,11 +421,11 @@ class SIRIUS:
                 """
                 phase = self.phase if phase is None else phase
                 br = self.br
-                z0 = self._z0
+                z0 = self.phase_coef[self.polarization]['z0']
                 a = self.halbach_coef[self.polarization]["a"]
                 b = self.halbach_coef[self.polarization]["b"]
                 c = self.halbach_coef[self.polarization]["c"]
-                efficiency = self.efficiency
+                efficiency = self.phase_coef[self.polarization]['ef']
                 return (
                     efficiency
                     * self.beff_function(
