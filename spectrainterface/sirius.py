@@ -398,3 +398,27 @@ class SIRIUS:
                 gap = gap + vc_thickness + vc_tolerance
 
                 return gap, gap
+            
+            def get_beff(self, gap_over_period, phase=None):
+                """Get peak magnetic field for a given device and gap.
+
+                Args:
+                    gap_over_period (float): gap normalized by the undulator period.
+
+                Returns:
+                    _type_: _description_
+                """
+                phase = self.phase if phase is None else phase
+                br = self.br
+                z0 = self._z0
+                a = self.halbach_coef[self.polarization]["a"]
+                b = self.halbach_coef[self.polarization]["b"]
+                c = self.halbach_coef[self.polarization]["c"]
+                efficiency = self.efficiency
+                return (
+                    efficiency
+                    * self.beff_function(
+                        gap_over_period=gap_over_period, br=br, a=a, b=b, c=c
+                    )
+                    * _np.abs(_np.cos(_np.pi / self._period * (phase - z0)))
+                )
