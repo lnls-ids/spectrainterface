@@ -333,7 +333,8 @@ class SIRIUS:
                 self._label = "DELTA"
                 self._br = 1.39
                 self._polarization = "hp"
-                self._efficiency = 0.71224
+                self._efficiency = 1.01381
+                self._gap = 13.6
                 self._phase = 0
                 self._z0 = 0
                 self._halbach_coef = {
