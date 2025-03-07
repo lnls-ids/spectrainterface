@@ -321,7 +321,7 @@ class SIRIUS:
         class DELTA52(sources.Elliptic):
             """DELTA Undulator class."""
 
-            def __init__(self, period, length):
+            def __init__(self, period=52.5, length=1.2):
                 """Class constructor.
 
                 Args:
