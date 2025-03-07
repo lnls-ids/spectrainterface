@@ -335,6 +335,7 @@ class SIRIUS:
                 self._polarization = "hp"
                 self._efficiency = 1
                 self._phase = 0
+                self._z0
                 self._halbach_coef = {
                     "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
                     "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
@@ -353,6 +354,13 @@ class SIRIUS:
                     float: Phase [mm]
                 """
                 return self._phase
+            @property
+            def z0(self):
+                """Undulator phase z0 offset [mm].
+                
+                Returns:
+                    float: z0 [mm]
+                """
 
             def calc_min_gap(
                 self,
