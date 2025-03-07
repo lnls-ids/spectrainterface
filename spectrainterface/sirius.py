@@ -361,6 +361,7 @@ class SIRIUS:
                 Returns:
                     float: z0 [mm]
                 """
+                return self._z0
 
             def calc_min_gap(
                 self,
