@@ -321,7 +321,7 @@ class SIRIUS:
         class DELTA52(sources.Elliptic):
             """DELTA Undulator class."""
 
-            def __init__(self, period, length):
+            def __init__(self, period=52.5, length=1.2):
                 """Class constructor.
 
                 Args:
@@ -331,9 +331,15 @@ class SIRIUS:
                 super().__init__()
                 self._undulator_type = "DELTA"
                 self._label = "DELTA"
-                self._br = 1.37
+                self._br = 1.39
                 self._polarization = "hp"
-                self._efficiency = 1
+                self._phase_coef = {
+                    "hp": {"ef": 1.01381, "z0": 0},
+                    "vp": {"ef": 1.01381, "z0": 0},
+                    "cp": {"ef": 1.01381, "z0": 0},
+                }
+                self._gap = 13.6
+                self._phase = 0
                 self._halbach_coef = {
                     "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
                     "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
@@ -343,6 +349,30 @@ class SIRIUS:
                 self._period = period
                 self._source_length = length
                 self._source_type = "ellipticundulator"
+            
+            @property
+            def phase(self):
+                """Undulator phase [mm].
+
+                Returns:
+                    float: Phase [mm]
+                """
+                return self._phase
+            
+            @property
+            def phase_coef(self):
+                """Undulator calibration coefficients."""
+                return self._phase_coef
+
+            @phase.setter
+            def phase(self, value):
+                """Undulator phase setter [mm]."""
+                self._phase = value
+
+            @phase_coef.setter
+            def phase_coef(self, value):
+                """Undulator calibration coefficients setter."""
+                self._phase_coef = value
 
             def calc_min_gap(
                 self,
@@ -379,3 +409,27 @@ class SIRIUS:
                 gap = gap + vc_thickness + vc_tolerance
 
                 return gap, gap
+            
+            def get_beff(self, gap_over_period, phase=None):
+                """Get peak magnetic field for a given device and gap.
+
+                Args:
+                    gap_over_period (float): gap normalized by the undulator period.
+
+                Returns:
+                    _type_: _description_
+                """
+                phase = self.phase if phase is None else phase
+                br = self.br
+                z0 = self.phase_coef[self.polarization]['z0']
+                a = self.halbach_coef[self.polarization]["a"]
+                b = self.halbach_coef[self.polarization]["b"]
+                c = self.halbach_coef[self.polarization]["c"]
+                efficiency = self.phase_coef[self.polarization]['ef']
+                return (
+                    efficiency
+                    * self.beff_function(
+                        gap_over_period=gap_over_period, br=br, a=a, b=b, c=c
+                    )
+                    * _np.abs(_np.cos(_np.pi / self._period * (phase - z0)))
+                )
