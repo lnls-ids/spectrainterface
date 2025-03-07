@@ -334,6 +334,7 @@ class SIRIUS:
                 self._br = 1.37
                 self._polarization = "hp"
                 self._efficiency = 1
+                self._phase = 0
                 self._halbach_coef = {
                     "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
                     "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
@@ -343,6 +344,15 @@ class SIRIUS:
                 self._period = period
                 self._source_length = length
                 self._source_type = "ellipticundulator"
+            
+            @property
+            def phase(self):
+                """Undulator phase [mm].
+
+                Returns:
+                    float: Phase [mm]
+                """
+                return self._phase
 
             def calc_min_gap(
                 self,
