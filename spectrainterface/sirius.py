@@ -331,9 +331,9 @@ class SIRIUS:
                 super().__init__()
                 self._undulator_type = "DELTA"
                 self._label = "DELTA"
-                self._br = 1.37
+                self._br = 1.39
                 self._polarization = "hp"
-                self._efficiency = 1
+                self._efficiency = 0.71224
                 self._phase = 0
                 self._z0 = 0
                 self._halbach_coef = {
@@ -362,6 +362,11 @@ class SIRIUS:
                     float: z0 [mm]
                 """
                 return self._z0
+            
+            @phase.setter
+            def phase(self, value):
+                """Undulator phase setter [mm]."""
+                self._phase = value
 
             def calc_min_gap(
                 self,
