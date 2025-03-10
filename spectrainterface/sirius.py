@@ -334,16 +334,16 @@ class SIRIUS:
                 self._br = 1.39
                 self._polarization = "hp"
                 self._phase_coef = {
-                    "hp": {"ef": 1.01381, "z0": 0},
-                    "vp": {"ef": 1.01381, "z0": 0},
-                    "cp": {"ef": 1.01381, "z0": 0},
+                    "hp": {"ef": 1.00566, "z0": 25.89527},
+                    "vp": {"ef": 0.99032, "z0": 26.08821},
+                    "cp": {"ef": 0.71497, "z0": 25.89593},
                 }
                 self._gap = 13.6
                 self._phase = 0
                 self._halbach_coef = {
                     "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
                     "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
-                    "cp": {"a": 1.193, "b": -2.336, "c": -0.667},
+                    "cp": {"a": 1.696, "b": -2.349, "c": -0.658},
                 }
                 self._material = "NdFeB"
                 self._period = period
