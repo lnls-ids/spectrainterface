@@ -23,7 +23,7 @@ class FunctionsManipulation:
     """Manipulation generic Spectra Interface functions to generate graphs"""
 
     @staticmethod
-    def process_flux_distribuition_2d(spectra, source, calc_params):
+    def process_flux_distribution_2d(spectra, source, calc_params):
         distance_from_source = calc_params.distance_from_source
         slit_shape = calc_params.slit_shape
         slit_acceptance = calc_params.slit_acceptance
@@ -58,7 +58,7 @@ class FunctionsManipulation:
         target_k = target_k if source.source_type != "bendingmagnet" else 0
 
         spectra_calc: SpectraInterface = copy.deepcopy(spectra)
-        result = spectra_calc.calc_flux_distribuition_2d(
+        result = spectra_calc.calc_flux_distribution_2d(
             source,
             target_energy=target_energy,
             target_k=target_k,
@@ -447,15 +447,15 @@ class FunctionsManipulation:
             ax.set_xlim(0, col + 0.2)
             data = dict()
             data["Máx. B [T]"] = _np.round(
-                source.undulator_k_to_b(source_k_max, source.period), 2
+                source.undulator_k_to_b(source_k_max, source.period), 6
             )
-            data["Máx. K"] = _np.round(source_k_max, 2)
+            data["Máx. K"] = _np.round(source_k_max, 6)
             if source.undulator_type != "APU":
                 gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-                data["Min. gap [mm]"] = _np.round(gapv, 2)
+                data["Min. gap [mm]"] = _np.round(gapv if source.polarization=='hp' else gaph, 2)
             else:
                 gapv = source.gap
-                data["Gap [mm]"] = _np.round(gapv, 2)
+                data["Gap [mm]"] = _np.round(gapv if source.polarization=='hp' else gaph, 2)
             data["Polarization"] = source.polarization
             data["Length [m]"] = _np.round(source.source_length, 2)
             data["Period [mm]"] = _np.round(source.period, 2)
@@ -557,10 +557,12 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         dpi = calc_params.dpi
+        gapmin, gapmax = calc_params.gap_lim
 
-        gapmax = 25
-        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-        gaps = _np.linspace(gapv, gapmax, 501)
+        # gapmax = 25
+        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator) 
+        
+        gaps = _np.linspace(gapv if source.polarization=='hp' else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         gamma = spectra_calc.accelerator.gamma
@@ -594,7 +596,7 @@ class FunctionsManipulation:
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.xlim(*xlim)
-        _plt.ylim(0, gapmax)
+        _plt.ylim(gapmin, gapmax)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
@@ -609,7 +611,7 @@ class FunctionsManipulation:
             )
 
         # Fundamental Energy
-        gaps = _np.linspace(gapv, gapmax, 501)
+        gaps = _np.linspace(gapv if source.polarization=='hp' else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         Es = source.get_harmonic_energy(
@@ -670,10 +672,11 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         dpi = calc_params.dpi
+        gapmin, gapmax = calc_params.gap_lim
 
-        gapmax = 25
+        # gapmax = 25
         gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-        gaps = _np.linspace(gapv, gapmax, 501)
+        gaps = _np.linspace(gapv if source.polarization=='hp' else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
 
@@ -699,7 +702,7 @@ class FunctionsManipulation:
         _plt.grid(which="minor", alpha=0.1)
         _plt.ylim(0, Ks[0])
         _plt.yscale(yscale)
-        _plt.xlim(0, gapmax)
+        _plt.xlim(gapmin, gapmax)
         _plt.xscale(xscale)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
@@ -731,10 +734,11 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         dpi = calc_params.dpi
+        gapmin, gapmax = calc_params.gap_lim
 
-        gapmax = 25
+        # gapmax = 25
         gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-        gaps = _np.linspace(gapv, gapmax, 501)
+        gaps = _np.linspace(gapv if source.polarization=='hp' else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
 
         _plt.figure(figsize=figsize)
@@ -759,7 +763,7 @@ class FunctionsManipulation:
         _plt.grid(which="minor", alpha=0.1)
         _plt.ylim(0, Bs[0])
         _plt.yscale(yscale)
-        _plt.xlim(0, gapmax)
+        _plt.xlim(gapmin, gapmax)
         _plt.xscale(xscale)
         text = r"$B(g)=B_r\cdot a\cdot \exp{\left(b\frac{g}{\lambda_u}+c\frac{g^2}{\lambda_u^2}\right)}$"
         text += "\n"
@@ -1864,7 +1868,7 @@ class Calculations:
         self._power = False
         self._degree_polarization = False
         self._degree_coherence = False
-        self._flux_distribuition_2d = False
+        self._flux_distribution_2d = False
     
     @property
     def gap_energy(self):
@@ -1931,8 +1935,8 @@ class Calculations:
         return self._degree_coherence
 
     @property 
-    def flux_distribuition_2d(self):
-        return self._flux_distribuition_2d
+    def flux_distribution_2d(self):
+        return self._flux_distribution_2d
 
     @gap_energy.setter
     def gap_energy(self, value):
@@ -1998,9 +2002,9 @@ class Calculations:
     def degree_coherence(self, value):
         self._degree_coherence = value
 
-    @flux_distribuition_2d.setter
-    def flux_distribuition_2d(self, value):
-        self._flux_distribuition_2d = value
+    @flux_distribution_2d.setter
+    def flux_distribution_2d(self, value):
+        self._flux_distribution_2d = value
 
 
 class CalcParameters:

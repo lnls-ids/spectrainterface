@@ -4217,7 +4217,7 @@ class SpectraInterface:
         del spectra_calc
         return partial_power
 
-    def calc_flux_distribuition_2d(
+    def calc_flux_distribution_2d(
         self,
         source,
         target_energy: float = 12e3,
@@ -4228,7 +4228,7 @@ class SpectraInterface:
         y_nr_pts: int = 401,
         distance_from_source: float = 30,
     ):
-        """Flux Distribuition 2D.
+        """Flux Distribution 2D.
 
         Args:
             source: light source.
