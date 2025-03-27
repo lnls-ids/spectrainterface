@@ -430,8 +430,9 @@ class Undulator(SourceFunctions):
             si_parameters (StorageRingParameters): StorageRingParameters
              object.
         """
-        gap_minv, _ = self.calc_min_gap(si_parameters)
-        b_max = self.get_beff(gap_minv / self.period)
+        gap_minv, gap_minh = self.calc_min_gap(si_parameters)
+        gap_min = gap_minv if self.polarization == 'hp' else gap_minh
+        b_max = self.get_beff(gap_min / self.period)
         k_max = self.undulator_b_to_k(b_max, self.period)
         return k_max
 
