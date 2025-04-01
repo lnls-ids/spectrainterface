@@ -661,7 +661,7 @@ class APU(Halbach):
             * _np.abs(_np.cos(_np.pi / self._period * (phase - z0)))
         )
 
-    def calc_max_k(self):
+    def calc_max_k(self, si_parameters):
         """Calc max K achieved by undulator.
 
         Args:
