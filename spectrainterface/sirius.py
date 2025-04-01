@@ -285,7 +285,7 @@ class SIRIUS:
                 self._gap = 22
 
         class IVU18_2(sources.IVU_NdFeB):
-            """IVU18 class."""
+            """IVU18-2 class (EMA beamline)."""
 
             def __init__(self, period=18.5, length=2):
                 """Class constructor."""
@@ -302,7 +302,7 @@ class SIRIUS:
                 self._material = 'NdFeB'
 
         class IVU18_1(sources.IVU_NdFeB):
-            """IVU18 class."""
+            """IVU18-1 class (PAINEIRA beamline)."""
 
             def __init__(self, period=18.5, length=2):
                 """Class constructor."""
@@ -433,3 +433,22 @@ class SIRIUS:
                     )
                     * _np.abs(_np.cos(_np.pi / self._period * (phase - z0)))
                 )
+                
+                
+
+        class VPU29_CNB(sources.VPU):
+            """VPU29b / 2386b (CARNAUBA) class."""
+
+            def __init__(self, period=29.0, length=1.54):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "VPU29-CNB"
+                self._br = 1.304
+                self._gap = 9.7
+                self.vc_thickness = 0.5
+                self.vc_tolerance = 0.4655
+                self._polarization = "vp"
+                self._halbach_coef = {
+                    "vp": {"a": 2.03304573, "b": -3.4431994, "c": 0.18171406},
+                }
+                self._material = 'NdFeB'
