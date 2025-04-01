@@ -754,6 +754,7 @@ class VPU(Hybrid_Nd):
     def __init__(self, period=29, length=1.5):
         """Class constructor."""
         super().__init__(period, length)
+        self._undulator_type = "VPU"
         self._material = "NdFeB"
         self._polarization = "vp"
         self._source_type = "verticalundulator"
