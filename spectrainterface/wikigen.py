@@ -1783,6 +1783,7 @@ class IDParameters:
         self._phase_error = None
         self._label = None
         self._vc_tolerance = None
+        self._halbach_coef = None
     
     @property
     def polarization(self):
@@ -1816,6 +1817,10 @@ class IDParameters:
     def vc_tolerance(self):
         return self._vc_tolerance
 
+    @property
+    def halbach_coef(self):
+        return self._halbach_coef
+
     @polarization.setter
     def polarization(self, value):
         self._polarization = value
@@ -1847,6 +1852,10 @@ class IDParameters:
     @vc_tolerance.setter
     def vc_tolerance(self, value):
         self._vc_tolerance = value
+
+    @halbach_coef.setter
+    def halbach_coef(self, value):
+        self._halbach_coef = value
 
 
 class Calculations:
@@ -2290,15 +2299,20 @@ class Process(FunctionsManipulation):
                 source = getattr(module, source_selected)()
             else:
                 source = getattr(module, source_selected)(self._id_params.period, self._id_params.length)
-            source.label = self._id_params.label
+            source.label = source.label if self._id_params.label is None else self._id_params.label
             source.vc_tolerance = source.vc_tolerance if self._id_params.vc_tolerance is None else  self._id_params.vc_tolerance
+            source.halbach_coef = source.halbach_coef if self._id_params.halbach_coef is None else self._id_params.halbach_coef
             source.polarization = source.polarization if self._id_params.polarization is None else self._id_params.polarization
             # Phase Errors
             if self._id_params.phase_error > 0:
                 source.add_phase_errors = True
                 source.use_recovery_params = True
             # Verify min gap and max k values
-            gapv, gaph = source.calc_min_gap(self._spectra.accelerator)
+            if source._undulator_type in ["APU", "APPLE2"]:
+                gap = source.gap
+            else:
+                gapv, gaph = source.calc_min_gap(self._spectra.accelerator)
+            
             kmax = source.calc_max_k(self._spectra.accelerator)
 
             if verb:
@@ -2308,12 +2322,14 @@ class Process(FunctionsManipulation):
                         source.period, source.source_length
                     )
                 )
+
+
                 if source.polarization == "cp":
-                    print("Min. gapv: {:.4f} mm | Min gaph: {:.3f} mm".format(gapv, gaph))
+                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in ["APU", "APPLE2"] else "Min. gapv: {:.4f} mm | Min gaph: {:.3f} mm".format(gapv, gaph))
                 elif source.polarization == "hp":
-                    print("Min. gapv: {:.4f} mm".format(gapv))
+                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in ["APU", "APPLE2"] else "Min. gapv: {:.4f} mm".format(gapv))
                 else:
-                    print("Min. gaph: {:.3f} mm".format(gaph))
+                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in ["APU", "APPLE2"] else "Min. gaph: {:.3f} mm".format(gaph))
                 print(
                     "Máx. k: {:.4f} | Máx. B: {:.2f} T".format(
                         kmax, source.undulator_k_to_b(kmax, source.period)
