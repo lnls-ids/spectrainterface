@@ -768,11 +768,11 @@ class FunctionsManipulation:
         text = r"$B(g)=B_r\cdot a\cdot \exp{\left(b\frac{g}{\lambda_u}+c\frac{g^2}{\lambda_u^2}\right)}$"
         text += "\n"
         text += r"$B_r=$ {:.2f}        a={:.4f}".format(
-            source.br, source.halbach_coef["hp"]["a"]
+            source.br, source.halbach_coef[source.polarization]["a"]
         )
         text += "\n"
         text += r"$b=$ {:.4f}    c={:.4f}".format(
-            source.halbach_coef["hp"]["b"], source.halbach_coef["hp"]["c"]
+            source.halbach_coef[source.polarization]["b"], source.halbach_coef[source.polarization]["c"]
         )
         _plt.text(x=gapmax / 3, y=(Bs[0] - Bs[-1]) / 2, s=text, fontsize=10)
         _plt.tick_params(
@@ -2286,10 +2286,13 @@ class Process(FunctionsManipulation):
                 print("Source Selected: {:}".format(source.material))
                 print("B Peak: {:.4f} T".format(source.b_peak))
         else:
-            source = getattr(module, source_selected)(self._id_params.period, self._id_params.length)
+            if self._id_params.period is None or self._id_params.length is None:
+                source = getattr(module, source_selected)()
+            else:
+                source = getattr(module, source_selected)(self._id_params.period, self._id_params.length)
             source.label = self._id_params.label
-            source.vc_tolerance = self._id_params.vc_tolerance
-            source.polarization = self._id_params.polarization
+            source.vc_tolerance = source.vc_tolerance if self._id_params.vc_tolerance is None else  self._id_params.vc_tolerance
+            source.polarization = source.polarization if self._id_params.polarization is None else self._id_params.polarization
             # Phase Errors
             if self._id_params.phase_error > 0:
                 source.add_phase_errors = True
