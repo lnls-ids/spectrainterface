@@ -661,6 +661,17 @@ class APU(Halbach):
             * _np.abs(_np.cos(_np.pi / self._period * (phase - z0)))
         )
 
+    def calc_max_k(self):
+        """Calc max K achieved by undulator.
+
+        Args:
+            si_parameters (StorageRingParameters): StorageRingParameters
+             object.
+        """
+        b_max = self.get_beff(self.gap / self.period)
+        k_max = self.undulator_b_to_k(b_max, self.period)
+        return k_max
+
 
 class Elliptic(Undulator):
     """Class for undulators that allow elliptic polarizations.
@@ -714,9 +725,56 @@ class APPLE2(Elliptic):
             "vp": {"a": 1.926, "b": -5.629, "c": 1.448},
             "cp": {"a": 1.356, "b": -4.875, "c": 0.947},
         }
+        self._z0 = 0
+        self._efficiency = 1
+        self._phase = 0
         self._period = period
         self._source_length = length
         self._source_type = "ellipticundulator"
+    
+    @property
+    def phase(self):
+        """Undulator phase [mm].
+
+        Returns:
+            float: Phase [mm]
+        """
+        return self._phase
+    
+    def get_beff(self, gap_over_period, phase=None):
+        """Get peak magnetic field for a given device and gap.
+
+        Args:
+            gap_over_period (float): gap normalized by the undulator period.
+
+        Returns:
+            _type_: _description_
+        """
+        phase = self.phase if phase is None else phase
+        br = self.br
+        z0 = self._z0
+        a = self.halbach_coef[self.polarization]["a"]
+        b = self.halbach_coef[self.polarization]["b"]
+        c = self.halbach_coef[self.polarization]["c"]
+        efficiency = self.efficiency
+        return (
+            efficiency
+            * SourceFunctions.beff_function(
+                gap_over_period=gap_over_period, br=br, a=a, b=b, c=c
+            )
+            * _np.abs(_np.cos(_np.pi / self._period * (phase - z0)))
+        )
+    
+    def calc_max_k(self, si_parameters):
+        """Calc max K achieved by undulator.
+
+        Args:
+            si_parameters (StorageRingParameters): StorageRingParameters
+             object.
+        """
+        b_max = self.get_beff(self.gap / self.period)
+        k_max = self.undulator_b_to_k(b_max, self.period)
+        return k_max
 
 
 class Hybrid_Nd(Undulator):
