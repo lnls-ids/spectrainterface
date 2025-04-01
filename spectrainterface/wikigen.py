@@ -2244,9 +2244,8 @@ class Process(FunctionsManipulation):
             return_indices=True,
         )[1]
         source_classes = _np.delete(source_classes, idx_intersec)
-        source_classes = [name.upper() for name in source_classes]
         sources = list()
-        sources += source_classes
+        sources += list(source_classes)
 
         # Mount Module Sirius
         module_sirius = getattr(
@@ -2259,12 +2258,11 @@ class Process(FunctionsManipulation):
         sirius_classes = _np.array(
             [name for name, obj in inspect.getmembers(module_sirius_sources, inspect.isclass)]
         )
-        sirius_classes = [name.upper() for name in sirius_classes]
-        sources += sirius_classes
+        sources += list(sirius_classes)
 
         # Verify if exist Und type inside Module Sources
         source_class_exist = list(
-            map(lambda x: und_class.upper() in x.upper(), sources)
+            map(lambda x: und_class.upper() in x.upper(), [name.upper() for name in sources])
         )
         idxs = _np.where(source_class_exist)[0]
         if len(idxs) == 0:
