@@ -2227,11 +2227,11 @@ class Process(FunctionsManipulation):
         )
         
         # Mount Module
-        sources = importlib.import_module("spectrainterface.sources")
+        module_sources = importlib.import_module("spectrainterface.sources")
 
         # Get Source Classes inside Module Sources
         source_classes = _np.array(
-            [name for name, obj in inspect.getmembers(sources, inspect.isclass)]
+            [name for name, obj in inspect.getmembers(module_sources, inspect.isclass)]
         )
         idx_intersec = _np.intersect1d(
             source_classes,
@@ -2244,24 +2244,43 @@ class Process(FunctionsManipulation):
             return_indices=True,
         )[1]
         source_classes = _np.delete(source_classes, idx_intersec)
+        source_classes = [name.upper() for name in source_classes]
+        sources = list()
+        sources += source_classes
+
+        # Mount Module Sirius
+        module_sirius = getattr(
+            importlib.import_module("spectrainterface.sirius"),
+            "SIRIUS"
+        )
+        module_sirius_sources = getattr(module_sirius, "Sources")
+
+        # Get Source Classes inside Module Sirius
+        sirius_classes = _np.array(
+            [name for name, obj in inspect.getmembers(module_sirius_sources, inspect.isclass)]
+        )
+        sirius_classes = [name.upper() for name in sirius_classes]
+        sources += sirius_classes
 
         # Verify if exist Und type inside Module Sources
         source_class_exist = list(
-            map(lambda x: und_class.upper() in x.upper(), source_classes)
+            map(lambda x: und_class.upper() in x.upper(), sources)
         )
         idxs = _np.where(source_class_exist)[0]
         if len(idxs) == 0:
             raise ValueError(
                 "Source classe: '{:}' does not exist.\nChoose one of these:\n {:}".format(  # noqa: E501
-                    und_class, source_classes
+                    und_class, sources
                 )
             )
         idx = idxs[0]
-        source_selected = source_classes[idx]
+        source_selected = sources[idx]
+
+        module = module_sources if source_selected in source_classes else module_sirius_sources
 
         # Source Initialization
         if source_selected in ["B1", "B2", "BC"]:
-            source = getattr(sources, source_selected)()
+            source = getattr(module, source_selected)()
             source.label = self._id_params.label
             source.material = source_selected
 
@@ -2269,7 +2288,7 @@ class Process(FunctionsManipulation):
                 print("Source Selected: {:}".format(source.material))
                 print("B Peak: {:.4f} T".format(source.b_peak))
         else:
-            source = getattr(sources, source_selected)(self._id_params.period, self._id_params.length)
+            source = getattr(module, source_selected)(self._id_params.period, self._id_params.length)
             source.label = self._id_params.label
             source.vc_tolerance = self._id_params.vc_tolerance
             source.polarization = self._id_params.polarization
