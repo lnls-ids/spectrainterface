@@ -85,7 +85,7 @@ class FunctionsManipulation:
                 source.source_length,
                 source.period,
             )
-            figname = "flux_density_{:}_{:.0f}m_{:.0f}mm_{:.0f}keV".format(
+            figname = "flux_density_{:}_{:.0f}m_{:.0f}mm_{:.0f}keV.png".format(
                 source.label,
                 source.source_length,
                 source.period,
@@ -97,7 +97,7 @@ class FunctionsManipulation:
                 distance_from_source,
                 source.label,
             )
-            figname = "flux_density_{:}_{:.0f}keV".format(
+            figname = "flux_density_{:}_{:.0f}keV.png".format(
                 source.label, target_energy * 1e-3
             )
         fig = _plt.figure(figsize=(figsize[0], figsize[0]))
