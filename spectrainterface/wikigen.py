@@ -2304,9 +2304,10 @@ class Process(FunctionsManipulation):
             source.halbach_coef = source.halbach_coef if self._id_params.halbach_coef is None else self._id_params.halbach_coef
             source.polarization = source.polarization if self._id_params.polarization is None else self._id_params.polarization
             # Phase Errors
-            if self._id_params.phase_error > 0:
-                source.add_phase_errors = True
-                source.use_recovery_params = True
+            if self._id_params.phase_error is not None: 
+                if self._id_params.phase_error > 0:
+                    source.add_phase_errors = True
+                    source.use_recovery_params = True
             # Verify min gap and max k values
             if source._undulator_type in ["APU", "APPLE2"]:
                 gap = source.gap
