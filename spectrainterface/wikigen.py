@@ -768,11 +768,11 @@ class FunctionsManipulation:
         text = r"$B(g)=B_r\cdot a\cdot \exp{\left(b\frac{g}{\lambda_u}+c\frac{g^2}{\lambda_u^2}\right)}$"
         text += "\n"
         text += r"$B_r=$ {:.2f}        a={:.4f}".format(
-            source.br, source.halbach_coef["hp"]["a"]
+            source.br, source.halbach_coef[source.polarization]["a"]
         )
         text += "\n"
         text += r"$b=$ {:.4f}    c={:.4f}".format(
-            source.halbach_coef["hp"]["b"], source.halbach_coef["hp"]["c"]
+            source.halbach_coef[source.polarization]["b"], source.halbach_coef[source.polarization]["c"]
         )
         _plt.text(x=gapmax / 3, y=(Bs[0] - Bs[-1]) / 2, s=text, fontsize=10)
         _plt.tick_params(
@@ -1783,6 +1783,7 @@ class IDParameters:
         self._phase_error = None
         self._label = None
         self._vc_tolerance = None
+        self._halbach_coef = None
     
     @property
     def polarization(self):
@@ -1816,6 +1817,10 @@ class IDParameters:
     def vc_tolerance(self):
         return self._vc_tolerance
 
+    @property
+    def halbach_coef(self):
+        return self._halbach_coef
+
     @polarization.setter
     def polarization(self, value):
         self._polarization = value
@@ -1847,6 +1852,10 @@ class IDParameters:
     @vc_tolerance.setter
     def vc_tolerance(self, value):
         self._vc_tolerance = value
+
+    @halbach_coef.setter
+    def halbach_coef(self, value):
+        self._halbach_coef = value
 
 
 class Calculations:
@@ -2227,11 +2236,11 @@ class Process(FunctionsManipulation):
         )
         
         # Mount Module
-        sources = importlib.import_module("spectrainterface.sources")
+        module_sources = importlib.import_module("spectrainterface.sources")
 
         # Get Source Classes inside Module Sources
         source_classes = _np.array(
-            [name for name, obj in inspect.getmembers(sources, inspect.isclass)]
+            [name for name, obj in inspect.getmembers(module_sources, inspect.isclass)]
         )
         idx_intersec = _np.intersect1d(
             source_classes,
@@ -2244,24 +2253,41 @@ class Process(FunctionsManipulation):
             return_indices=True,
         )[1]
         source_classes = _np.delete(source_classes, idx_intersec)
+        sources = list()
+        sources += list(source_classes)
+
+        # Mount Module Sirius
+        module_sirius = getattr(
+            importlib.import_module("spectrainterface.sirius"),
+            "SIRIUS"
+        )
+        module_sirius_sources = getattr(module_sirius, "Sources")
+
+        # Get Source Classes inside Module Sirius
+        sirius_classes = _np.array(
+            [name for name, obj in inspect.getmembers(module_sirius_sources, inspect.isclass)]
+        )
+        sources += list(sirius_classes)
 
         # Verify if exist Und type inside Module Sources
         source_class_exist = list(
-            map(lambda x: und_class.upper() in x.upper(), source_classes)
+            map(lambda x: und_class.upper() in x.upper(), [name.upper() for name in sources])
         )
         idxs = _np.where(source_class_exist)[0]
         if len(idxs) == 0:
             raise ValueError(
                 "Source classe: '{:}' does not exist.\nChoose one of these:\n {:}".format(  # noqa: E501
-                    und_class, source_classes
+                    und_class, sources
                 )
             )
         idx = idxs[0]
-        source_selected = source_classes[idx]
+        source_selected = sources[idx]
+
+        module = module_sources if source_selected in source_classes else module_sirius_sources
 
         # Source Initialization
         if source_selected in ["B1", "B2", "BC"]:
-            source = getattr(sources, source_selected)()
+            source = getattr(module, source_selected)()
             source.label = self._id_params.label
             source.material = source_selected
 
@@ -2269,16 +2295,25 @@ class Process(FunctionsManipulation):
                 print("Source Selected: {:}".format(source.material))
                 print("B Peak: {:.4f} T".format(source.b_peak))
         else:
-            source = getattr(sources, source_selected)(self._id_params.period, self._id_params.length)
-            source.label = self._id_params.label
-            source.vc_tolerance = self._id_params.vc_tolerance
-            source.polarization = self._id_params.polarization
+            if self._id_params.period is None or self._id_params.length is None:
+                source = getattr(module, source_selected)()
+            else:
+                source = getattr(module, source_selected)(self._id_params.period, self._id_params.length)
+            source.label = source.label if self._id_params.label is None else self._id_params.label
+            source.vc_tolerance = source.vc_tolerance if self._id_params.vc_tolerance is None else  self._id_params.vc_tolerance
+            source.halbach_coef = source.halbach_coef if self._id_params.halbach_coef is None else self._id_params.halbach_coef
+            source.polarization = source.polarization if self._id_params.polarization is None else self._id_params.polarization
             # Phase Errors
-            if self._id_params.phase_error > 0:
-                source.add_phase_errors = True
-                source.use_recovery_params = True
+            if self._id_params.phase_error is not None: 
+                if self._id_params.phase_error > 0:
+                    source.add_phase_errors = True
+                    source.use_recovery_params = True
             # Verify min gap and max k values
-            gapv, gaph = source.calc_min_gap(self._spectra.accelerator)
+            if source._undulator_type in ["APU", "APPLE2"]:
+                gap = source.gap
+            else:
+                gapv, gaph = source.calc_min_gap(self._spectra.accelerator)
+            
             kmax = source.calc_max_k(self._spectra.accelerator)
 
             if verb:
@@ -2288,12 +2323,14 @@ class Process(FunctionsManipulation):
                         source.period, source.source_length
                     )
                 )
+
+
                 if source.polarization == "cp":
-                    print("Min. gapv: {:.4f} mm | Min gaph: {:.3f} mm".format(gapv, gaph))
+                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in ["APU", "APPLE2"] else "Min. gapv: {:.4f} mm | Min gaph: {:.3f} mm".format(gapv, gaph))
                 elif source.polarization == "hp":
-                    print("Min. gapv: {:.4f} mm".format(gapv))
+                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in ["APU", "APPLE2"] else "Min. gapv: {:.4f} mm".format(gapv))
                 else:
-                    print("Min. gaph: {:.3f} mm".format(gaph))
+                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in ["APU", "APPLE2"] else "Min. gaph: {:.3f} mm".format(gaph))
                 print(
                     "Máx. k: {:.4f} | Máx. B: {:.2f} T".format(
                         kmax, source.undulator_k_to_b(kmax, source.period)
