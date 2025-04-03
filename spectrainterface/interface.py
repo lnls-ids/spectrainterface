@@ -2156,6 +2156,21 @@ class SpectraInterface:
             - (_np.sum(f_x * x) / _np.sum(f_x)) ** 2
         )
 
+    @staticmethod
+    def export_data(data: dict, filename: str):
+        """ Export data function.
+
+        Args:
+            data (dict): data
+            filename (str): file name
+
+        Returns:
+            None
+        """
+        with open("{:}.json".format(filename), "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False) 
+
+
     def apply_phase_error_matrix(self, values, harm, rec_param=True):
         """Add phase errors.
 
