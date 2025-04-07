@@ -2170,7 +2170,6 @@ class SpectraInterface:
         with open("{:}.json".format(filename), "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False) 
 
-
     def apply_phase_error_matrix(self, values, harm, rec_param=True):
         """Add phase errors.
 
@@ -2540,7 +2539,7 @@ class SpectraInterface:
         kmin=0.2,
         slit_shape="circslit",
         slit_acceptances=[[0, 0.04]],
-        extraction_points=None,
+        extraction_points=None
     ):
         """Calc flux curves.
 
@@ -4610,6 +4609,8 @@ class SpectraInterface:
         dpi=300,
         legend_fs=10,
         legend_properties=True,
+        export_data=False,
+        filename='flux_curves'
     ):
         """Plot flux curves.
 
@@ -4620,9 +4621,26 @@ class SpectraInterface:
              superposition. Defaults to 250.
             title (str, optional): Plot title.
             xscale (str, optional): xscale axis
-             xscale. Defalts to 'linear'.
+             xscale. Defaults to 'linear'.
             yscale (str, optional): yscale axis
-             yscale. Defalts to 'log'.
+             yscale. Defaults to 'log'.
+            xlim (list, optional): xlim axes.
+            ylim (list, optional): ylim axes.
+            linewidth (int, optional): linewidth.
+            savefig (bool, optional): save fig.
+            figname (str, optional): figname.
+             figname. Defaults to 'flux.png'.
+            dpi (int, optional): dpi figure.
+             dpi. Defaults to 300.
+            legend_fs (int, optional): legend font size.
+             legend_fs. Defaults to 10.
+            legend_properties (bool, optional): lengend properties.
+             legend_properties. Defaults to True.
+            export_data (bool, optional): export data, if True not will plot.
+             export_data. Defaults to False.
+            filename (str, optional): json file name.
+             filename. Defaults to 'flux_curves'.
+
         """
         if self._flag_flux_processed:
             process_curves = False
@@ -4680,62 +4698,79 @@ class SpectraInterface:
             self._energies = energies
             self._fluxes = fluxes
 
-        _plt.figure(figsize=figsize)
-        colorlist = ["C" + str(i) for i, value in enumerate(self.sources)]
-        for i, source in enumerate(self.sources):
-            color = colorlist[i]
-            if source.source_type == "bendingmagnet":
-                label = source.label
-            else:
-                label = source.label
-                if legend_properties:
-                    label += ", λ = {:.1f} mm".format(source.period)
-                    label += ", L = {:.1f} m".format(source.source_length)
-            for j in _np.arange(self.energies[i].shape[0]):
-                if j == 0:
-                    _plt.plot(
-                        1e-3 * self.energies[i][j, :],
-                        self.fluxes[i][j, :],
-                        color=color,
-                        linewidth=linewidth,
-                        alpha=0.9,
-                        label=label,
-                    )
-                else:
-                    _plt.plot(
-                        1e-3 * self.energies[i][j, :],
-                        self.fluxes[i][j, :],
-                        color=color,
-                        linewidth=linewidth,
-                        alpha=0.9,
-                    )
+        data = dict()
+        data["calc"] = "Flux Curves"
+        data["units"] = ["eV", "ph/s/0.1%/100mA"]
+        data["data"] = list()
 
-        _plt.yscale(yscale)
-        _plt.xscale(xscale)
+        if export_data:
+            for i, source in enumerate(self.sources):
+                data["data"].append(
+                    {
+                        "label": source.label,
+                        "energies": self._energies[i].tolist(),
+                        "flux": self._fluxes[i].tolist()
+                    }
+                )
 
-        if xlim:
-            _plt.xlim(xlim[0], xlim[1])
-        if ylim:
-            _plt.ylim(ylim[0], ylim[1])
-
-        _plt.xlabel("Energy [keV]")
-        _plt.ylabel("Flux [ph/s/0.1%/100mA]")
-        _plt.title(title)
-
-        _plt.minorticks_on()
-        _plt.tick_params(
-            which="both", axis="both", direction="in", top=True, right=True
-        )
-        _plt.grid(which="major", alpha=0.4)
-        _plt.grid(which="minor", alpha=0.2)
-
-        _plt.legend(fontsize=legend_fs)
-        _plt.tight_layout()
-
-        if savefig:
-            _plt.savefig(figname, dpi=dpi)
+            self.export_data(data=data, filename='{:}'.format(filename))
         else:
-            _plt.show()
+            _plt.figure(figsize=figsize)
+            colorlist = ["C" + str(i) for i, value in enumerate(self.sources)]
+            for i, source in enumerate(self.sources):
+                color = colorlist[i]
+                if source.source_type == "bendingmagnet":
+                    label = source.label
+                else:
+                    label = source.label
+                    if legend_properties:
+                        label += ", λ = {:.1f} mm".format(source.period)
+                        label += ", L = {:.1f} m".format(source.source_length)
+                for j in _np.arange(self.energies[i].shape[0]):
+                    if j == 0:
+                        _plt.plot(
+                            1e-3 * self.energies[i][j, :],
+                            self.fluxes[i][j, :],
+                            color=color,
+                            linewidth=linewidth,
+                            alpha=0.9,
+                            label=label,
+                        )
+                    else:
+                        _plt.plot(
+                            1e-3 * self.energies[i][j, :],
+                            self.fluxes[i][j, :],
+                            color=color,
+                            linewidth=linewidth,
+                            alpha=0.9,
+                        )
+
+            _plt.yscale(yscale)
+            _plt.xscale(xscale)
+
+            if xlim:
+                _plt.xlim(xlim[0], xlim[1])
+            if ylim:
+                _plt.ylim(ylim[0], ylim[1])
+
+            _plt.xlabel("Energy [keV]")
+            _plt.ylabel("Flux [ph/s/0.1%/100mA]")
+            _plt.title(title)
+
+            _plt.minorticks_on()
+            _plt.tick_params(
+                which="both", axis="both", direction="in", top=True, right=True
+            )
+            _plt.grid(which="major", alpha=0.4)
+            _plt.grid(which="minor", alpha=0.2)
+
+            _plt.legend(fontsize=legend_fs)
+            _plt.tight_layout()
+
+            if savefig:
+                _plt.savefig(figname, dpi=dpi)
+            else:
+                _plt.show()
 
     def plot_flux_density_matrix(
         self,
