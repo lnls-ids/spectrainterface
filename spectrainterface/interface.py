@@ -4466,9 +4466,9 @@ class SpectraInterface:
              superposition. Defaults to 250.
             title (str, optional): Plot title.
             xscale (str, optional): xscale axis
-             xscale. Defalts to 'linear'.
+             xscale. Delfaults to 'linear'.
             yscale (str, optional): yscale axis
-             yscale. Defalts to 'log'.
+             yscale. Delfaults to 'log'.
         """
         if self._flag_brill_processed:
             process_curves = False
@@ -4787,17 +4787,17 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Defalts to 'linear'.
+             cscale. Delfaults to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
-             savefig. Defalts to False.
+             savefig. Delfaults to False.
             figname (str, optional): Figure name
-             figname. Defalts to 'flux_density_matrix.png'
+             figname. Delfaults to 'flux_density_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Defalts to 400.
+             dpi. Delfaults to 400.
             figsize (tuple, optional): Figure size.
-             figsize. Defalts to (5, 4)
+             figsize. Delfaults to (5, 4)
         """
         # Getting the parameters of the best undulator
         info = self._info_matrix_flux_density[
@@ -4897,18 +4897,18 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Defalts to 'linear'.
+             cscale. Delfaults to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             cmap (str): colormap.
             savefig (bool, optional): Save Figure
-             savefig. Defalts to False.
+             savefig. Delfaults to False.
             figname (str, optional): Figure name
-             figname. Defalts to 'flux_matrix.png'
+             figname. Delfaults to 'flux_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Defalts to 400.
+             dpi. Delfaults to 400.
             figsize (tuple, optional): Figure size.
-             figsize. Defalts to (5, 4)
+             figsize. Delfaults to (5, 4)
         """
         # Getting the parameters of the best undulator
         flux_matrix = data[0]
@@ -5001,17 +5001,17 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Defalts to 'linear'.
+             cscale. Delfaults to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
-             savefig. Defalts to False.
+             savefig. Delfaults to False.
             figname (str, optional): Figure name
-             figname. Defalts to 'brilliance_matrix.png'
+             figname. Delfaults to 'brilliance_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Defalts to 400.
+             dpi. Delfaults to 400.
             figsize (tuple, optional): Figure size.
-             figsize. Defalts to (5, 4)
+             figsize. Delfaults to (5, 4)
         """
         # Getting the parameters of the best undulator
         brilliance_matrix = data[0]
@@ -5113,17 +5113,17 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Defalts to 'linear'.
+             cscale. Delfaults to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
-             savefig. Defalts to False.
+             savefig. Delfaults to False.
             figsize (tuple, optional): Figure size.
-             figsize. Defalts to (5, 4)
+             figsize. Delfaults to (5, 4)
             figname (str, optional): Figure name
-             figname. Defalts to 'total_power_matrix.png'
+             figname. Delfaults to 'total_power_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Defalts to 400.
+             dpi. Delfaults to 400.
             data (tuple): data especified
              First position 'flux matrix' or 'flux density matrix' or 'brilliance matrix'
              Second position unds matrix
@@ -5227,17 +5227,17 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Defalts to 'linear'.
+             cscale. Delfaults to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
-             savefig. Defalts to False.
+             savefig. Delfaults to False.
             figsize (tuple, optional): Figure size.
-             figsize. Defalts to (5, 4)
+             figsize. Delfaults to (5, 4)
             figname (str, optional): Figure name
-             figname. Defalts to 'partial_power_matrix.png'
+             figname. Delfaults to 'partial_power_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Defalts to 400.
+             dpi. Delfaults to 400.
             partial_power_matrix (numpy array): partial power matrix of undulators information to use in calculation
         """
         if partial_power_matrix is None:
