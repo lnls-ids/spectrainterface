@@ -2539,7 +2539,11 @@ class SpectraInterface:
         kmin=0.2,
         slit_shape="circslit",
         slit_acceptances=[[0, 0.04]],
-        extraction_points=None
+        extraction_points=None,
+        export_data=False,
+        filename="data",
+        superp_value=250,
+        process_curves=True
     ):
         """Calc flux curves.
 
@@ -2556,6 +2560,14 @@ class SpectraInterface:
              Defaults to [0, 0.04].
             extraction_points (list of string): List of extraction points for each
              source.
+            export_data (bool, optional): to export data.
+             export_data. Defaults to False.
+            filename (str, optional): filename.
+             filename. Defaults to 'data'.
+            superp_value (int, optional): Desired value of energy
+             superposition. Defaults to 250.
+            process_curves (bool, optional): If true energy superposition will
+             be processed. Defaults to True.
 
         Raises:
             ValueError: _description_
@@ -2628,6 +2640,78 @@ class SpectraInterface:
 
         self._energies = energies
         self._fluxes = fluxes
+
+        if export_data:
+            if self._flag_flux_processed:
+                process_curves = False
+            energies = list()
+            fluxes = list()
+            if process_curves is True:
+                self._flag_flux_processed = True
+                for i, source in enumerate(self.sources):
+                    if (
+                        source.source_type != "wiggler"
+                        and source.source_type != "bendingmagnet"
+                    ):
+                        input_flux = self.fluxes[i][:, :]
+                        input_energies = self.energies[i][:, :]
+                        if input_energies.shape[0] > 1:
+                            energies_, flux = self.calc.process_brilliance_curve(
+                                input_energies,
+                                input_flux,
+                                superp_value=superp_value,
+                            )
+                        else:
+                            input_flux_b = input_flux[0]
+                            input_energies_b = input_energies[0]
+                            idx = _np.argsort(input_energies_b)
+                            input_energies_b = input_energies_b[idx]
+                            input_flux_b = input_flux_b[idx]
+                            energies_ = _np.linspace(
+                                _np.min(input_energies_b),
+                                _np.max(input_energies_b),
+                                2001,
+                            )
+                            flux = _np.interp(
+                                energies_, input_energies_b, input_flux_b
+                            )
+                            energies_ = _np.reshape(
+                                energies_, (1, _np.shape(energies_)[0])
+                            )
+                            flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
+                    else:
+                        input_flux = _np.array(self.fluxes[i], dtype=float)
+                        input_energies = _np.array(self.energies[i], dtype=float)
+                        energies_ = _np.linspace(
+                            _np.min(input_energies), _np.max(input_energies), 2001
+                        )
+                        flux = _np.interp(energies_, input_energies, input_flux)
+                        energies_ = _np.reshape(
+                            energies_, (1, _np.shape(energies_)[0])
+                        )
+                        flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
+
+                    energies.append(energies_)
+                    fluxes.append(flux)
+                energies = _np.array(energies, dtype=object)
+                fluxes = _np.array(fluxes, dtype=object)
+
+            data = dict()
+            data["calc"] = "Flux Curves"
+            data["units"] = ["eV", "ph/s/0.1%/100mA"]
+            data["data"] = list()
+
+            
+            for i, source in enumerate(self.sources):
+                data["data"].append(
+                    {
+                        "label": source.label,
+                        "energies": energies[i].tolist(),
+                        "flux": fluxes[i].tolist()
+                    }
+                )
+
+            self.export_data(data=data, filename='{:}'.format(filename))
 
     def _parallel_calc_flux_fpmethod(self, args):
         (
@@ -4466,9 +4550,9 @@ class SpectraInterface:
              superposition. Defaults to 250.
             title (str, optional): Plot title.
             xscale (str, optional): xscale axis
-             xscale. Delfaults to 'linear'.
+             xscale. Defalts to 'linear'.
             yscale (str, optional): yscale axis
-             yscale. Delfaults to 'log'.
+             yscale. Defalts to 'log'.
         """
         if self._flag_brill_processed:
             process_curves = False
@@ -4609,8 +4693,6 @@ class SpectraInterface:
         dpi=300,
         legend_fs=10,
         legend_properties=True,
-        export_data=False,
-        filename='flux_curves'
     ):
         """Plot flux curves.
 
@@ -4635,11 +4717,7 @@ class SpectraInterface:
             legend_fs (int, optional): legend font size.
              legend_fs. Defaults to 10.
             legend_properties (bool, optional): lengend properties.
-             legend_properties. Defaults to True.
-            export_data (bool, optional): export data, if True not will plot.
-             export_data. Defaults to False.
-            filename (str, optional): json file name.
-             filename. Defaults to 'flux_curves'.
+             legend_properties. Defaults to True
 
         """
         if self._flag_flux_processed:
@@ -4698,79 +4776,62 @@ class SpectraInterface:
             self._energies = energies
             self._fluxes = fluxes
 
-        data = dict()
-        data["calc"] = "Flux Curves"
-        data["units"] = ["eV", "ph/s/0.1%/100mA"]
-        data["data"] = list()
-
-        if export_data:
-            for i, source in enumerate(self.sources):
-                data["data"].append(
-                    {
-                        "label": source.label,
-                        "energies": self._energies[i].tolist(),
-                        "flux": self._fluxes[i].tolist()
-                    }
-                )
-
-            self.export_data(data=data, filename='{:}'.format(filename))
-        else:
-            _plt.figure(figsize=figsize)
-            colorlist = ["C" + str(i) for i, value in enumerate(self.sources)]
-            for i, source in enumerate(self.sources):
-                color = colorlist[i]
-                if source.source_type == "bendingmagnet":
-                    label = source.label
-                else:
-                    label = source.label
-                    if legend_properties:
-                        label += ", λ = {:.1f} mm".format(source.period)
-                        label += ", L = {:.1f} m".format(source.source_length)
-                for j in _np.arange(self.energies[i].shape[0]):
-                    if j == 0:
-                        _plt.plot(
-                            1e-3 * self.energies[i][j, :],
-                            self.fluxes[i][j, :],
-                            color=color,
-                            linewidth=linewidth,
-                            alpha=0.9,
-                            label=label,
-                        )
-                    else:
-                        _plt.plot(
-                            1e-3 * self.energies[i][j, :],
-                            self.fluxes[i][j, :],
-                            color=color,
-                            linewidth=linewidth,
-                            alpha=0.9,
-                        )
-
-            _plt.yscale(yscale)
-            _plt.xscale(xscale)
-
-            if xlim:
-                _plt.xlim(xlim[0], xlim[1])
-            if ylim:
-                _plt.ylim(ylim[0], ylim[1])
-
-            _plt.xlabel("Energy [keV]")
-            _plt.ylabel("Flux [ph/s/0.1%/100mA]")
-            _plt.title(title)
-
-            _plt.minorticks_on()
-            _plt.tick_params(
-                which="both", axis="both", direction="in", top=True, right=True
-            )
-            _plt.grid(which="major", alpha=0.4)
-            _plt.grid(which="minor", alpha=0.2)
-
-            _plt.legend(fontsize=legend_fs)
-            _plt.tight_layout()
-
-            if savefig:
-                _plt.savefig(figname, dpi=dpi)
+        _plt.figure(figsize=figsize)
+        colorlist = ["C" + str(i) for i, value in enumerate(self.sources)]
+        for i, source in enumerate(self.sources):
+            color = colorlist[i]
+            if source.source_type == "bendingmagnet":
+                label = source.label
             else:
-                _plt.show()
+                label = source.label
+                if legend_properties:
+                    label += ", λ = {:.1f} mm".format(source.period)
+                    label += ", L = {:.1f} m".format(source.source_length)
+            for j in _np.arange(self.energies[i].shape[0]):
+                if j == 0:
+                    _plt.plot(
+                        1e-3 * self.energies[i][j, :],
+                        self.fluxes[i][j, :],
+                        color=color,
+                        linewidth=linewidth,
+                        alpha=0.9,
+                        label=label,
+                    )
+                else:
+                    _plt.plot(
+                        1e-3 * self.energies[i][j, :],
+                        self.fluxes[i][j, :],
+                        color=color,
+                        linewidth=linewidth,
+                        alpha=0.9,
+                    )
+
+        _plt.yscale(yscale)
+        _plt.xscale(xscale)
+
+        if xlim:
+            _plt.xlim(xlim[0], xlim[1])
+        if ylim:
+            _plt.ylim(ylim[0], ylim[1])
+
+        _plt.xlabel("Energy [keV]")
+        _plt.ylabel("Flux [ph/s/0.1%/100mA]")
+        _plt.title(title)
+
+        _plt.minorticks_on()
+        _plt.tick_params(
+            which="both", axis="both", direction="in", top=True, right=True
+        )
+        _plt.grid(which="major", alpha=0.4)
+        _plt.grid(which="minor", alpha=0.2)
+
+        _plt.legend(fontsize=legend_fs)
+        _plt.tight_layout()
+
+        if savefig:
+            _plt.savefig(figname, dpi=dpi)
+        else:
+            _plt.show()
 
     def plot_flux_density_matrix(
         self,
@@ -4787,17 +4848,17 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Delfaults to 'linear'.
+             cscale. Defalts to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
-             savefig. Delfaults to False.
+             savefig. Defalts to False.
             figname (str, optional): Figure name
-             figname. Delfaults to 'flux_density_matrix.png'
+             figname. Defalts to 'flux_density_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Delfaults to 400.
+             dpi. Defalts to 400.
             figsize (tuple, optional): Figure size.
-             figsize. Delfaults to (5, 4)
+             figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
         info = self._info_matrix_flux_density[
@@ -4897,18 +4958,18 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Delfaults to 'linear'.
+             cscale. Defalts to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             cmap (str): colormap.
             savefig (bool, optional): Save Figure
-             savefig. Delfaults to False.
+             savefig. Defalts to False.
             figname (str, optional): Figure name
-             figname. Delfaults to 'flux_matrix.png'
+             figname. Defalts to 'flux_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Delfaults to 400.
+             dpi. Defalts to 400.
             figsize (tuple, optional): Figure size.
-             figsize. Delfaults to (5, 4)
+             figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
         flux_matrix = data[0]
@@ -5001,17 +5062,17 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Delfaults to 'linear'.
+             cscale. Defalts to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
-             savefig. Delfaults to False.
+             savefig. Defalts to False.
             figname (str, optional): Figure name
-             figname. Delfaults to 'brilliance_matrix.png'
+             figname. Defalts to 'brilliance_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Delfaults to 400.
+             dpi. Defalts to 400.
             figsize (tuple, optional): Figure size.
-             figsize. Delfaults to (5, 4)
+             figsize. Defalts to (5, 4)
         """
         # Getting the parameters of the best undulator
         brilliance_matrix = data[0]
@@ -5113,17 +5174,17 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Delfaults to 'linear'.
+             cscale. Defalts to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
-             savefig. Delfaults to False.
+             savefig. Defalts to False.
             figsize (tuple, optional): Figure size.
-             figsize. Delfaults to (5, 4)
+             figsize. Defalts to (5, 4)
             figname (str, optional): Figure name
-             figname. Delfaults to 'total_power_matrix.png'
+             figname. Defalts to 'total_power_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Delfaults to 400.
+             dpi. Defalts to 400.
             data (tuple): data especified
              First position 'flux matrix' or 'flux density matrix' or 'brilliance matrix'
              Second position unds matrix
@@ -5227,17 +5288,17 @@ class SpectraInterface:
         Args:
             title (str, optional): Plot title.
             cscale (str, optional): color bar scale
-             cscale. Delfaults to 'linear'.
+             cscale. Defalts to 'linear'.
             clim (tuple): color bar limits.
              Defaults to (None, None) will take the minimum or/and maximum limit
             savefig (bool, optional): Save Figure
-             savefig. Delfaults to False.
+             savefig. Defalts to False.
             figsize (tuple, optional): Figure size.
-             figsize. Delfaults to (5, 4)
+             figsize. Defalts to (5, 4)
             figname (str, optional): Figure name
-             figname. Delfaults to 'partial_power_matrix.png'
+             figname. Defalts to 'partial_power_matrix.png'
             dpi (int, optional): Image resolution
-             dpi. Delfaults to 400.
+             dpi. Defalts to 400.
             partial_power_matrix (numpy array): partial power matrix of undulators information to use in calculation
         """
         if partial_power_matrix is None:
