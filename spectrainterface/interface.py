@@ -2642,12 +2642,9 @@ class SpectraInterface:
         self._fluxes = fluxes
 
         if export_data:
-            if self._flag_flux_processed:
-                process_curves = False
             energies = list()
             fluxes = list()
             if process_curves is True:
-                self._flag_flux_processed = True
                 for i, source in enumerate(self.sources):
                     if (
                         source.source_type != "wiggler"
