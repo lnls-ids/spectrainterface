@@ -2328,6 +2328,10 @@ class SpectraInterface:
         emax=20e3,
         x_accep=1,
         extraction_points=None,
+        export_data=False,
+        filename="data_brilliance",
+        superp_value=250,
+        process_curves=True
     ):
         """Calc brilliance curve.
 
@@ -2340,7 +2344,14 @@ class SpectraInterface:
             x_accep (float): X acceptance for bending magnet radiation.
             extraction_points (list of string): List of extraction points for each
              source.
-
+            export_data (bool, optional): to export data.
+             export_data. Defaults to False.
+            filename (str, optional): filename.
+             filename. Defaults to 'data'.
+            superp_value (int, optional): Desired value of energy
+             superposition. Defaults to 250.
+            process_curves (bool, optional): If true energy superposition will
+             be processed. Defaults to True.
         """
 
         self._flag_brill_processed = False
@@ -2405,6 +2416,75 @@ class SpectraInterface:
 
         self._energies = energies
         self._brilliances = brilliances
+
+        if export_data:
+            energies = list()
+            brilliances = list()
+            if process_curves is True:
+                for i, source in enumerate(self.sources):
+                    if (
+                        source.source_type != "wiggler"
+                        and source.source_type != "bendingmagnet"
+                    ):
+                        input_flux = self.brilliances[i][:, :]
+                        input_energies = self.energies[i][:, :]
+                        if input_energies.shape[0] > 1:
+                            energies_, flux = self.calc.process_brilliance_curve(
+                                input_energies,
+                                input_flux,
+                                superp_value=superp_value,
+                            )
+                        else:
+                            input_flux_b = input_flux[0]
+                            input_energies_b = input_energies[0]
+                            idx = _np.argsort(input_energies_b)
+                            input_energies_b = input_energies_b[idx]
+                            input_flux_b = input_flux_b[idx]
+                            energies_ = _np.linspace(
+                                _np.min(input_energies_b),
+                                _np.max(input_energies_b),
+                                2001,
+                            )
+                            flux = _np.interp(
+                                energies_, input_energies_b, input_flux_b
+                            )
+                            energies_ = _np.reshape(
+                                energies_, (1, _np.shape(energies_)[0])
+                            )
+                            flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
+                    else:
+                        input_flux = _np.array(self.brilliances[i], dtype=float)
+                        input_energies = _np.array(self.energies[i], dtype=float)
+                        energies_ = _np.linspace(
+                            _np.min(input_energies), _np.max(input_energies), 2001
+                        )
+                        flux = _np.interp(energies_, input_energies, input_flux)
+                        energies_ = _np.reshape(
+                            energies_, (1, _np.shape(energies_)[0])
+                        )
+                        flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
+
+                    energies.append(energies_)
+                    brilliances.append(flux)
+                energies = _np.array(energies, dtype=object)
+                brilliances = _np.array(brilliances, dtype=object)
+
+            data = dict()
+            data["calc"] = "Brilliances Curves"
+            data["units"] = ["eV", "ph/s/0.1%/mm²/mrad²/100mA"]
+            data["data"] = list()
+
+            
+            for i, source in enumerate(self.sources):
+                data["data"].append(
+                    {
+                        "label": source.label,
+                        "energies": energies[i].tolist(),
+                        "brilliance": brilliances[i].tolist()
+                    }
+                )
+
+            self.export_data(data=data, filename='{:}'.format(filename))
 
     def _parallel_calc_flux_curve(self, args):
         (
@@ -2541,7 +2621,7 @@ class SpectraInterface:
         slit_acceptances=[[0, 0.04]],
         extraction_points=None,
         export_data=False,
-        filename="data",
+        filename="data_flux",
         superp_value=250,
         process_curves=True
     ):
