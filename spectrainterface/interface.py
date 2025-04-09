@@ -2418,9 +2418,9 @@ class SpectraInterface:
         self._brilliances = brilliances
 
         if export_data:
-            energies = list()
-            brilliances = list()
             if process_curves is True:
+                energies = list()
+                brilliances = list()
                 for i, source in enumerate(self.sources):
                     if (
                         source.source_type != "wiggler"
@@ -2722,9 +2722,9 @@ class SpectraInterface:
         self._fluxes = fluxes
 
         if export_data:
-            energies = list()
-            fluxes = list()
             if process_curves is True:
+                energies = list()
+                fluxes = list()
                 for i, source in enumerate(self.sources):
                     if (
                         source.source_type != "wiggler"
