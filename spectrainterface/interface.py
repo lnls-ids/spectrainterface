@@ -280,11 +280,11 @@ class GeneralConfigs(SourceFunctions):
         else:
             self._period = value
             if self._bx_peak is not None:
-                self._kx = 1e-3 * ECHARGE_MC * self._bx_peak * self.period
+                self._kx = 1e-3 * ECHARGE_MC * self._bx_peak * (2 * self.period if self.source_type == self.SourceType.figure8_undulator else self.period)
             if self._by_peak is not None:
                 self._ky = 1e-3 * ECHARGE_MC * self._by_peak * self.period
             if self._kx is not None:
-                self._bx_peak = self._kx / (ECHARGE_MC * 1e-3 * self.period)
+                self._bx_peak = self._kx / (ECHARGE_MC * 1e-3 * (2 * self.period if self.source_type == self.SourceType.figure8_undulator else self.period))
             if self._ky is not None:
                 self._by_peak = self._ky / (ECHARGE_MC * 1e-3 * self.period)
 
@@ -349,11 +349,6 @@ class GeneralConfigs(SourceFunctions):
             self._ky = value
             if self.period is not None:
                 self._by_peak = self._ky / (ECHARGE_MC * 1e-3 * self.period)
-                if (
-                    self.source_type
-                    == self.SourceType.vertical_figure8_undulator
-                ):
-                    self._by_peak /= 2
 
             if self.source_type == self.SourceType.helical_undulator:
                 self._kx = value
