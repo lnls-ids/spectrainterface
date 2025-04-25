@@ -444,13 +444,16 @@ class SIRIUS:
                 if self.gap != 0:
                     phase0 = self.phase
                     self.phase = self.phase_coef[self.polarization]["z0"]
-                    self.phase = phase0
                     k_max = self.get_k()
+                    self.phase = phase0
                 else:
                     gap_minv, gap_minh = self.calc_min_gap(si_parameters)
                     gap_min = gap_minv if self.polarization == 'hp' else gap_minh
+                    phase0 = self.phase
+                    self.phase = self.phase_coef[self.polarization]["z0"]
                     b_max = self.get_beff(gap_min / self.period)
                     k_max = self.undulator_b_to_k(b_max, self.period)
+                    self.phase = phase0
                 return k_max
                 
                 
