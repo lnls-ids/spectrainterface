@@ -442,7 +442,9 @@ class SIRIUS:
                     object.
                 """
                 if self.gap != 0:
+                    phase0 = self.phase
                     self.phase = self.phase_coef[self.polarization]["z0"]
+                    self.phase = phase0
                     k_max = self.get_k()
                 else:
                     gap_minv, gap_minh = self.calc_min_gap(si_parameters)
