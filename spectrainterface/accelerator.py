@@ -100,6 +100,26 @@ class StorageRingParameters:
         return self._coupling_constant
 
     @property
+    def horizontal_emmitance(self):
+        """Horizontal emittance.
+
+        Returns:
+            float: Horizontal emittance
+        """
+        k = self.coupling_constant
+        return 1/(1+k)*self.nat_emittance
+    
+    @property
+    def vertical_emmitance(self):
+        """Vertical emittance.
+
+        Returns:
+            float: Vertical emittance
+        """
+        k = self.coupling_constant
+        return k/(1+k)*self.nat_emittance
+
+    @property
     def energy_spread(self):
         """Energy spread.
 
@@ -188,6 +208,58 @@ class StorageRingParameters:
             float: etay [m]
         """
         return self._etapy
+
+    @property
+    def beamsizex(self):
+        """Horizontal beam size.
+
+        Returns:
+            float: Horizontal beam size [m]
+        """
+        emit = self.horizontal_emmitance
+        beta = self.betax
+        eta = self.etax
+        espread = self.energy_spread
+        return _np.sqrt(emit*beta + eta**2*espread**2)
+
+    @property
+    def beamsizey(self):
+        """Vertical beam size.
+
+        Returns:
+            float: Vertical beam size [m]
+        """
+        emit = self.vertical_emmitance
+        beta = self.betay
+        eta = self.etay
+        espread = self.energy_spread
+        return _np.sqrt(emit*beta + eta**2*espread**2)
+    
+    @property
+    def beamdivx(self):
+        """Horizontal beam divergence.
+
+        Returns:
+            float: Horizontal beam divergence [rad]
+        """
+        emit = self.horizontal_emmitance
+        gamma = (1+self.alphax**2)/self.betax
+        etap = self.etapx
+        espread = self.energy_spread
+        return _np.sqrt(emit*gamma + etap**2*espread**2)
+
+    @property
+    def beamdivy(self):
+        """Vertical beam divergence.
+
+        Returns:
+            float: Vertical beam divergence [rad]
+        """
+        emit = self.vertical_emmitance
+        gamma = (1+self.alphay**2)/self.betay
+        etap = self.etapy
+        espread = self.energy_spread
+        return _np.sqrt(emit*gamma + etap**2*espread**2)
 
     @property
     def zero_emittance(self):
