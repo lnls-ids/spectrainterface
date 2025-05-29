@@ -48,7 +48,7 @@ class StorageRingParameters:
 
         self._zero_emittance = False
         self._zero_energy_spread = False
-        self._injection_condition = "Align at Entrance"
+        self._injection_condition = None
 
         # BSC parameters
         self._bsc0_h = 3.4529

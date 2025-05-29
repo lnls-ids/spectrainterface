@@ -90,7 +90,7 @@ class ESRF:
 
             self._zero_emittance = False
             self._zero_energy_spread = False
-            self._injection_condition = "Align at Entrance"
+            self._injection_condition = None
 
     class Sources():
 

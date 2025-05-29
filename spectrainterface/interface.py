@@ -106,9 +106,19 @@ class SpectraTools:
             accelerator.etapy,
         ]
 
-        input_template["Accelerator"]["Options"]["Injection Condition"] = (
-            accelerator.injection_condition
-        )
+        if accelerator.injection_condition is None:
+            if flag_bend:
+                input_template["Accelerator"]["Options"]["Injection Condition"] = (
+                    "Align at Center"
+                )
+            else:
+                input_template["Accelerator"]["Options"]["Injection Condition"] = (
+                    "Align at Entrance"
+                )
+        else:
+            input_template["Accelerator"]["Options"]["Injection Condition"] = (
+                accelerator.injection_condition
+            )
 
         input_template["Accelerator"]["Options"]["Zero Emittance"] = (
             accelerator.zero_emittance
@@ -117,14 +127,6 @@ class SpectraTools:
         input_template["Accelerator"]["Options"]["Zero Energy Spread"] = (
             accelerator.zero_energy_spread
         )
-        if flag_bend:
-            input_template["Accelerator"]["Options"]["Injection Condition"] = (
-                "Align at Center"
-            )
-        else:
-            input_template["Accelerator"]["Options"]["Injection Condition"] = (
-                "Align at Entrance"
-            )
 
         return input_template
 
@@ -144,6 +146,15 @@ class GeneralConfigs(SourceFunctions):
         vertical_figure8_undulator = "verticalfigure8undulator"
         bending_magnet = "bendingmagnet"
         wiggler = "wiggler"
+
+    class InjectionCondition:
+            """Sub class to define injection condition"""
+
+            entrance = 'Align at Entrance'
+            center = 'Align at Center'
+            exit = 'Align at Exit'
+            automatic = 'Automatic'
+            custom = 'Custom'
 
     def __init__(self):
         """Class constructor."""
