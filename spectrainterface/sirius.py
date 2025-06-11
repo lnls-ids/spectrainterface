@@ -479,7 +479,7 @@ class SIRIUS:
             def __init__(self, period=29.0, length=1.54):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "VPU29-CNB"
+                self._label = "VPU29-CAT"
                 self._br = 1.304
                 self._gap = 9.7
                 self.vc_thickness = 0.5
