@@ -455,8 +455,6 @@ class SIRIUS:
                     k_max = self.undulator_b_to_k(b_max, self.period)
                     self.phase = phase0
                 return k_max
-                
-                
 
         class VPU29_CNB(sources.VPU):
             """VPU29b / 2386b (CARNAUBA) class."""
@@ -472,5 +470,22 @@ class SIRIUS:
                 self._polarization = "vp"
                 self._halbach_coef = {
                     "vp": {"a": 2.03304573, "b": -3.4431994, "c": 0.18171406},
+                }
+                self._material = 'NdFeB'
+
+        class VPU29_CAT(sources.VPU):
+            """VPU29a (CATERETÊ) class."""
+
+            def __init__(self, period=29.0, length=1.54):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "VPU29-CNB"
+                self._br = 1.304
+                self._gap = 9.7
+                self.vc_thickness = 0.5
+                self.vc_tolerance = 0.468
+                self._polarization = "vp"
+                self._halbach_coef = {
+                    "vp": {"a": 1.95855633, "b": -3.41259099, "c": 0.14960116},
                 }
                 self._material = 'NdFeB'
