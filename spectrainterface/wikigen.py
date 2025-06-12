@@ -437,10 +437,7 @@ class FunctionsManipulation:
 
         if source.source_type != "bendingmagnet":
             fig, ax = _plt.subplots(figsize=figsize)
-            if source.gap == 0:
-                source_k_max = source.calc_max_k(spectra_calc.accelerator)
-            else:
-                source_k_max = source.get_k()
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
             rows = 7
             col = 1.3
             ax.set_ylim(0, rows)
@@ -450,12 +447,11 @@ class FunctionsManipulation:
                 source.undulator_k_to_b(source_k_max, source.period), 6
             )
             data["Máx. K"] = _np.round(source_k_max, 6)
-            if source.undulator_type != "APU":
+            if not source.undulator_type in ["APU", "DELTA"]:
                 gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
                 data["Min. gap [mm]"] = _np.round(gapv if source.polarization=='hp' else gaph, 2)
             else:
-                gapv = source.gap
-                data["Gap [mm]"] = _np.round(gapv if source.polarization=='hp' else gaph, 2)
+                data["Gap [mm]"] = source.gap
             data["Polarization"] = source.polarization
             data["Length [m]"] = _np.round(source.source_length, 2)
             data["Period [mm]"] = _np.round(source.period, 2)
@@ -816,8 +812,8 @@ class FunctionsManipulation:
         _plt.title(title)
 
         _plt.title(
-            "Phase vs B \nAPU22 ({:.1f} m, {:.1f} mm)".format(
-                source.source_length, source.period
+            "Phase vs B \n{:} ({:.1f} m, {:.1f} mm)".format(
+                source.label, source.source_length, source.period
             )
         )
         _plt.plot(
@@ -828,10 +824,10 @@ class FunctionsManipulation:
         )
         text = r"$B(z) = B_0|\cos\left(\frac{\pi}{\lambda_u}(z-z_0)\right)|$"
         text += "\n" + r"$B_0 = $" + "{:.4f}   ".format(Bs[0])
-        text += r"$z_0 = $" + "{:.4f}".format(source._z0)
+        text += r"$z_0 = $" + "{:.4f}".format(source._phase_coef[source.polarization]['z0'])
         _plt.text(
-            x=1.9 * source.period / 2 / 5,
-            y=14 * (Bs[0] - Bs[-1]) / 15,
+            x=1.5 * source.period / 2 / 5,
+            y= 0.5* (Bs[-1] - Bs[0])/3,
             s=text,
             fontsize=11,
         )
@@ -845,7 +841,6 @@ class FunctionsManipulation:
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.xlim(0, source.period / 2)
-        _plt.xticks(range(0, int(source.period / 2), 1))
         _plt.ylim(0, _np.round(_np.max(Bs) + 0.2, 1))
         _plt.minorticks_on()
         _plt.tight_layout()
@@ -885,8 +880,8 @@ class FunctionsManipulation:
         _plt.title(title)
 
         _plt.title(
-            "Phase vs K \nAPU22 ({:.1f} m, {:.1f} mm)".format(
-                source.source_length, source.period
+            "Phase vs K \n{:} ({:.1f} m, {:.1f} mm)".format(
+                source.label, source.source_length, source.period
             )
         )
         _plt.plot(
@@ -899,14 +894,13 @@ class FunctionsManipulation:
         _plt.yscale(yscale)
         _plt.xlabel("Phase [mm]")
         _plt.xscale(xscale)
-        _plt.xticks(range(0, int(source.period / 2), 1))
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
         _plt.tick_params(
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.xlim(0, source.period / 2)
-        _plt.ylim(0, _np.round(Ks[0] + 0.2, 1))
+        _plt.ylim(0, _np.round(Ks[-1] + 0.2, 1))
         _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
@@ -999,7 +993,7 @@ class FunctionsManipulation:
         _plt.xlabel("Phase [mm]")
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.ylim(int(Es[0]) * 1e-3 - 0.1, int(Es[-1] * 1e-3) + 1)
+        _plt.ylim(int(Es[-1]) * 1e-3 - 0.1, int(Es[0] * 1e-3) + 1)
         _plt.yscale(yscale)
         _plt.xlim(0, source.period / 2)
         _plt.xscale(xscale)
