@@ -2298,12 +2298,13 @@ class Process(FunctionsManipulation):
             source.halbach_coef = source.halbach_coef if self._id_params.halbach_coef is None else self._id_params.halbach_coef
             source.polarization = source.polarization if self._id_params.polarization is None else self._id_params.polarization
             # Phase Errors
+            AGUS = ["APU", "APPLE2", "DELTA"]
             if self._id_params.phase_error is not None: 
                 if self._id_params.phase_error > 0:
                     source.add_phase_errors = True
                     source.use_recovery_params = True
             # Verify min gap and max k values
-            if source._undulator_type in ["APU", "APPLE2"]:
+            if source._undulator_type in AGUS:
                 gap = source.gap
             else:
                 gapv, gaph = source.calc_min_gap(self._spectra.accelerator)
@@ -2320,11 +2321,11 @@ class Process(FunctionsManipulation):
 
 
                 if source.polarization == "cp":
-                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in ["APU", "APPLE2"] else "Min. gapv: {:.4f} mm | Min gaph: {:.3f} mm".format(gapv, gaph))
+                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in AGUS else "Min. gapv: {:.4f} mm | Min gaph: {:.3f} mm".format(gapv, gaph))
                 elif source.polarization == "hp":
-                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in ["APU", "APPLE2"] else "Min. gapv: {:.4f} mm".format(gapv))
+                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in AGUS else "Min. gapv: {:.4f} mm".format(gapv))
                 else:
-                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in ["APU", "APPLE2"] else "Min. gaph: {:.3f} mm".format(gaph))
+                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in AGUS else "Min. gaph: {:.3f} mm".format(gaph))
                 print(
                     "Máx. k: {:.4f} | Máx. B: {:.2f} T".format(
                         kmax, source.undulator_k_to_b(kmax, source.period)
