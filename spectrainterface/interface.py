@@ -1402,7 +1402,7 @@ class Calc(GeneralConfigs, SpectraTools):
             if self.source_type == self.SourceType.vertical_undulator:
                 input_temp["Light Source"]["K value"] = self.kx
 
-        if self.kx is not None and self.ky is not None:
+        if self.kx is not None or self.ky is not None:
             if (
                 self.source_type == self.SourceType.elliptic_undulator
                 or self.source_type == self.SourceType.figure8_undulator
@@ -1410,8 +1410,8 @@ class Calc(GeneralConfigs, SpectraTools):
                 == self.SourceType.vertical_figure8_undulator
             ):
                 input_temp["Light Source"]["K<sub>x,y</sub>"] = [
-                    self.kx,
-                    self.ky,
+                    self.kx if self.kx is not None else 0,
+                    self.ky if self.ky is not None else 0,
                 ]
 
         if self.by_peak is not None:
