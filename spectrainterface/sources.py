@@ -623,7 +623,7 @@ class APU(Halbach):
         self._undulator_type = "APU"
         self._phase = 0
         self._label = "APU"
-        self._gap = 8
+        self._gap = 0
         self._br = 1.34
         self._z0 = 0
         self._efficiency = 1
@@ -666,10 +666,21 @@ class APU(Halbach):
 
         Args:
             si_parameters (StorageRingParameters): StorageRingParameters
-             object.
+            object.
         """
-        b_max = self.get_beff(self.gap / self.period)
-        k_max = self.undulator_b_to_k(b_max, self.period)
+        if self.gap != 0:
+            phase0 = self.phase
+            self.phase = self._z0
+            k_max = self.get_k()
+            self.phase = phase0
+        else:
+            gap_minv, gap_minh = self.calc_min_gap(si_parameters)
+            gap_min = gap_minv if self.polarization == 'hp' else gap_minh
+            phase0 = self.phase
+            self.phase = self._z0
+            b_max = self.get_beff(gap_min / self.period)
+            k_max = self.undulator_b_to_k(b_max, self.period)
+            self.phase = phase0
         return k_max
 
 
