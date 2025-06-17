@@ -238,10 +238,8 @@ class FunctionsManipulation:
 
         source_period = source.period
         source_length = source.source_length
-        if source.gap == 0:
-            source_k_max = source.calc_max_k(spectra_calc.accelerator)
-        else:
-            source_k_max = source.get_k()
+
+        source_k_max = source.calc_max_k(spectra_calc.accelerator)
 
         coupling_const = spectra_calc.accelerator.coupling_constant
         nat_emittance = spectra_calc.accelerator.nat_emittance
@@ -344,10 +342,8 @@ class FunctionsManipulation:
 
         source_period = source.period
         source_length = source.source_length
-        if source.gap == 0:
-            source_k_max = source.calc_max_k(spectra_calc.accelerator)
-        else:
-            source_k_max = source.get_k()
+
+        source_k_max = source.calc_max_k(spectra_calc.accelerator)
 
         coupling_const = spectra_calc.accelerator.coupling_constant
         nat_emittance = spectra_calc.accelerator.nat_emittance
@@ -826,8 +822,8 @@ class FunctionsManipulation:
         text += "\n" + r"$B_0 = $" + "{:.4f}   ".format(Bs[0])
         text += r"$z_0 = $" + "{:.4f}".format(source._phase_coef[source.polarization]['z0'])
         _plt.text(
-            x=1.5 * source.period / 2 / 5,
-            y= 0.5* (Bs[-1] - Bs[0])/3,
+            x=1.2 * source.period / 10,
+            y= 0.2* _np.abs((Bs[-1] - Bs[0]))/3,
             s=text,
             fontsize=11,
         )
@@ -1030,10 +1026,8 @@ class FunctionsManipulation:
             source.source_type != "wiggler"
             and source.source_type != "bendingmagnet"
         ):
-            if source.gap == 0:
-                source_k_max = source.calc_max_k(spectra_calc.accelerator)
-            else:
-                source_k_max = source.get_k()
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
@@ -1106,7 +1100,7 @@ class FunctionsManipulation:
             legend_fs=legend_fs,
             legend_properties=legend_properties,
             xlim=xlim,
-            ylim=ylim,
+            # ylim=ylim,
         )
         del spectra_calc
 
@@ -1125,10 +1119,8 @@ class FunctionsManipulation:
             source.source_type != "wiggler"
             and source.source_type != "bendingmagnet"
         ):
-            if source.gap == 0:
-                source_k_max = source.calc_max_k(spectra_calc.accelerator)
-            else:
-                source_k_max = source.get_k()
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+            
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
