@@ -264,7 +264,6 @@ class SIRIUS:
                 self._phase_coef = {
                     "hp": {"ef": 1.0022029, "z0": -0.300609},
                 }
-                
 
         class EPU50(sources.APPLE2):
             """EPU50 class."""
