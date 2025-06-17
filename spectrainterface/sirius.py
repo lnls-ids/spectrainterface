@@ -238,7 +238,6 @@ class SIRIUS:
                 self._label = "APU58"
                 self._gap = 15.8
                 self._br = 1.34
-                self._z0 = 0
         
         class APU22_SAPUCAIA(sources.APU):
             """APU22 1991d class."""
@@ -249,8 +248,9 @@ class SIRIUS:
                 self._label = "APU22"
                 self._gap = 8
                 self._br = 1.34
-                self._z0 = 0.321
-                self._efficiency = 0.9981
+                self._phase_coef = {
+                    "hp": {"ef": 0.9981, "z0": 0.321},
+                }
         
         class APU22_MANACA(sources.APU):
             """APU22 1991d class."""
@@ -261,8 +261,10 @@ class SIRIUS:
                 self._label = "APU22"
                 self._gap = 8
                 self._br = 1.34
-                self._z0 = -0.300609
-                self._efficiency = 1.0022029
+                self._phase_coef = {
+                    "hp": {"ef": 1.0022029, "z0": -0.300609},
+                }
+                
 
         class EPU50(sources.APPLE2):
             """EPU50 class."""
