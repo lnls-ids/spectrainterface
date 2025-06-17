@@ -2193,10 +2193,7 @@ class SpectraInterface:
         spectra_calc.accelerator = accelerator
 
         if source.source_type != "bendingmagnet":
-            if source.gap == 0:
-                kmax = source.calc_max_k(spectra_calc.accelerator)
-            else:
-                kmax = source.get_k()
+            kmax = source.calc_max_k(spectra_calc.accelerator)
 
             if source.source_type == "wiggler":
                 b_max = source.undulator_k_to_b(kmax, source.period)
@@ -2414,9 +2411,6 @@ class SpectraInterface:
 
         if source.source_type != "bendingmagnet":
             kmax = source.calc_max_k(spectra_calc.accelerator)
-            if source.gap != 0:
-                kmax_gap = source.get_k()
-                kmax = kmax if kmax_gap > kmax else kmax_gap
             if source.source_type == "wiggler":
                 b_max = source.undulator_k_to_b(kmax, source.period)
                 spectra_calc.calc.source_type = (
@@ -2711,10 +2705,7 @@ class SpectraInterface:
         Returns:
             tuple: Fluxes, and Energies.
         """
-        if und.gap == 0:
-            source_k_max = und.calc_max_k(self.accelerator)
-        else:
-            source_k_max = und.get_k()
+        source_k_max = und.calc_max_k(self.accelerator)
         first_hamonic_energy = und.get_harmonic_energy(
             1, self.accelerator.gamma, 0, und.period, source_k_max
         )
@@ -2729,7 +2720,7 @@ class SpectraInterface:
             ns = ns[::2]
         else:
             ns = ns[1::2]
-        ks = _np.linspace(source_k_max, 0.2, 41)
+        ks = _np.linspace(source_k_max, 0, 41)
 
         arglist = []
         for i, harmonic in enumerate(ns):
@@ -2757,7 +2748,7 @@ class SpectraInterface:
                                 harmonic,
                             )
                         ]
-
+        
         data = []
         num_process = multiprocessing.cpu_count()
         with multiprocessing.Pool(processes=num_process - 1) as parallel:
@@ -3849,10 +3840,7 @@ class SpectraInterface:
             div_size (numpy array): Div. at 1th pos. and Size at 2nd pos.
             energies (numpy array).
         """
-        if source.gap == 0:
-            kmax_source = source.calc_max_k(self.accelerator)
-        else:
-            kmax_source = source.get_k()
+        kmax_source = source.calc_max_k(self.accelerator)
 
         # Automatic range adjust
         r_lim = 0.01
@@ -3962,9 +3950,6 @@ class SpectraInterface:
         spectra_calc: SpectraInterface = copy.deepcopy(self)
         if source.source_type != "bendingmagnet":
             kmax = source.calc_max_k(spectra_calc.accelerator)
-            if source.gap != 0:
-                kmax_gap = source.get_k()
-                kmax = kmax if kmax_gap > kmax else kmax_gap
             if source.source_type == "wiggler":
                 spectra_calc.calc.source_type = source.source_type
                 spectra_calc.calc.method = (
