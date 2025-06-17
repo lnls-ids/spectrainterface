@@ -295,7 +295,7 @@ class FunctionsManipulation:
             label=r"$\sigma_{y}$",
             linewidth=linewidth,
         )
-        y_lim = max(dimensions_beam[-1, 0], dimensions_beam[-1, 1])
+        y_lim = _np.nanmax([dimensions_beam[:, 0], dimensions_beam[:, 1]])
         y_lim *= 1e6
 
         _plt.xlabel("Energy [keV]")
@@ -400,7 +400,7 @@ class FunctionsManipulation:
             label=r"$\sigma'_{y}$",
             linewidth=linewidth,
         )
-        y_lim = max(dimensions_beam[-1, 2], dimensions_beam[-1, 3])
+        y_lim = _np.nanmax([dimensions_beam[:, 2], dimensions_beam[:, 3]])
         y_lim *= 1e6
 
         _plt.xlabel("Energy [keV]")
@@ -896,7 +896,7 @@ class FunctionsManipulation:
             which="both", axis="both", direction="in", right=True, top=True
         )
         _plt.xlim(0, source.period / 2)
-        _plt.ylim(0, _np.round(Ks[-1] + 0.2, 1))
+        _plt.ylim(0, _np.round(max(Ks[-1], Ks[0]) + 0.2, 1))
         _plt.minorticks_on()
         _plt.tight_layout()
         if savefig:
@@ -989,7 +989,7 @@ class FunctionsManipulation:
         _plt.xlabel("Phase [mm]")
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.ylim(int(Es[-1]) * 1e-3 - 0.1, int(Es[0] * 1e-3) + 1)
+        _plt.ylim(int(min(Es[-1], Es[0])) * 1e-3 - 0.1, int(max(Es[0], Es[-1])) * 1e-3 + 1)
         _plt.yscale(yscale)
         _plt.xlim(0, source.period / 2)
         _plt.xscale(xscale)
@@ -1073,8 +1073,10 @@ class FunctionsManipulation:
                 _np.abs(spectra_calc._energies[0, -1, :] - (xlim[1] * 1e3))
             )
             min_flux = float(
-                10 ** int(_np.log10(spectra_calc._fluxes[0, -1, idx_xlim - 1]))
-            )
+                    10 ** int(_np.log10(spectra_calc._fluxes[0, -1, idx_xlim - 1]))
+                ) if source.polarization != 'cp' else float(
+                    10 ** int(_np.log10(spectra_calc._fluxes[0, -1, 0]))
+                )
             max_flux = float(
                 10 ** (int(_np.log10(_np.max(spectra_calc._fluxes))) + 1)
             )
@@ -1100,7 +1102,7 @@ class FunctionsManipulation:
             legend_fs=legend_fs,
             legend_properties=legend_properties,
             xlim=xlim,
-            # ylim=ylim,
+            ylim=ylim,
         )
         del spectra_calc
 
@@ -1170,10 +1172,9 @@ class FunctionsManipulation:
                 _np.abs(spectra_calc._energies[0, -1, :] - (xlim[1] * 1e3))
             )
             min_brilliance = float(
-                10
-                ** int(
-                    _np.log10(spectra_calc._brilliances[0, -1, idx_xlim - 1])
-                )
+                10**int(_np.log10(spectra_calc._brilliances[0, -1, idx_xlim - 1]) - 1) 
+            ) if source.polarization != 'cp' else float(
+                10**int(_np.log10(spectra_calc._brilliances[0, -1, 0])) 
             )
             max_brilliance = float(
                 10 ** (int(_np.log10(_np.max(spectra_calc._brilliances))) + 1)
