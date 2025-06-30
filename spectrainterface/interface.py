@@ -2167,13 +2167,13 @@ class SpectraInterface:
         )
 
     @staticmethod
-    def _truncate_at_intersections(x_list, y_list, delta=2e3):
+    def _truncate_at_intersections(x_list, y_list, superb=2e3):
         """Intersection function.
         
         Args:
             x_list (list): list of arrays.
             y_list (list): list of arrays.
-            delta (float): extrapolation value of the intersection point.
+            superb (float): extrapolation value of the intersection point.
         
         Returns:
             x_list_trunc (list): list of arrays.
@@ -2207,12 +2207,11 @@ class SpectraInterface:
         for i in range(n-1):
             xi_left  = xis[i+1-1] if i+1 > 0 else -_np.inf
             xi_right = xis[i+1]   if i+1 < n-1 else  _np.inf
-            mask = (x_list[i+1] > xi_left - delta) & (x_list[i+1] < xi_right + delta)
+            mask = (x_list[i+1] > xi_left - superb) & (x_list[i+1] < xi_right + superb)
             x_list_trunc.append(x_list[i+1][mask])
             y_list_trunc.append(y_list[i+1][mask])
 
         return x_list_trunc, y_list_trunc
-
 
     def apply_phase_error_matrix(self, values, harm, rec_param=True):
         """Add phase errors.
@@ -2742,7 +2741,7 @@ class SpectraInterface:
         k_nr_pts=1,
         deltak=0.99,
         even_harmonic=False,
-        superb=2e3,
+        superb=1e3,
         kmin=0.1
     ):
         """Calculate flux curve generic, at res, out res, even harmonic, odd harmonic.
@@ -2794,7 +2793,7 @@ class SpectraInterface:
                     harmonic, self.accelerator.gamma, 0, und.period, k
                 )
                 if (
-                    e < (harmonic + 2) * first_hamonic_energy + superb
+                    e < (harmonic + 2) * first_hamonic_energy + 5e3
                     and e < emax + 2e3
                 ):
                     dks = _np.linspace(k, k * deltak, k_nr_pts)
@@ -2898,6 +2897,8 @@ class SpectraInterface:
 
         fs = harmonic_result
         es = [harmonic[:, 1] for harmonic in harmonic_arglist]
+
+        es, fs = self._truncate_at_intersections(x_list=es, y_list=fs, delta=superb)
 
         return fs, es
 
