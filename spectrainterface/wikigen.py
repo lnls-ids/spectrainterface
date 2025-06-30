@@ -1701,8 +1701,7 @@ class FunctionsManipulation:
         # Plot flux curve
         _plt.figure(figsize=figsize)
         _plt.title(
-            "Flux curve ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
-                spectra_calc.accelerator._extraction_point,
+            "Flux curve\n{:} ({:.2f} m, {:.2f} mm)".format(
                 source.label,
                 source.source_length,
                 source.period,
