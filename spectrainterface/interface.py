@@ -2694,7 +2694,8 @@ class SpectraInterface:
         k_nr_pts=1,
         deltak=0.99,
         even_harmonic=False,
-        superb=701,
+        superb=2e3,
+        kmin=0.1
     ):
         """Calculate flux curve generic, at res, out res, even harmonic, odd harmonic.
 
@@ -2716,6 +2717,7 @@ class SpectraInterface:
             dk (float, optional): Rate for change of k
             even_harmonic (bool, optional): If it is false it will be calculated for the even harmonic
             superb (int, optional): Extrapolation of the intersection of the curve
+            kmin (float, optional): K min to use in the calculation
 
         Returns:
             tuple: Fluxes, and Energies.
@@ -2735,7 +2737,7 @@ class SpectraInterface:
             ns = ns[::2]
         else:
             ns = ns[1::2]
-        ks = _np.linspace(source_k_max, 0, 41)
+        ks = _np.linspace(source_k_max, kmin, 41)
 
         arglist = []
         for i, harmonic in enumerate(ns):
@@ -2745,7 +2747,7 @@ class SpectraInterface:
                 )
                 if (
                     e < (harmonic + 2) * first_hamonic_energy + superb
-                    and e < emax + 5e3
+                    and e < emax + 2e3
                 ):
                     dks = _np.linspace(k, k * deltak, k_nr_pts)
                     for w, dk in enumerate(dks):
@@ -2803,29 +2805,25 @@ class SpectraInterface:
             best_arglist = []
 
             for i, flux_values in enumerate(filter_result):
-                if k_nr_pts > 1:
-                    fs_result = _np.flip(filter_result[i, :])
-                    ks_result = _np.flip(filter_arglist[i, :, 0])
-                    es_result = _np.flip(filter_arglist[i, :, 1])
-                    hs_result = _np.flip(filter_arglist[i, :, 2])
+                fs_result = _np.flip(filter_result[i, :])
+                ks_result = _np.flip(filter_arglist[i, :, 0])
+                es_result = _np.flip(filter_arglist[i, :, 1])
+                hs_result = _np.flip(filter_arglist[i, :, 2])
 
-                    spl = make_interp_spline(ks_result, fs_result, k=3)
-                    smooth_ks = _np.linspace(
-                        ks_result.min(), ks_result.max(), 300
-                    )
-                    smooth_fs = spl(smooth_ks)
+                spl = make_interp_spline(ks_result, fs_result, k=3)
+                smooth_ks = _np.linspace(
+                    ks_result.min(), ks_result.max(), 300
+                )
+                smooth_fs = spl(smooth_ks)
 
-                    best_result.append(smooth_fs[_np.argmax(smooth_fs)])
-                    best_arglist.append(
-                        [
-                            smooth_ks[_np.argmax(smooth_fs)],
-                            es_result[0],
-                            hs_result[0],
-                        ]
-                    )
-                else:
-                    best_result.append(flux_values[0])
-                    best_arglist.append(filter_arglist[i][0])
+                best_result.append(smooth_fs[_np.argmax(smooth_fs)])
+                best_arglist.append(
+                    [
+                        smooth_ks[_np.argmax(smooth_fs)],
+                        es_result[0],
+                        hs_result[0],
+                    ]
+                )
 
             best_arglist = _np.array(best_arglist)
             best_result = _np.array(best_result)
