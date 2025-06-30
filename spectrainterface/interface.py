@@ -2166,6 +2166,54 @@ class SpectraInterface:
             - (_np.sum(f_x * x) / _np.sum(f_x)) ** 2
         )
 
+    @staticmethod
+    def _truncate_at_intersections(x_list, y_list, delta=2e3):
+        """Intersection function.
+        
+        Args:
+            x_list (list): list of arrays.
+            y_list (list): list of arrays.
+            delta (float): extrapolation value of the intersection point.
+        
+        Returns:
+            x_list_trunc (list): list of arrays.
+            y_list_trunc (list): list of arrays.
+        """
+        n = len(x_list)
+        xis = list()
+        x_list_trunc = list()
+        y_list_trunc = list()
+
+        for i in range(n-1):
+            x1, y1 = x_list[i], y_list[i]
+            x2, y2 = x_list[i+1], y_list[i+1]
+            x_common = _np.linspace(max(x1.min(), x2.min()), min(x1.max(), x2.max()), 500)
+            y1c = _np.interp(x_common, x1, y1)
+            y2c = _np.interp(x_common, x2, y2)
+            d = y1c - y2c
+            idx = _np.where(d[:-1] * d[1:] < 0)[0]
+            if len(idx) == 0:
+                xis.append(x_list[i+1].min())
+                x_list_trunc.append(x_list[i])
+                y_list_trunc.append(y_list[i])
+                continue
+            i0 = idx[0]
+            xa, xb = x_common[i0], x_common[i0+1]
+            da, db = d[i0], d[i0+1]
+            t = -da / (db - da)
+            xi = xa + t * (xb - xa)
+            xis.append(xi)
+
+        for i in range(n-1):
+            xi_left  = xis[i+1-1] if i+1 > 0 else -_np.inf
+            xi_right = xis[i+1]   if i+1 < n-1 else  _np.inf
+            mask = (x_list[i+1] > xi_left - delta) & (x_list[i+1] < xi_right + delta)
+            x_list_trunc.append(x_list[i+1][mask])
+            y_list_trunc.append(y_list[i+1][mask])
+
+        return x_list_trunc, y_list_trunc
+
+
     def apply_phase_error_matrix(self, values, harm, rec_param=True):
         """Add phase errors.
 
