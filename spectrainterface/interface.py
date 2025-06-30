@@ -2898,7 +2898,7 @@ class SpectraInterface:
         fs = harmonic_result
         es = [harmonic[:, 1] for harmonic in harmonic_arglist]
 
-        es, fs = self._truncate_at_intersections(x_list=es, y_list=fs, delta=superb)
+        es, fs = self._truncate_at_intersections(x_list=es, y_list=fs, superb=superb)
 
         return fs, es
 
