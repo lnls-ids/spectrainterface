@@ -1634,7 +1634,7 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         linewidth = calc_params.linewidth
         dpi = calc_params.dpi
-        superb = 701
+        superb = 5e3
         deltak = 0.99
         k_nr_pts = 11
 
