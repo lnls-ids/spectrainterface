@@ -1019,7 +1019,7 @@ class FunctionsManipulation:
         xlim = calc_params.e_range
         energy_range = [xlim[0] * 1e3, xlim[1] * 1e3]
         
-        nr_pts_k = 11
+        nr_pts_k = 31
         kmin = 0.2
         gamma = spectra_calc.accelerator.gamma
         if (
@@ -1112,7 +1112,7 @@ class FunctionsManipulation:
         if source.source_type != "bendingmagnet":
             if source.use_recovery_params and source.add_phase_errors:
                 spectra_calc.use_recovery_params = True
-        nr_pts_k = 11
+        nr_pts_k = 31
         kmin = 0.2
         xlim =calc_params.e_range
         emax = xlim[1] * 1e3
@@ -1240,34 +1240,40 @@ class FunctionsManipulation:
         dpi = calc_params.dpi
         legend_fs = 9
 
-        energies, degree_pl, degree_pc = spectra_calc.calc_degree_polarization(
+        energies, degree_pl, degree_pc, degree_pl45 = spectra_calc.calc_degree_polarization(
             source=source,
             slit_shape=slit_shape,
             slit_position=slit_position,
             slit_acceptance=slit_acceptance,
             distance_from_source=distance_from_source,
             energy_range=energy_range,
+            kmin=0.1,
+            k_nr_pts=41
         )
 
         _plt.figure(figsize=figsize)
         _plt.title(title)
-        _plt.plot(
-            energies * 1e-3,
-            degree_pl**2,
+        pl_plot = _plt.plot(
+            energies.T * 1e-3,
+            degree_pl.T**2,
             "-C0",
-            label="PL²",
             linewidth=linewidth,
         )
-        _plt.plot(
-            energies * 1e-3,
-            degree_pc**2,
+        pc_plot = _plt.plot(
+            energies.T * 1e-3,
+            degree_pc.T**2,
             "-C1",
-            label="PC²",
             linewidth=linewidth,
+        )
+        pl45_plot = _plt.plot(
+            energies.T * 1e-3,
+            degree_pc.T**2,
+            "-C2",
+            linewidth=linewidth-1,
         )
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Polarization Degree")
-        _plt.legend(loc=5, ncol=3, fontsize=legend_fs)
+        _plt.legend([pl_plot[0], pc_plot[0], pl45_plot[0]], ['PL²', 'PC²', 'PL45²'], loc=5, ncol=3, fontsize=legend_fs)
         _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
@@ -2198,7 +2204,7 @@ class Process(FunctionsManipulation):
     def _initialize_spectra(self):
         self._spectra.accelerator.zero_emittance = False
         self._spectra.accelerator.zero_energy_spread = False
-
+        self._spectra.accelerator.set_bsc_orion_reduction()
         if self._calc_params.beta_section == "bc":
             self._spectra.accelerator.set_extraction_point('bc')
         elif self._calc_params.beta_section == "b1":
@@ -2338,7 +2344,7 @@ class Process(FunctionsManipulation):
                     1, self._spectra.accelerator.gamma, 0, self._source.period, k_max
                 )
                 n = int(self._calc_params.target_energy / first_hamonic_energy)
-                if n > 0:
+                if n > 0 and not self._id_params.polarization == 'cp':
                     n_harmonic = n - 1 if n % 2 == 0 else n
                 else:
                     n_harmonic = 1
