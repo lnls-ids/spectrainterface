@@ -1784,6 +1784,10 @@ class Calc(GeneralConfigs, SpectraTools):
                         self._flux = self.apply_phase_errors(
                             self._flux, self._use_recovery_params
                         )
+                    self._brilliance = data[:, 2, :]
+                    self._pl = data[:, 3, :]
+                    self._pc = data[:, 4, :]
+                    self._pl45 = data[:, 5, :]
                 else:
                     self._kx = data[:, 1, :]
                     self._ky = data[:, 2, :]
@@ -3936,6 +3940,9 @@ class SpectraInterface:
         slit_acceptance: tuple = (0.060, 0.060),
         distance_from_source: float = 30,
         energy_range: tuple = (0, 20e3),
+        kmin: float = 0.1,
+        k_nr_pts: int = 41,
+        
     ):
         """Degree Polarization Function.
 
@@ -3951,34 +3958,40 @@ class SpectraInterface:
                 Defaults to 30.
             energy_range (tuple): energy range to calculate [eV].
                 Defaults to (0, 20e3).
-
+            kmin (float): min deflection parameter
+            k_nr_pts (float): k points number
         Returns:
             Tuple of three elements.
                 first element (numpy array): energies
                 second element (numpy array): degree linear polarization.
                 third element (numpy array): degree circular polarization.
+                fourth element (numpy array): degree linear 45 polarization.
         """
         spectra_calc: SpectraInterface = copy.deepcopy(self)
         if source.source_type != "bendingmagnet":
             kmax = source.calc_max_k(spectra_calc.accelerator)
+            fst_energy = source.get_harmonic_energy(n=1, gamma=spectra_calc.accelerator.gamma, theta=0, period=source.period, k=kmax)
+            n = int(energy_range[1] / fst_energy)
+            n = n + 1 if n%2 == 0 else n
+            harmonic_range = (1, n)
+            print(harmonic_range)
             if source.source_type == "wiggler":
                 spectra_calc.calc.source_type = source.source_type
                 spectra_calc.calc.method = (
                     spectra_calc.calc.CalcConfigs.Method.far_field
                 )
                 spectra_calc.calc.indep_var = (
-                    spectra_calc.calc.CalcConfigs.Variable.energy
+                    spectra_calc.calc.CalcConfigs.Variable.k
                 )
                 spectra_calc.calc.output_type = (
                     spectra_calc.calc.CalcConfigs.Output.flux
                 )
-                spectra_calc.calc.slit_shape = slit_shape
                 spectra_calc.calc.period = source.period
-                spectra_calc.calc.ky = kmax
-                spectra_calc.calc.observation_angle = slit_position
+                spectra_calc.calc.slit_shape = slit_shape
                 spectra_calc.calc.slit_acceptance = slit_acceptance
-                spectra_calc.calc.energy_range = energy_range
-                spectra_calc.calc.energy_step = 1
+                spectra_calc.calc.k_range = [kmin, kmax]
+                spectra_calc.calc.k_nr_pts = k_nr_pts
+                spectra_calc.calc.harmonic_range = harmonic_range
             else:
                 spectra_calc.calc._add_phase_errors = source.add_phase_errors
                 spectra_calc.calc._use_recovery_params = (
@@ -3991,11 +4004,16 @@ class SpectraInterface:
                     spectra_calc.calc.CalcConfigs.Method.far_field
                 )
                 spectra_calc.calc.indep_var = (
-                    spectra_calc.calc.CalcConfigs.Variable.energy
+                    spectra_calc.calc.CalcConfigs.Variable.k
                 )
                 spectra_calc.calc.source_type = source.source_type
                 spectra_calc.calc.slit_shape = slit_shape
                 spectra_calc.calc.period = source.period
+                spectra_calc.calc.slit_shape = slit_shape
+                spectra_calc.calc.slit_acceptance = slit_acceptance
+                spectra_calc.calc.k_range = [kmin, kmax]
+                spectra_calc.calc.k_nr_pts = k_nr_pts
+                spectra_calc.calc.harmonic_range = harmonic_range
                 if source.polarization == "hp":
                     spectra_calc.calc.source_type = (
                         spectra_calc.calc.SourceType.horizontal_undulator
@@ -4016,10 +4034,7 @@ class SpectraInterface:
                     spectra_calc.calc.ky = (
                         spectra_calc.calc.kx * source.fields_ratio
                     )
-                spectra_calc.calc.observation_angle = slit_position
                 spectra_calc.calc.slit_acceptance = slit_acceptance
-                spectra_calc.calc.energy_range = energy_range
-                spectra_calc.calc.energy_step = 1
         else:
             b = source.b_peak
             spectra_calc.calc.source_type = source.source_type
@@ -4045,8 +4060,9 @@ class SpectraInterface:
         energies = spectra_calc.calc.energies
         degree_pl = spectra_calc.calc._pl
         degree_pc = spectra_calc.calc._pc
+        degree_pl45 = spectra_calc.calc._pl45
         del spectra_calc
-        return energies, degree_pl, degree_pc
+        return energies, degree_pl, degree_pc, degree_pl45
 
     def calc_power_density(
         self,
