@@ -456,7 +456,43 @@ class SIRIUS:
                     self.phase = phase0
                 return k_max
                 
-                
+        class CPMU13(sources.CPMU_PrFeB_HEPS):
+            """Cpmu PrFeB Undulator class (HEPS).
+
+            Args:
+            Undulator (Undulator class): Undulator class
+            """
+
+            def __init__(self, period=13.6, length=2.03):
+                """Class constructor.
+
+                Args:
+                    period (float, optional): Undulator period [mm]
+                    length (float, optional): Undulator length [m]
+                """
+                super().__init__(period, length)
+                self._undulator_type = "CPMU"
+                self._label = "CPMU 13.6"
+                self.vc_tolerance = 0.160
+
+        class CPMU15(sources.CPMU_PrFeB_HEPS):
+            """Cpmu PrFeB Undulator class (HEPS).
+
+            Args:
+            Undulator (Undulator class): Undulator class
+            """
+
+            def __init__(self, period=15.8, length=2.03):
+                """Class constructor.
+
+                Args:
+                    period (float, optional): Undulator period [mm]
+                    length (float, optional): Undulator length [m]
+                """
+                super().__init__(period, length)
+                self._undulator_type = "CPMU"
+                self._label = "CPMU 15.8"
+                self.vc_tolerance = 0.210
 
         class VPU29_CNB(sources.VPU):
             """VPU29b / 2386b (CARNAUBA) class."""
