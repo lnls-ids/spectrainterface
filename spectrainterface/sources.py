@@ -963,3 +963,30 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
         }
         self._material = "PrFeB"
         self._source_type = "linearundulator"
+
+
+class CPMU_PrFeB_HEPS_model(IVU_NdFeB):
+    """Cpmu PrFeB Undulator class (HEPS).
+
+    Args:
+        Undulator (Undulator class): Undulator class
+    """
+
+    def __init__(self, period, length):
+        """Class constructor.
+
+        Args:
+            period (float, optional): Undulator period [mm]
+            length (float, optional): Undulator length [m]
+        """
+        super().__init__(period, length)
+        self._undulator_type = "CPMU"
+        self._label = "CPMU (PrFeB)"
+        self._br = 1.689
+        self._polarization = "hp"
+        self._efficiency = 1.0
+        self._halbach_coef = {
+            "hp": {"a": 2.42609676, "b": -4.20036671, "c": 0.79735306}
+        }
+        self._material = "PrFeB"
+        self._source_type = "linearundulator"
