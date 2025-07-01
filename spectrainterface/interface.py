@@ -2194,8 +2194,9 @@ class SpectraInterface:
             idx = _np.where(d[:-1] * d[1:] < 0)[0]
             if len(idx) == 0:
                 xis.append(x_list[i+1].min())
-                x_list_trunc.append(x_list[i])
-                y_list_trunc.append(y_list[i])
+                mask = (x_list[i] < x_list[i+1].min() + superb) # verificar isso!
+                x_list_trunc.append(x_list[i][mask])
+                y_list_trunc.append(y_list[i][mask])
                 continue
             i0 = idx[0]
             xa, xb = x_common[i0], x_common[i0+1]
