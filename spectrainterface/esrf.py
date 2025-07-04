@@ -110,6 +110,7 @@ class ESRF:
                 self._label = "U18"
                 self._br = 1.27
                 self._gap = 6
+                self._min_gap = 6
                 self._vc_thickness = 0
                 self._vc_tolerance = 0.35
                 self._polarization = "hp"
