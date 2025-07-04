@@ -267,6 +267,10 @@ class Undulator(SourceFunctions):
     def gap(self, value):
         if value < 0:
             raise ValueError("Gap must be positive.")
+        if value < self._min_gap:
+            raise ValueError(
+                f"Gap must be greater than minimum gap: {self.min_gap:.2f} mm"
+            )
         else:
             self._gap = value
 
