@@ -16,6 +16,8 @@ class SIRIUS:
     """Class with SIRIUS parameters for radiation calculations."""
 
     class StorageRing(StorageRingParameters):
+        """SIRIUS Storage Ring."""
+
         extraction_dict = {
             "low_beta": {
                 "betax": 1.499,
@@ -170,6 +172,8 @@ class SIRIUS:
                     self._bsc0_v = self._bsc0_v_highbeta
 
     class Sources:
+        """SIRIUS Sources."""
+
         class BC(sources.BendingMagnet):
             """BC class.
 
@@ -212,7 +216,7 @@ class SIRIUS:
                 self._label = "B1"
                 self._meas_fname = REPOS_PATH + "/files/sirius/field_b1.txt"
 
-        class UE44_IPE(sources.APPLE2):
+        class UE44_IPE(sources.APPLE2):  # noqa: N801
             """UE44  class."""
 
             def __init__(self, period=44, length=3.4):
@@ -223,7 +227,7 @@ class SIRIUS:
                 self._gap = 11.4
                 self._br = 1.14
 
-        class APU58_IPE(sources.APU):
+        class APU58_IPE(sources.APU):  # noqa: N801
             """APU58 class."""
 
             def __init__(self, period=58, length=1):
@@ -234,7 +238,7 @@ class SIRIUS:
                 self._br = 1.34
                 self._z0 = 0
 
-        class APU22_SPU(sources.APU):
+        class APU22_SPU(sources.APU):  # noqa: N801
             """APU22 1991d class."""
 
             def __init__(self, period=22, length=1.2):
@@ -246,7 +250,7 @@ class SIRIUS:
                 self._z0 = 0.321
                 self._efficiency = 0.9981
 
-        class APU22_MNC(sources.APU):
+        class APU22_MNC(sources.APU):  # noqa: N801
             """APU22 1991d class."""
 
             def __init__(self, period=22, length=1.2):
@@ -268,7 +272,7 @@ class SIRIUS:
                 self._br = 1.24
                 self._gap = 10.3
 
-        class EPU50_UVX(sources.APPLE2):
+        class EPU50_UVX(sources.APPLE2):  # noqa: N801
             """EPU50 UVX class."""
 
             def __init__(self, period=50, length=2.7):
@@ -278,7 +282,7 @@ class SIRIUS:
                 self._br = 1.135
                 self._gap = 22
 
-        class IVU18_EMA(sources.IVU_NdFeB):
+        class IVU18_EMA(sources.IVU_NdFeB):  # noqa: N801
             """IVU18-2 class (EMA beamline)."""
 
             def __init__(self, period=18.5, length=2):
@@ -295,7 +299,7 @@ class SIRIUS:
                 }
                 self._material = "NdFeB"
 
-        class IVU18_PNR(sources.IVU_NdFeB):
+        class IVU18_PNR(sources.IVU_NdFeB):  # noqa: N801
             """IVU18-1 class (PAINEIRA beamline)."""
 
             def __init__(self, period=18.5, length=2):
@@ -312,7 +316,7 @@ class SIRIUS:
                 }
                 self._material = "NdFeB"
 
-        class DELTA52_SAB(sources.Elliptic):
+        class DELTA52_SAB(sources.Elliptic):  # noqa: N801
             """DELTA Undulator class."""
 
             def __init__(self, period=52.5, length=1.2):
@@ -450,7 +454,7 @@ class SIRIUS:
                     self.phase = phase0
                 return k_max
 
-        class CPMU13_HIB(sources.CPMU_PrFeB_HEPS):
+        class CPMU13_HIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
             """Cpmu PrFeB Undulator class (HEPS).
 
             Args:
@@ -469,7 +473,7 @@ class SIRIUS:
                 self._label = "CPMU 13.6"
                 self.vc_tolerance = 0.160
 
-        class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):
+        class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
             """Cpmu PrFeB Undulator class (HEPS).
 
             Args:
@@ -488,7 +492,7 @@ class SIRIUS:
                 self._label = "CPMU 15.8"
                 self.vc_tolerance = 0.210
 
-        class VPU29_CNB(sources.VPU):
+        class VPU29_CNB(sources.VPU):  # noqa: N801
             """VPU29b / 2386b (CARNAUBA) class."""
 
             def __init__(self, period=29.0, length=1.54):
@@ -497,10 +501,33 @@ class SIRIUS:
                 self._label = "VPU29-CNB"
                 self._br = 1.304
                 self._gap = 9.7
+                self._min_gap = 9.7
                 self.vc_thickness = 0.5
                 self.vc_tolerance = 0.468
                 self._polarization = "vp"
                 self._halbach_coef = {
                     "vp": {"a": 2.03304573, "b": -3.4431994, "c": 0.18171406},
+                }
+                self._material = "NdFeB"
+
+        class VPU29_CAT(sources.VPU):  # noqa: N801
+            """VPU29a (CATERETE) class."""
+
+            def __init__(self, period=29.0, length=1.54):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "VPU29-CAT"
+                self._br = 1.304
+                self._gap = 9.7
+                self._min_gap = 9.7
+                self.vc_thickness = 0.5
+                self.vc_tolerance = 0.468
+                self._polarization = "vp"
+                self._halbach_coef = {
+                    "vp": {
+                        "a": 2.03304573,
+                        "b": -3.4431994,
+                        "c": 0.18171406,
+                    },  # must to be update
                 }
                 self._material = "NdFeB"
