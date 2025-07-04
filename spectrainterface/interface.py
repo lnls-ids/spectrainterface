@@ -2159,7 +2159,8 @@ class SpectraInterface:
             else:
                 gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
                 gap = gaph if source.polarization == "vp" else gapv
-                kmax = source.get_beff(gap / source.period)
+                beff = source.get_beff(gap / source.period)
+                kmax = source.undulator_b_to_k(b=beff, period=source.period)
 
             if source.source_type == "wiggler":
                 b_max = source.undulator_k_to_b(kmax, source.period)
@@ -2363,7 +2364,8 @@ class SpectraInterface:
             if source.min_gap != 0:
                 gapv, gaph = source.calc_min_gap(self.accelerator)
                 gap = gaph if source.polarization == "vp" else gapv
-                kmax = source.get_beff(gap / source.period)
+                beff = source.get_beff(gap / source.period)
+                kmax = source.undulator_b_to_k(b=beff, period=source.period)
             else:
                 kmax = source.calc_max_k(spectra_calc.accelerator)
             if source.source_type == "wiggler":
@@ -2639,7 +2641,9 @@ class SpectraInterface:
         else:
             gapv, gaph = und.calc_min_gap(self.accelerator)
             gap = gaph if und.polarization == "vp" else gapv
-            source_k_max = und.get_beff(gap / und.period)
+            beff = und.get_beff(gap / und.period)
+            source_k_max = und.undulator_b_to_k(b=beff, period=und.period)
+
         first_hamonic_energy = und.get_harmonic_energy(
             1, self.accelerator.gamma, 0, und.period, source_k_max
         )
@@ -3705,7 +3709,8 @@ class SpectraInterface:
         else:
             gapv, gaph = source.calc_min_gap(self.accelerator)
             gap = gaph if source.polarization == "vp" else gapv
-            kmax_source = source.get_beff(gap / source.period)
+            beff = source.get_beff(gap / source.period)
+            kmax_source = source.undulator_b_to_k(b=beff, period=source.period)
 
         # Automatic range adjust
         r_lim = 0.01
@@ -3817,7 +3822,8 @@ class SpectraInterface:
             if source.min_gap != 0:
                 gapv, gaph = source.calc_min_gap(self.accelerator)
                 gap = gaph if source.polarization == "vp" else gapv
-                kmax = source.get_beff(gap / source.period)
+                beff = source.get_beff(gap / source.period)
+                kmax = source.undulator_b_to_k(b=beff, period=source.period)
             else:
                 kmax = source.calc_max_k(spectra_calc.accelerator)
             if source.source_type == "wiggler":
