@@ -225,6 +225,7 @@ class SIRIUS:
                 self._material = "NdFeB"
                 self._label = "UE44"
                 self._gap = 11.4
+                self._min_gap = 11.4
                 self._br = 1.14
 
         class APU58_IPE(sources.APU):  # noqa: N801
@@ -235,6 +236,7 @@ class SIRIUS:
                 super().__init__(period, length)
                 self._label = "APU58"
                 self._gap = 15.8
+                self._min_gap = 15.8
                 self._br = 1.34
                 self._z0 = 0
 
@@ -246,6 +248,7 @@ class SIRIUS:
                 super().__init__(period, length)
                 self._label = "APU22"
                 self._gap = 8
+                self._min_gap = 8
                 self._br = 1.34
                 self._z0 = 0.321
                 self._efficiency = 0.9981
@@ -258,6 +261,7 @@ class SIRIUS:
                 super().__init__(period, length)
                 self._label = "APU22"
                 self._gap = 8
+                self._min_gap = 8
                 self._br = 1.34
                 self._z0 = -0.300609
                 self._efficiency = 1.0022029
@@ -271,6 +275,7 @@ class SIRIUS:
                 self._label = "EPU50"
                 self._br = 1.24
                 self._gap = 10.3
+                self._min_gap = 10.3
 
         class EPU50_UVX(sources.APPLE2):  # noqa: N801
             """EPU50 UVX class."""
@@ -281,6 +286,7 @@ class SIRIUS:
                 self._label = "EPU50 (UVX)"
                 self._br = 1.135
                 self._gap = 22
+                self._min_gap = 22
 
         class IVU18_EMA(sources.IVU_NdFeB):  # noqa: N801
             """IVU18-2 class (EMA beamline)."""
@@ -291,6 +297,7 @@ class SIRIUS:
                 self._label = "IVU18-2"
                 self._br = 1.27
                 self._gap = 4.5
+                self._min_gap = 4.5
                 self.vc_thickness = 0
                 self.vc_tolerance = 0.2501
                 self._polarization = "hp"
@@ -308,6 +315,7 @@ class SIRIUS:
                 self._label = "IVU18-1"
                 self._br = 1.27
                 self._gap = 4.5
+                self._min_gap = 4.5
                 self._vc_thickness = 0
                 self._vc_tolerance = 0.2501
                 self._polarization = "hp"
@@ -337,6 +345,7 @@ class SIRIUS:
                     "cp": {"ef": 0.71497, "z0": 25.89593},
                 }
                 self._gap = 13.6
+                self._min_gap = 13.6
                 self._phase = 0
                 self._halbach_coef = {
                     "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
@@ -471,6 +480,8 @@ class SIRIUS:
                 super().__init__(period, length)
                 self._undulator_type = "CPMU"
                 self._label = "CPMU 13.6"
+                self._gap = 4.84
+                self._min_gap = 4.84
                 self.vc_tolerance = 0.160
 
         class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
@@ -490,6 +501,8 @@ class SIRIUS:
                 super().__init__(period, length)
                 self._undulator_type = "CPMU"
                 self._label = "CPMU 15.8"
+                self._gap = 3.7
+                self._min_gap = 3.7
                 self.vc_tolerance = 0.210
 
         class VPU29_CNB(sources.VPU):  # noqa: N801
