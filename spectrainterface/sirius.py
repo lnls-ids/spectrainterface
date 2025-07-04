@@ -16,7 +16,6 @@ class SIRIUS:
     """Class with SIRIUS parameters for radiation calculations."""
 
     class StorageRing(StorageRingParameters):
-
         extraction_dict = {
             "low_beta": {
                 "betax": 1.499,
@@ -28,7 +27,6 @@ class SIRIUS:
                 "etapx": 0,
                 "etapy": 0,
             },
-
             "high_beta": {
                 "betax": 17.20,
                 "betay": 3.605,
@@ -39,7 +37,6 @@ class SIRIUS:
                 "etapx": 0,
                 "etapy": 0,
             },
-
             "bc": {
                 "betax": 0.338,
                 "betay": 5.356,
@@ -50,7 +47,6 @@ class SIRIUS:
                 "etapx": 0,
                 "etapy": 0,
             },
-            
             "b1": {
                 "betax": 1.660,
                 "betay": 26.820,
@@ -61,7 +57,6 @@ class SIRIUS:
                 "etapx": 3.211e-3,
                 "etapy": 0,
             },
-
             "b2": {
                 "betax": 1.265,
                 "betay": 25.5,
@@ -155,14 +150,14 @@ class SIRIUS:
         def set_extraction_point(self, value):
             """Set extraction point."""
             self._extraction_point = value
-            self.betax = self.extraction_dict[value]['betax']
-            self.betay = self.extraction_dict[value]['betay']
-            self.alphax = self.extraction_dict[value]['alphax']
-            self.alphay = self.extraction_dict[value]['alphay']
-            self.etax = self.extraction_dict[value]['etax']
-            self.etay = self.extraction_dict[value]['etay']
-            self.etapx = self.extraction_dict[value]['etapx']
-            self.etapy = self.extraction_dict[value]['etapy']
+            self.betax = self.extraction_dict[value]["betax"]
+            self.betay = self.extraction_dict[value]["betay"]
+            self.alphax = self.extraction_dict[value]["alphax"]
+            self.alphay = self.extraction_dict[value]["alphay"]
+            self.etax = self.extraction_dict[value]["etax"]
+            self.etay = self.extraction_dict[value]["etay"]
+            self.etapx = self.extraction_dict[value]["etapx"]
+            self.etapy = self.extraction_dict[value]["etapy"]
             self._update_bsc()
 
         def _update_bsc(self):
@@ -174,8 +169,7 @@ class SIRIUS:
                     self._bsc0_h = self._bsc0_h_highbeta
                     self._bsc0_v = self._bsc0_v_highbeta
 
-    class Sources():
-
+    class Sources:
         class BC(sources.BendingMagnet):
             """BC class.
 
@@ -218,18 +212,18 @@ class SIRIUS:
                 self._label = "B1"
                 self._meas_fname = REPOS_PATH + "/files/sirius/field_b1.txt"
 
-        class UE44(sources.APPLE2):
+        class UE44_IPE(sources.APPLE2):
             """UE44  class."""
 
             def __init__(self, period=44, length=3.4):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._material = 'NdFeB'
+                self._material = "NdFeB"
                 self._label = "UE44"
                 self._gap = 11.4
                 self._br = 1.14
 
-        class APU58(sources.APU):
+        class APU58_IPE(sources.APU):
             """APU58 class."""
 
             def __init__(self, period=58, length=1):
@@ -239,8 +233,8 @@ class SIRIUS:
                 self._gap = 15.8
                 self._br = 1.34
                 self._z0 = 0
-        
-        class APU22_SAPUCAIA(sources.APU):
+
+        class APU22_SPU(sources.APU):
             """APU22 1991d class."""
 
             def __init__(self, period=22, length=1.2):
@@ -251,8 +245,8 @@ class SIRIUS:
                 self._br = 1.34
                 self._z0 = 0.321
                 self._efficiency = 0.9981
-        
-        class APU22_MANACA(sources.APU):
+
+        class APU22_MNC(sources.APU):
             """APU22 1991d class."""
 
             def __init__(self, period=22, length=1.2):
@@ -284,7 +278,7 @@ class SIRIUS:
                 self._br = 1.135
                 self._gap = 22
 
-        class IVU18_2(sources.IVU_NdFeB):
+        class IVU18_EMA(sources.IVU_NdFeB):
             """IVU18-2 class (EMA beamline)."""
 
             def __init__(self, period=18.5, length=2):
@@ -299,9 +293,9 @@ class SIRIUS:
                 self._halbach_coef = {
                     "hp": {"a": 2.26223181, "b": -3.69776472, "c": 0.32867209},
                 }
-                self._material = 'NdFeB'
+                self._material = "NdFeB"
 
-        class IVU18_1(sources.IVU_NdFeB):
+        class IVU18_PNR(sources.IVU_NdFeB):
             """IVU18-1 class (PAINEIRA beamline)."""
 
             def __init__(self, period=18.5, length=2):
@@ -316,9 +310,9 @@ class SIRIUS:
                 self._halbach_coef = {
                     "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
                 }
-                self._material = 'NdFeB'
+                self._material = "NdFeB"
 
-        class DELTA52(sources.Elliptic):
+        class DELTA52_SAB(sources.Elliptic):
             """DELTA Undulator class."""
 
             def __init__(self, period=52.5, length=1.2):
@@ -349,7 +343,7 @@ class SIRIUS:
                 self._period = period
                 self._source_length = length
                 self._source_type = "ellipticundulator"
-            
+
             @property
             def phase(self):
                 """Undulator phase [mm].
@@ -358,7 +352,7 @@ class SIRIUS:
                     float: Phase [mm]
                 """
                 return self._phase
-            
+
             @property
             def phase_coef(self):
                 """Undulator calibration coefficients."""
@@ -393,7 +387,7 @@ class SIRIUS:
                   float: (min gap vertical, min gap horizontal) minimum gap allowed.
                 """
                 pos = self.source_length / 2
-        
+
                 if si_parameters is None:
                     raise ValueError("Accelerator must be selected")
                 else:
@@ -409,7 +403,7 @@ class SIRIUS:
                 gap = gap + vc_thickness + vc_tolerance
 
                 return gap, gap
-            
+
             def get_beff(self, gap_over_period, phase=None):
                 """Get peak magnetic field for a given device and gap.
 
@@ -421,11 +415,11 @@ class SIRIUS:
                 """
                 phase = self.phase if phase is None else phase
                 br = self.br
-                z0 = self.phase_coef[self.polarization]['z0']
+                z0 = self.phase_coef[self.polarization]["z0"]
                 a = self.halbach_coef[self.polarization]["a"]
                 b = self.halbach_coef[self.polarization]["b"]
                 c = self.halbach_coef[self.polarization]["c"]
-                efficiency = self.phase_coef[self.polarization]['ef']
+                efficiency = self.phase_coef[self.polarization]["ef"]
                 return (
                     efficiency
                     * self.beff_function(
@@ -433,7 +427,7 @@ class SIRIUS:
                     )
                     * _np.abs(_np.cos(_np.pi / self._period * (phase - z0)))
                 )
-            
+
             def calc_max_k(self, si_parameters):
                 """Calc max K achieved by undulator.
 
@@ -448,15 +442,15 @@ class SIRIUS:
                     self.phase = phase0
                 else:
                     gap_minv, gap_minh = self.calc_min_gap(si_parameters)
-                    gap_min = gap_minv if self.polarization == 'hp' else gap_minh
+                    gap_min = gap_minv if self.polarization == "hp" else gap_minh
                     phase0 = self.phase
                     self.phase = self.phase_coef[self.polarization]["z0"]
                     b_max = self.get_beff(gap_min / self.period)
                     k_max = self.undulator_b_to_k(b_max, self.period)
                     self.phase = phase0
                 return k_max
-                
-        class CPMU13(sources.CPMU_PrFeB_HEPS):
+
+        class CPMU13_HIB(sources.CPMU_PrFeB_HEPS):
             """Cpmu PrFeB Undulator class (HEPS).
 
             Args:
@@ -475,7 +469,7 @@ class SIRIUS:
                 self._label = "CPMU 13.6"
                 self.vc_tolerance = 0.160
 
-        class CPMU15(sources.CPMU_PrFeB_HEPS):
+        class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):
             """Cpmu PrFeB Undulator class (HEPS).
 
             Args:
@@ -509,4 +503,4 @@ class SIRIUS:
                 self._halbach_coef = {
                     "vp": {"a": 2.03304573, "b": -3.4431994, "c": 0.18171406},
                 }
-                self._material = 'NdFeB'
+                self._material = "NdFeB"
