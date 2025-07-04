@@ -70,9 +70,7 @@ class SpectraTools:
         input_template["Accelerator"]["Energy (GeV)"] = accelerator.energy
         input_template["Accelerator"]["Current (mA)"] = accelerator.current
 
-        input_template["Accelerator"]["&sigma;<sub>z</sub> (mm)"] = (
-            accelerator.sigmaz
-        )
+        input_template["Accelerator"]["&sigma;<sub>z</sub> (mm)"] = accelerator.sigmaz
 
         input_template["Accelerator"]["Nat. Emittance (m.rad)"] = (
             accelerator.nat_emittance
@@ -82,9 +80,7 @@ class SpectraTools:
             accelerator.coupling_constant
         )
 
-        input_template["Accelerator"]["Energy Spread"] = (
-            accelerator.energy_spread
-        )
+        input_template["Accelerator"]["Energy Spread"] = accelerator.energy_spread
 
         input_template["Accelerator"]["&beta;<sub>x,y</sub> (m)"] = [
             accelerator.betax,
@@ -148,13 +144,13 @@ class GeneralConfigs(SourceFunctions):
         wiggler = "wiggler"
 
     class InjectionCondition:
-            """Sub class to define injection condition"""
+        """Sub class to define injection condition"""
 
-            entrance = 'Align at Entrance'
-            center = 'Align at Center'
-            exit = 'Align at Exit'
-            automatic = 'Automatic'
-            custom = 'Custom'
+        entrance = "Align at Entrance"
+        center = "Align at Center"
+        exit = "Align at Exit"
+        automatic = "Automatic"
+        custom = "Custom"
 
     def __init__(self):
         """Class constructor."""
@@ -291,11 +287,28 @@ class GeneralConfigs(SourceFunctions):
         else:
             self._period = value
             if self._bx_peak is not None:
-                self._kx = 1e-3 * ECHARGE_MC * self._bx_peak * (2 * self.period if self.source_type == self.SourceType.figure8_undulator else self.period)
+                self._kx = (
+                    1e-3
+                    * ECHARGE_MC
+                    * self._bx_peak
+                    * (
+                        2 * self.period
+                        if self.source_type == self.SourceType.figure8_undulator
+                        else self.period
+                    )
+                )
             if self._by_peak is not None:
                 self._ky = 1e-3 * ECHARGE_MC * self._by_peak * self.period
             if self._kx is not None:
-                self._bx_peak = self._kx / (ECHARGE_MC * 1e-3 * (2 * self.period if self.source_type == self.SourceType.figure8_undulator else self.period))
+                self._bx_peak = self._kx / (
+                    ECHARGE_MC
+                    * 1e-3
+                    * (
+                        2 * self.period
+                        if self.source_type == self.SourceType.figure8_undulator
+                        else self.period
+                    )
+                )
             if self._ky is not None:
                 self._by_peak = self._ky / (ECHARGE_MC * 1e-3 * self.period)
 
@@ -313,10 +326,7 @@ class GeneralConfigs(SourceFunctions):
             self._by_peak = value
             if self.period is not None:
                 self._ky = 1e-3 * ECHARGE_MC * self._by_peak * self.period
-                if (
-                    self.source_type
-                    == self.SourceType.vertical_figure8_undulator
-                ):
+                if self.source_type == self.SourceType.vertical_figure8_undulator:
                     self._ky *= 2
 
             if self.source_type == self.SourceType.helical_undulator:
@@ -996,14 +1006,9 @@ class Calc(GeneralConfigs, SpectraTools):
     def target_energy(self, value):
         if self.indep_var != self.CalcConfigs.Variable.mesh_xy:
             if self.indep_var == self.CalcConfigs.Variable.energy:
-                if (
-                    self.method
-                    == self.CalcConfigs.Method.fixedpoint_near_field
-                ):
+                if self.method == self.CalcConfigs.Method.fixedpoint_near_field:
                     self._target_energy = value
-                elif (
-                    self.method == self.CalcConfigs.Method.fixedpoint_far_field
-                ):
+                elif self.method == self.CalcConfigs.Method.fixedpoint_far_field:
                     self._target_energy = value
                 else:
                     raise ValueError(
@@ -1135,9 +1140,7 @@ class Calc(GeneralConfigs, SpectraTools):
     @harmonic_range.setter
     def harmonic_range(self, value):
         if self.indep_var != self.CalcConfigs.Variable.k:
-            raise ValueError(
-                "Harmonic range can only be defined if the variable is k."
-            )
+            raise ValueError("Harmonic range can only be defined if the variable is k.")
         else:
             self._harmonic_range = value
 
@@ -1163,18 +1166,14 @@ class Calc(GeneralConfigs, SpectraTools):
     @k_range.setter
     def k_range(self, value):
         if self.indep_var != self.CalcConfigs.Variable.k:
-            raise ValueError(
-                "K range can only be defined if the variable is k."
-            )
+            raise ValueError("K range can only be defined if the variable is k.")
         else:
             self._k_range = value
 
     @k_nr_pts.setter
     def k_nr_pts(self, value):
         if self.indep_var != self.CalcConfigs.Variable.k:
-            raise ValueError(
-                "K nr points can only be defined if the variable is k."
-            )
+            raise ValueError("K nr points can only be defined if the variable is k.")
         else:
             self._k_nr_pts = value
 
@@ -1296,9 +1295,7 @@ class Calc(GeneralConfigs, SpectraTools):
         config_type = "".join(config)
         config_type = (
             config_type.replace("Energy Dependence::", "")
-            if ("fpfarfield" in keys)
-            or ("fpnearfield" in keys)
-            or ("fpwigner" in keys)
+            if ("fpfarfield" in keys) or ("fpnearfield" in keys) or ("fpwigner" in keys)
             else config_type
         )
         config_type = (
@@ -1325,18 +1322,14 @@ class Calc(GeneralConfigs, SpectraTools):
             if "xy" in keys
             else config_type
         )
-        config_type = (
-            config_type + "::Target Harmonics" if "k" in keys else config_type
-        )
+        config_type = config_type + "::Target Harmonics" if "k" in keys else config_type
         config_type = (
             config_type.replace("Spatial Flux Density", "Angular Flux Density")
             if "farfield" in keys
             else config_type
         )
         config_type = (
-            config_type.replace(
-                "Spatial Power Density", "Angular Power Density"
-            )
+            config_type.replace("Spatial Power Density", "Angular Power Density")
             if "farfield" in keys
             else config_type
         )
@@ -1346,9 +1339,7 @@ class Calc(GeneralConfigs, SpectraTools):
             else config_type
         )
         config_type = (
-            config_type.replace(
-                "Angular Power Density", "Spatial Power Density"
-            )
+            config_type.replace("Angular Power Density", "Spatial Power Density")
             if "nearfield" in keys
             else config_type
         )
@@ -1417,8 +1408,7 @@ class Calc(GeneralConfigs, SpectraTools):
             if (
                 self.source_type == self.SourceType.elliptic_undulator
                 or self.source_type == self.SourceType.figure8_undulator
-                or self.source_type
-                == self.SourceType.vertical_figure8_undulator
+                or self.source_type == self.SourceType.vertical_figure8_undulator
             ):
                 input_temp["Light Source"]["K<sub>x,y</sub>"] = [
                     self.kx,
@@ -1445,9 +1435,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 input_temp["Light Source"]["B (T)"] = by
 
         if self.period is not None:
-            input_temp["Light Source"]["&lambda;<sub>u</sub> (mm)"] = (
-                self.period
-            )
+            input_temp["Light Source"]["&lambda;<sub>u</sub> (mm)"] = self.period
 
         if self.length is not None:
             if self.source_type == self.SourceType.bending_magnet:
@@ -1456,9 +1444,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 input_temp["Light Source"]["Device Length (m)"] = self.length
 
         if self.energy_range is not None:
-            input_temp["Configurations"]["Energy Range (eV)"] = (
-                self.energy_range
-            )
+            input_temp["Configurations"]["Energy Range (eV)"] = self.energy_range
 
         if self.energy_step is not None:
             if (
@@ -1466,20 +1452,17 @@ class Calc(GeneralConfigs, SpectraTools):
                 or self.source_type == self.SourceType.wiggler
             ):
                 nr_points = int(
-                    (self.energy_range[1] - self.energy_range[0])
-                    / self.energy_step
+                    (self.energy_range[1] - self.energy_range[0]) / self.energy_step
                 )
                 input_temp["Configurations"]["Points (Energy)"] = nr_points
             else:
-                input_temp["Configurations"]["Energy Pitch (eV)"] = (
-                    self.energy_step
-                )
+                input_temp["Configurations"]["Energy Pitch (eV)"] = self.energy_step
 
         if self.observation_angle is not None:
             if self.output_type == self.CalcConfigs.Output.flux_density:
-                input_temp["Configurations"][
-                    "Angle &theta;<sub>x,y</sub> (mrad)"
-                ] = self.observation_angle
+                input_temp["Configurations"]["Angle &theta;<sub>x,y</sub> (mrad)"] = (
+                    self.observation_angle
+                )
             elif self.output_type == self.CalcConfigs.Output.flux:
                 input_temp["Configurations"][
                     "Slit Pos.: &theta;<sub>x,y</sub> (mrad)"
@@ -1491,13 +1474,13 @@ class Calc(GeneralConfigs, SpectraTools):
 
         if self.slit_acceptance is not None:
             if self.slit_shape == self.CalcConfigs.SlitShape.circular:
-                input_temp["Configurations"][
-                    "Slit &theta;<sub>1,2</sub> (mrad)"
-                ] = self.slit_acceptance
+                input_temp["Configurations"]["Slit &theta;<sub>1,2</sub> (mrad)"] = (
+                    self.slit_acceptance
+                )
             elif self.slit_shape == self.CalcConfigs.SlitShape.rectangular:
-                input_temp["Configurations"][
-                    "&Delta;&theta;<sub>x,y</sub> (mrad)"
-                ] = self.slit_acceptance
+                input_temp["Configurations"]["&Delta;&theta;<sub>x,y</sub> (mrad)"] = (
+                    self.slit_acceptance
+                )
             if self.source_type == self.SourceType.bending_magnet:
                 if self.output_type == self.CalcConfigs.Output.flux_density:
                     input_temp["Configurations"]["X' Acceptance (mrad)"] = (
@@ -1505,14 +1488,10 @@ class Calc(GeneralConfigs, SpectraTools):
                     )
 
         if self.target_energy is not None:
-            input_temp["Configurations"]["Target Energy (eV)"] = (
-                self.target_energy
-            )
+            input_temp["Configurations"]["Target Energy (eV)"] = self.target_energy
 
         if self.target_harmonic is not None:
-            input_temp["Configurations"]["Target Harmonic"] = (
-                self.target_harmonic
-            )
+            input_temp["Configurations"]["Target Harmonic"] = self.target_harmonic
 
         if self.x_range is not None:
             if self.output_type == self.CalcConfigs.Output.phasespace:
@@ -1521,9 +1500,9 @@ class Calc(GeneralConfigs, SpectraTools):
                 input_temp["Configurations"]["X' Range (mrad)"] = self.xp_range
                 input_temp["Configurations"]["Points (X')"] = self.xp_nr_pts
             else:
-                input_temp["Configurations"][
-                    "&theta;<sub>x</sub> Range (mrad)"
-                ] = self.x_range
+                input_temp["Configurations"]["&theta;<sub>x</sub> Range (mrad)"] = (
+                    self.x_range
+                )
                 input_temp["Configurations"]["Points (x)"] = self.x_nr_pts
 
         if self.y_range is not None:
@@ -1533,15 +1512,13 @@ class Calc(GeneralConfigs, SpectraTools):
                 input_temp["Configurations"]["Y' Range (mrad)"] = self.yp_range
                 input_temp["Configurations"]["Points (Y')"] = self.yp_nr_pts
             else:
-                input_temp["Configurations"][
-                    "&theta;<sub>y</sub> Range (mrad)"
-                ] = self.y_range
+                input_temp["Configurations"]["&theta;<sub>y</sub> Range (mrad)"] = (
+                    self.y_range
+                )
                 input_temp["Configurations"]["Points (y)"] = self.y_nr_pts
 
         if self.harmonic_range is not None:
-            input_temp["Configurations"]["Harmonic Range"] = (
-                self.harmonic_range
-            )
+            input_temp["Configurations"]["Harmonic Range"] = self.harmonic_range
             if (
                 self.source_type == self.SourceType.horizontal_undulator
                 or self.source_type == self.SourceType.vertical_undulator
@@ -1549,9 +1526,7 @@ class Calc(GeneralConfigs, SpectraTools):
             ):
                 input_temp["Configurations"]["K Range"] = self.k_range
             else:
-                input_temp["Configurations"]["K<sub>&perp;</sub> Range"] = (
-                    self.k_range
-                )
+                input_temp["Configurations"]["K<sub>&perp;</sub> Range"] = self.k_range
             if self.method == self.CalcConfigs.Method.wigner:
                 input_temp["Configurations"]["Slice X (mm)"] = self.slice_x
                 input_temp["Configurations"]["Slice Y (mm)"] = self.slice_y
@@ -1720,9 +1695,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 self._flux = data[0, :]
                 self._x = _np.array(self._output_variables[0][:])
                 self._y = _np.array(self._output_variables[1][:])
-                self._flux = _np.reshape(
-                    self._flux, (len(self._y), len(self._x))
-                )
+                self._flux = _np.reshape(self._flux, (len(self._y), len(self._x)))
                 self._flux = _np.flip(self._flux, axis=0)
                 self._pl = data[1, :]
                 self._pc = data[2, :]
@@ -1734,9 +1707,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 self._pc = _np.reshape(self._pc, (len(self._y), len(self._x)))
                 self._pc = _np.flip(self._pc, axis=0)
 
-                self._pl45 = _np.reshape(
-                    self._pl45, (len(self._y), len(self._x))
-                )
+                self._pl45 = _np.reshape(self._pl45, (len(self._y), len(self._x)))
                 self._pl45 = _np.flip(self._pl45, axis=0)
 
         elif (
@@ -1754,8 +1725,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 if (
                     self.source_type != self.SourceType.elliptic_undulator
                     and self.source_type != self.SourceType.figure8_undulator
-                    and self.source_type
-                    != self.SourceType.vertical_figure8_undulator
+                    and self.source_type != self.SourceType.vertical_figure8_undulator
                 ):
                     self._k = data[:, 0, :]
                     self._brilliance = data[:, 1, :]
@@ -1774,8 +1744,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 if (
                     self.source_type != self.SourceType.elliptic_undulator
                     and self.source_type != self.SourceType.figure8_undulator
-                    and self.source_type
-                    != self.SourceType.vertical_figure8_undulator
+                    and self.source_type != self.SourceType.vertical_figure8_undulator
                 ):
                     self._k = data[:, 1, :]
                     self._flux = data[:, 2, :]
@@ -1809,12 +1778,10 @@ class Calc(GeneralConfigs, SpectraTools):
         else:
             if (
                 self.source_type == self.SourceType.figure8_undulator
-                or self.source_type
-                == self.SourceType.vertical_figure8_undulator
+                or self.source_type == self.SourceType.vertical_figure8_undulator
             ):
                 nr_harmonics = (
-                    int((self.harmonic_range[-1] - self.harmonic_range[0]) * 2)
-                    + 1
+                    int((self.harmonic_range[-1] - self.harmonic_range[0]) * 2) + 1
                 )
                 if self.method == self.CalcConfigs.Method.wigner:
                     data = _np.zeros((nr_harmonics, 3, self.k_nr_pts))
@@ -1822,8 +1789,7 @@ class Calc(GeneralConfigs, SpectraTools):
                     data = _np.zeros((nr_harmonics, 7, self.k_nr_pts))
             else:
                 nr_harmonics = (
-                    int((self.harmonic_range[-1] - self.harmonic_range[0]) / 2)
-                    + 1
+                    int((self.harmonic_range[-1] - self.harmonic_range[0]) / 2) + 1
                 )
                 if self.source_type == self.SourceType.elliptic_undulator:
                     if self.method == self.CalcConfigs.Method.wigner:
@@ -1837,9 +1803,7 @@ class Calc(GeneralConfigs, SpectraTools):
                         data = _np.zeros((nr_harmonics, 6, self.k_nr_pts))
             variables = _np.zeros((nr_harmonics, self.k_nr_pts))
             for i in range(nr_harmonics):
-                variables[i, :] = _np.array(
-                    solver.GetDetailData(i)["variables"]
-                )
+                variables[i, :] = _np.array(solver.GetDetailData(i)["variables"])
                 data[i, :, :] = _np.array(solver.GetDetailData(i)["data"])
         return captions, data, variables
 
@@ -1865,15 +1829,11 @@ class Calc(GeneralConfigs, SpectraTools):
             ph = ph_err2[idcs]
         else:
             ph = ph_err1[idcs]
-        ph_full = _np.tile(ph, values.shape[1]).reshape(
-            values.shape, order="F"
-        )
+        ph_full = _np.tile(ph, values.shape[1]).reshape(values.shape, order="F")
         return values * ph_full
 
     @staticmethod
-    def process_brilliance_curve(
-        input_energies, input_brilliance, superp_value=250
-    ):
+    def process_brilliance_curve(input_energies, input_brilliance, superp_value=250):
         """Process brilliance curve.
 
         Args:
@@ -1898,9 +1858,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 idx = _np.argsort(e_harm)
                 e_harm = e_harm[idx]
                 b_harm = b_harm[idx]
-                e_harm_interp = _np.linspace(
-                    _np.min(e_harm), _np.max(e_harm), 2001
-                )
+                e_harm_interp = _np.linspace(_np.min(e_harm), _np.max(e_harm), 2001)
                 b_harm_interp = _np.exp(
                     _np.interp(e_harm_interp, e_harm, _np.log(b_harm))
                 )
@@ -1918,9 +1876,7 @@ class Calc(GeneralConfigs, SpectraTools):
                 _np.min(e_next_harm), _np.max(e_next_harm), 2001
             )
             b_next_harm_interp = _np.exp(
-                _np.interp(
-                    e_next_harm_interp, e_next_harm, _np.log(b_next_harm)
-                )
+                _np.interp(e_next_harm_interp, e_next_harm, _np.log(b_next_harm))
             )
 
             max_e_harm = _np.nanmax(e_harm_interp)
@@ -1943,9 +1899,7 @@ class Calc(GeneralConfigs, SpectraTools):
                     energy_intersect, e_next_harm_interp, b_next_harm_interp
                 )
 
-                idcs_bigger = _np.where(
-                    b_next_harm_intersect >= b_harm_intersect
-                )
+                idcs_bigger = _np.where(b_next_harm_intersect >= b_harm_intersect)
 
                 ecross = energy_intersect[_np.min(idcs_bigger)]
 
@@ -1975,12 +1929,8 @@ class Calc(GeneralConfigs, SpectraTools):
             e_next_harm_new.resize(2001)
             b_next_harm_new.resize(2001)
             idx = len(e_next_harm) - 1
-            e_next_harm_new[idx:] = _np.full(
-                len(e_next_harm_new[idx:]), _np.nan
-            )
-            b_next_harm_new[idx:] = _np.full(
-                len(e_next_harm_new[idx:]), _np.nan
-            )
+            e_next_harm_new[idx:] = _np.full(len(e_next_harm_new[idx:]), _np.nan)
+            b_next_harm_new[idx:] = _np.full(len(e_next_harm_new[idx:]), _np.nan)
 
             energies[i, :] = e_harm_new
             brilliance[i, :] = b_harm_new
@@ -2204,16 +2154,17 @@ class SpectraInterface:
         spectra_calc.accelerator = accelerator
 
         if source.source_type != "bendingmagnet":
-            if source.gap == 0:
+            if source.min_gap == 0:
                 kmax = source.calc_max_k(spectra_calc.accelerator)
             else:
-                kmax = source.get_k()
+                gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+                gap = gaph if source.polarization == "vp" else gapv
+                beff = source.get_beff(gap / source.period)
+                kmax = source.undulator_b_to_k(b=beff, period=source.period)
 
             if source.source_type == "wiggler":
                 b_max = source.undulator_k_to_b(kmax, source.period)
-                spectra_calc.calc.source_type = (
-                    spectra_calc.calc.SourceType.wiggler
-                )
+                spectra_calc.calc.source_type = spectra_calc.calc.SourceType.wiggler
                 spectra_calc.calc.method = (
                     spectra_calc.calc.CalcConfigs.Method.far_field
                 )
@@ -2234,15 +2185,9 @@ class SpectraInterface:
                     spectra_calc.calc.CalcConfigs.Output.brilliance
                 )
                 spectra_calc.calc._add_phase_errors = source.add_phase_errors
-                spectra_calc.calc._use_recovery_params = (
-                    source.use_recovery_params
-                )
-                spectra_calc.calc.indep_var = (
-                    spectra_calc.calc.CalcConfigs.Variable.k
-                )
-                spectra_calc.calc.method = (
-                    spectra_calc.calc.CalcConfigs.Method.wigner
-                )
+                spectra_calc.calc._use_recovery_params = source.use_recovery_params
+                spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.k
+                spectra_calc.calc.method = spectra_calc.calc.CalcConfigs.Method.wigner
                 spectra_calc.calc.slice_x = 0
                 spectra_calc.calc.slice_px = 0
                 spectra_calc.calc.slice_y = 0
@@ -2275,15 +2220,9 @@ class SpectraInterface:
 
         else:
             b = source.b_peak
-            spectra_calc.calc.source_type = (
-                spectra_calc.calc.SourceType.bending_magnet
-            )
-            spectra_calc.calc.method = (
-                spectra_calc.calc.CalcConfigs.Method.far_field
-            )
-            spectra_calc.calc.indep_var = (
-                spectra_calc.calc.CalcConfigs.Variable.energy
-            )
+            spectra_calc.calc.source_type = spectra_calc.calc.SourceType.bending_magnet
+            spectra_calc.calc.method = spectra_calc.calc.CalcConfigs.Method.far_field
+            spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.energy
             spectra_calc.calc.slit_acceptance = x_accep
             spectra_calc.calc.output_type = (
                 spectra_calc.calc.CalcConfigs.Output.flux_density
@@ -2348,7 +2287,7 @@ class SpectraInterface:
                 accelerators.append(self.accelerator)
         else:
             accelerators = self.accelerator
-        
+
         if "list" not in str(type(harmonic_range)):
             harmonic_ranges = list()
             for i, source in enumerate(source_list):
@@ -2358,10 +2297,7 @@ class SpectraInterface:
 
         arglist = []
         for i, source in enumerate(source_list):
-            if (
-                source.source_type == "wiggler"
-                or source.source_type == "bendingmagnet"
-            ):
+            if source.source_type == "wiggler" or source.source_type == "bendingmagnet":
                 flag_bend = True
             arglist += [
                 (
@@ -2369,8 +2305,9 @@ class SpectraInterface:
                     accelerators[i],
                     extraction_points[i],
                     emax,
-                    (1, 2) if hasattr(source, 'polarization') and 
-                    source.polarization == "cp" else harmonic_ranges[i],
+                    (1, 2)
+                    if hasattr(source, "polarization") and source.polarization == "cp"
+                    else harmonic_ranges[i],
                     nr_pts_k,
                     x_accep,
                     kmin,
@@ -2424,15 +2361,16 @@ class SpectraInterface:
                 raise ValueError("Invalid extraction point.")
 
         if source.source_type != "bendingmagnet":
-            kmax = source.calc_max_k(spectra_calc.accelerator)
-            if source.gap != 0:
-                kmax_gap = source.get_k()
-                kmax = kmax if kmax_gap > kmax else kmax_gap
+            if source.min_gap != 0:
+                gapv, gaph = source.calc_min_gap(self.accelerator)
+                gap = gaph if source.polarization == "vp" else gapv
+                beff = source.get_beff(gap / source.period)
+                kmax = source.undulator_b_to_k(b=beff, period=source.period)
+            else:
+                kmax = source.calc_max_k(spectra_calc.accelerator)
             if source.source_type == "wiggler":
                 b_max = source.undulator_k_to_b(kmax, source.period)
-                spectra_calc.calc.source_type = (
-                    spectra_calc.calc.SourceType.wiggler
-                )
+                spectra_calc.calc.source_type = spectra_calc.calc.SourceType.wiggler
                 spectra_calc.calc.method = (
                     spectra_calc.calc.CalcConfigs.Method.far_field
                 )
@@ -2452,15 +2390,11 @@ class SpectraInterface:
                 spectra_calc.calc.energy_step = 1
             else:
                 spectra_calc.calc._add_phase_errors = source.add_phase_errors
-                spectra_calc.calc._use_recovery_params = (
-                    source.use_recovery_params
-                )
+                spectra_calc.calc._use_recovery_params = source.use_recovery_params
                 spectra_calc.calc.output_type = (
                     spectra_calc.calc.CalcConfigs.Output.flux
                 )
-                spectra_calc.calc.indep_var = (
-                    spectra_calc.calc.CalcConfigs.Variable.k
-                )
+                spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.k
                 spectra_calc.calc.method = (
                     spectra_calc.calc.CalcConfigs.Method.far_field
                 )
@@ -2493,18 +2427,10 @@ class SpectraInterface:
 
         else:
             b = source.b_peak
-            spectra_calc.calc.source_type = (
-                spectra_calc.calc.SourceType.bending_magnet
-            )
-            spectra_calc.calc.method = (
-                spectra_calc.calc.CalcConfigs.Method.far_field
-            )
-            spectra_calc.calc.indep_var = (
-                spectra_calc.calc.CalcConfigs.Variable.energy
-            )
-            spectra_calc.calc.output_type = (
-                spectra_calc.calc.CalcConfigs.Output.flux
-            )
+            spectra_calc.calc.source_type = spectra_calc.calc.SourceType.bending_magnet
+            spectra_calc.calc.method = spectra_calc.calc.CalcConfigs.Method.far_field
+            spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.energy
+            spectra_calc.calc.output_type = spectra_calc.calc.CalcConfigs.Output.flux
             spectra_calc.calc.slit_shape = slit_shape
             spectra_calc.calc.observation_angle = [0, 0]
             spectra_calc.calc.slit_acceptance = slit_acceptance
@@ -2558,9 +2484,7 @@ class SpectraInterface:
         fluxes = list()
         slit_acceptances = _np.array(slit_acceptances)
         if slit_acceptances.shape[0] == 1:
-            slit_acceptances = _np.full(
-                (len(source_list), 2), slit_acceptances[0]
-            )
+            slit_acceptances = _np.full((len(source_list), 2), slit_acceptances[0])
         slit_acceptances = slit_acceptances.tolist()
         flag_bend = False
 
@@ -2570,20 +2494,17 @@ class SpectraInterface:
                 accelerators.append(self.accelerator)
         else:
             accelerators = self.accelerator
-        
+
         if "list" not in str(type(harmonic_range)):
             harmonic_ranges = list()
             for i, source in enumerate(source_list):
                 harmonic_ranges.append(harmonic_range)
         else:
             harmonic_ranges = harmonic_range
-            
+
         arglist = []
         for i, source in enumerate(source_list):
-            if (
-                source.source_type == "wiggler"
-                or source.source_type == "bendingmagnet"
-            ):
+            if source.source_type == "wiggler" or source.source_type == "bendingmagnet":
                 flag_bend = True
             arglist += [
                 (
@@ -2591,8 +2512,9 @@ class SpectraInterface:
                     accelerators[i],
                     extraction_points[i],
                     energy_range,
-                    (1, 2) if hasattr(source, 'polarization') and 
-                    source.polarization == "cp" else harmonic_ranges[i],
+                    (1, 2)
+                    if hasattr(source, "polarization") and source.polarization == "cp"
+                    else harmonic_ranges[i],
                     nr_pts_k,
                     slit_shape,
                     slit_acceptances[i],
@@ -2637,15 +2559,11 @@ class SpectraInterface:
 
         spectra_calc: SpectraInterface = copy.deepcopy(self)
         spectra_calc.calc.source_type = source.source_type
-        spectra_calc.calc.indep_var = (
-            spectra_calc.calc.CalcConfigs.Variable.energy
-        )
+        spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.energy
         spectra_calc.calc.method = (
             spectra_calc.calc.CalcConfigs.Method.fixedpoint_far_field
         )
-        spectra_calc.calc.output_type = (
-            spectra_calc.calc.CalcConfigs.Output.flux
-        )
+        spectra_calc.calc.output_type = spectra_calc.calc.CalcConfigs.Output.flux
 
         spectra_calc.calc.slit_shape = slit_shape
         spectra_calc.calc.slit_acceptance = slit_acceptance
@@ -2661,12 +2579,8 @@ class SpectraInterface:
             elif source_polarization == "vp":
                 spectra_calc.calc.kx = target_k
             else:
-                spectra_calc.calc.kx = target_k / _np.sqrt(
-                    1 + source.fields_ratio**2
-                )
-                spectra_calc.calc.ky = (
-                    spectra_calc.calc.kx * source.fields_ratio
-                )
+                spectra_calc.calc.kx = target_k / _np.sqrt(1 + source.fields_ratio**2)
+                spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
         else:
             spectra_calc.calc.by = source.b_peak
 
@@ -2722,10 +2636,14 @@ class SpectraInterface:
         Returns:
             tuple: Fluxes, and Energies.
         """
-        if und.gap == 0:
+        if und.min_gap == 0:
             source_k_max = und.calc_max_k(self.accelerator)
         else:
-            source_k_max = und.get_k()
+            gapv, gaph = und.calc_min_gap(self.accelerator)
+            gap = gaph if und.polarization == "vp" else gapv
+            beff = und.get_beff(gap / und.period)
+            source_k_max = und.undulator_b_to_k(b=beff, period=und.period)
+
         first_hamonic_energy = und.get_harmonic_energy(
             1, self.accelerator.gamma, 0, und.period, source_k_max
         )
@@ -2815,9 +2733,7 @@ class SpectraInterface:
                     hs_result = _np.flip(filter_arglist[i, :, 2])
 
                     spl = make_interp_spline(ks_result, fs_result, k=3)
-                    smooth_ks = _np.linspace(
-                        ks_result.min(), ks_result.max(), 300
-                    )
+                    smooth_ks = _np.linspace(ks_result.min(), ks_result.max(), 300)
                     smooth_fs = spl(smooth_ks)
 
                     best_result.append(smooth_fs[_np.argmax(smooth_fs)])
@@ -2885,30 +2801,20 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        spectra.accelerator.set_extraction_point(
-            self.accelerator.extraction_point
-        )
+        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
-        spectra.accelerator.zero_energy_spread = (
-            self.accelerator.zero_emittance
-        )
+        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
 
         if und.polarization == "hp":
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.horizontal_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
             spectra.calc.ky = target_k
         elif und.polarization == "vp":
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.vertical_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
             spectra.calc.kx = target_k
         else:
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.elliptic_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
 
@@ -2979,9 +2885,7 @@ class SpectraInterface:
                 self._und.period = period
                 self._und.source_length = length
                 k_max = self._und.calc_max_k(self.accelerator)
-                ks = self._und.calc_k_target(
-                    gamma, n, period, self._target_energy
-                )
+                ks = self._und.calc_k_target(gamma, n, period, self._target_energy)
                 isnan = _np.isnan(ks)
                 idcs_nan = _np.argwhere(~isnan)
                 idcs_max = _np.argwhere(ks < k_max)
@@ -3107,53 +3011,35 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        spectra.accelerator.set_extraction_point(
-            self.accelerator.extraction_point
-        )
+        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
-        spectra.accelerator.zero_energy_spread = (
-            self.accelerator.zero_emittance
-        )
+        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
 
         if und.polarization == "hp":
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.horizontal_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
             spectra.calc.ky = target_k
         elif und.polarization == "vp":
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.vertical_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
             spectra.calc.kx = target_k
         else:
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.elliptic_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
 
         if method == "farfield":
-            spectra.calc.method = (
-                spectra.calc.CalcConfigs.Method.fixedpoint_far_field
-            )
+            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_far_field
         elif method == "nearfield":
-            spectra.calc.method = (
-                spectra.calc.CalcConfigs.Method.fixedpoint_near_field
-            )
+            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_near_field
 
         spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.flux
 
         if slit_shape == "retslit":
-            spectra.calc.slit_shape = (
-                spectra.calc.CalcConfigs.SlitShape.rectangular
-            )
+            spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.rectangular
         elif slit_shape == "circslit":
-            spectra.calc.slit_shape = (
-                spectra.calc.CalcConfigs.SlitShape.circular
-            )
+            spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.circular
 
         spectra.calc.target_energy = self._target_energy
         spectra.calc.distance_from_source = distance_from_source
@@ -3252,9 +3138,7 @@ class SpectraInterface:
                 self._und.period = period
                 self._und.source_length = length
                 k_max = self._und.calc_max_k(self.accelerator)
-                ks = self._und.calc_k_target(
-                    gamma, n, period, self._target_energy
-                )
+                ks = self._und.calc_k_target(gamma, n, period, self._target_energy)
                 isnan = _np.isnan(ks)
                 idcs_nan = _np.argwhere(~isnan)
                 idcs_max = _np.argwhere(ks < k_max)
@@ -3342,9 +3226,7 @@ class SpectraInterface:
 
         # Flux Matrix Reassembly
         flux_matrix = best_result
-        flux_matrix = flux_matrix.reshape(
-            len(periods), len(lengths), order="F"
-        )
+        flux_matrix = flux_matrix.reshape(len(periods), len(lengths), order="F")
         flux_matrix = flux_matrix.transpose()
 
         self._flux_matrix = flux_matrix
@@ -3376,33 +3258,23 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        spectra.accelerator.set_extraction_point(
-            self.accelerator.extraction_point
-        )
+        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
-        spectra.accelerator.zero_energy_spread = (
-            self.accelerator.zero_emittance
-        )
+        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
 
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.brilliance
         spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_wigner
         spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
         if und.polarization == "hp":
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.horizontal_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
             spectra.calc.ky = target_k
         elif und.polarization == "vp":
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.vertical_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
             spectra.calc.kx = target_k
         else:
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.elliptic_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
 
@@ -3477,9 +3349,7 @@ class SpectraInterface:
                 self._und.period = period
                 self._und.source_length = length
                 k_max = self._und.calc_max_k(self.accelerator)
-                ks = self._und.calc_k_target(
-                    gamma, n, period, self._target_energy
-                )
+                ks = self._und.calc_k_target(gamma, n, period, self._target_energy)
                 isnan = _np.isnan(ks)
                 idcs_nan = _np.argwhere(~isnan)
                 idcs_max = _np.argwhere(ks < k_max)
@@ -3592,47 +3462,31 @@ class SpectraInterface:
 
         # Spectra Initialization
         spectra = copy.deepcopy(self)
-        spectra.accelerator.set_extraction_point(
-            self.accelerator.extraction_point
-        )
+        spectra.accelerator.set_extraction_point(self.accelerator.extraction_point)
 
         # Spectra Configuration
         spectra.accelerator.zero_emittance = self.accelerator.zero_emittance
-        spectra.accelerator.zero_energy_spread = (
-            self.accelerator.zero_emittance
-        )
+        spectra.accelerator.zero_energy_spread = self.accelerator.zero_emittance
 
         if und.polarization == "hp":
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.horizontal_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.horizontal_undulator
             spectra.calc.ky = target_k
         elif und.polarization == "vp":
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.vertical_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.vertical_undulator
             spectra.calc.kx = target_k
         else:
-            spectra.calc.source_type = (
-                spectra.calc.SourceType.elliptic_undulator
-            )
+            spectra.calc.source_type = spectra.calc.SourceType.elliptic_undulator
             spectra.calc.kx = target_k / _np.sqrt(1 + und.fields_ratio**2)
             spectra.calc.ky = spectra.calc.kx * und.fields_ratio
 
         if calcfarfield == 1:
-            spectra.calc.method = (
-                spectra.calc.CalcConfigs.Method.fixedpoint_far_field
-            )
+            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_far_field
         elif calcfarfield == 0:
-            spectra.calc.method = (
-                spectra.calc.CalcConfigs.Method.fixedpoint_near_field
-            )
+            spectra.calc.method = spectra.calc.CalcConfigs.Method.fixedpoint_near_field
 
         spectra.calc.indep_var = spectra.calc.CalcConfigs.Variable.energy
         spectra.calc.output_type = spectra.calc.CalcConfigs.Output.power
-        spectra.calc.slit_shape = (
-            spectra.calc.CalcConfigs.SlitShape.rectangular
-        )
+        spectra.calc.slit_shape = spectra.calc.CalcConfigs.SlitShape.rectangular
 
         spectra.calc.target_energy = self._target_energy
         spectra.calc.distance_from_source = distance_from_source
@@ -3705,17 +3559,11 @@ class SpectraInterface:
             arglist, _np.ones((arglist.shape[0], 1)) * distance_from_source
         ]
         # Add slit x
-        arglist = _np.c_[
-            arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[0]
-        ]
+        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[0]]
         # Add slit y
-        arglist = _np.c_[
-            arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[1]
-        ]
+        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * slit_acceptance[1]]
         # Add method farfield or nearfield
-        arglist = _np.c_[
-            arglist, _np.ones((arglist.shape[0], 1)) * calcfarfield
-        ]
+        arglist = _np.c_[arglist, _np.ones((arglist.shape[0], 1)) * calcfarfield]
 
         arglist = list(arglist)
 
@@ -3773,9 +3621,7 @@ class SpectraInterface:
             spectra_calc.calc.indep_var = (
                 spectra_calc.calc.CalcConfigs.Variable.mesh_xxp
             )
-        spectra_calc.calc.output_type = (
-            spectra_calc.calc.CalcConfigs.Output.phasespace
-        )
+        spectra_calc.calc.output_type = spectra_calc.calc.CalcConfigs.Output.phasespace
 
         spectra_calc.calc.period = source.period
         spectra_calc.calc.length = source.source_length
@@ -3796,9 +3642,7 @@ class SpectraInterface:
         elif source.polarization == "vp":
             spectra_calc.calc.kx = target_k
         else:
-            spectra_calc.calc.kx = target_k / _np.sqrt(
-                1 + source.fields_ratio**2
-            )
+            spectra_calc.calc.kx = target_k / _np.sqrt(1 + source.fields_ratio**2)
             spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
 
         spectra_calc.calc.target_harmonic = n_harmonic
@@ -3860,10 +3704,13 @@ class SpectraInterface:
             div_size (numpy array): Div. at 1th pos. and Size at 2nd pos.
             energies (numpy array).
         """
-        if source.gap == 0:
+        if source.min_gap == 0:
             kmax_source = source.calc_max_k(self.accelerator)
         else:
-            kmax_source = source.get_k()
+            gapv, gaph = source.calc_min_gap(self.accelerator)
+            gap = gaph if source.polarization == "vp" else gapv
+            beff = source.get_beff(gap / source.period)
+            kmax_source = source.undulator_b_to_k(b=beff, period=source.period)
 
         # Automatic range adjust
         r_lim = 0.01
@@ -3972,10 +3819,13 @@ class SpectraInterface:
         """
         spectra_calc: SpectraInterface = copy.deepcopy(self)
         if source.source_type != "bendingmagnet":
-            kmax = source.calc_max_k(spectra_calc.accelerator)
-            if source.gap != 0:
-                kmax_gap = source.get_k()
-                kmax = kmax if kmax_gap > kmax else kmax_gap
+            if source.min_gap != 0:
+                gapv, gaph = source.calc_min_gap(self.accelerator)
+                gap = gaph if source.polarization == "vp" else gapv
+                beff = source.get_beff(gap / source.period)
+                kmax = source.undulator_b_to_k(b=beff, period=source.period)
+            else:
+                kmax = source.calc_max_k(spectra_calc.accelerator)
             if source.source_type == "wiggler":
                 spectra_calc.calc.source_type = source.source_type
                 spectra_calc.calc.method = (
@@ -3996,9 +3846,7 @@ class SpectraInterface:
                 spectra_calc.calc.energy_step = 1
             else:
                 spectra_calc.calc._add_phase_errors = source.add_phase_errors
-                spectra_calc.calc._use_recovery_params = (
-                    source.use_recovery_params
-                )
+                spectra_calc.calc._use_recovery_params = source.use_recovery_params
                 spectra_calc.calc.output_type = (
                     spectra_calc.calc.CalcConfigs.Output.flux
                 )
@@ -4025,12 +3873,8 @@ class SpectraInterface:
                     spectra_calc.calc.source_type = (
                         spectra_calc.calc.SourceType.elliptic_undulator
                     )
-                    spectra_calc.calc.kx = kmax / _np.sqrt(
-                        1 + source.fields_ratio**2
-                    )
-                    spectra_calc.calc.ky = (
-                        spectra_calc.calc.kx * source.fields_ratio
-                    )
+                    spectra_calc.calc.kx = kmax / _np.sqrt(1 + source.fields_ratio**2)
+                    spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
                 spectra_calc.calc.observation_angle = slit_position
                 spectra_calc.calc.slit_acceptance = slit_acceptance
                 spectra_calc.calc.energy_range = energy_range
@@ -4038,15 +3882,9 @@ class SpectraInterface:
         else:
             b = source.b_peak
             spectra_calc.calc.source_type = source.source_type
-            spectra_calc.calc.method = (
-                spectra_calc.calc.CalcConfigs.Method.far_field
-            )
-            spectra_calc.calc.indep_var = (
-                spectra_calc.calc.CalcConfigs.Variable.energy
-            )
-            spectra_calc.calc.output_type = (
-                spectra_calc.calc.CalcConfigs.Output.flux
-            )
+            spectra_calc.calc.method = spectra_calc.calc.CalcConfigs.Method.far_field
+            spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.energy
+            spectra_calc.calc.output_type = spectra_calc.calc.CalcConfigs.Output.flux
             spectra_calc.calc.slit_shape = slit_shape
             spectra_calc.calc.observation_angle = slit_position
             spectra_calc.calc.slit_acceptance = slit_acceptance
@@ -4096,12 +3934,8 @@ class SpectraInterface:
         spectra_calc: SpectraInterface = copy.deepcopy(self)
         spectra_calc.accelerator.current = current
         spectra_calc.calc.source_type = source.source_type
-        spectra_calc.calc.method = (
-            spectra_calc.calc.CalcConfigs.Method.near_field
-        )
-        spectra_calc.calc.indep_var = (
-            spectra_calc.calc.CalcConfigs.Variable.mesh_xy
-        )
+        spectra_calc.calc.method = spectra_calc.calc.CalcConfigs.Method.near_field
+        spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.mesh_xy
         spectra_calc.calc.output_type = (
             spectra_calc.calc.CalcConfigs.Output.power_density
         )
@@ -4121,12 +3955,8 @@ class SpectraInterface:
                 spectra_calc.calc.source_type = (
                     spectra_calc.calc.SourceType.elliptic_undulator
                 )
-                spectra_calc.calc.kx = kmax / _np.sqrt(
-                    1 + source.fields_ratio**2
-                )
-                spectra_calc.calc.ky = (
-                    spectra_calc.calc.kx * source.fields_ratio
-                )
+                spectra_calc.calc.kx = kmax / _np.sqrt(1 + source.fields_ratio**2)
+                spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
             spectra_calc.calc.period = source.period
             spectra_calc.calc.length = source.source_length
         else:
@@ -4176,12 +4006,8 @@ class SpectraInterface:
         spectra_calc.calc.method = (
             spectra_calc.calc.CalcConfigs.Method.fixedpoint_near_field
         )
-        spectra_calc.calc.indep_var = (
-            spectra_calc.calc.CalcConfigs.Variable.energy
-        )
-        spectra_calc.calc.output_type = (
-            spectra_calc.calc.CalcConfigs.Output.power
-        )
+        spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.energy
+        spectra_calc.calc.output_type = spectra_calc.calc.CalcConfigs.Output.power
         spectra_calc.calc.slit_shape = slit_shape
 
         spectra_calc.calc.target_energy = 0
@@ -4201,12 +4027,8 @@ class SpectraInterface:
                 spectra_calc.calc.source_type = (
                     spectra_calc.calc.SourceType.elliptic_undulator
                 )
-                spectra_calc.calc.kx = kmax / _np.sqrt(
-                    1 + source.fields_ratio**2
-                )
-                spectra_calc.calc.ky = (
-                    spectra_calc.calc.kx * source.fields_ratio
-                )
+                spectra_calc.calc.kx = kmax / _np.sqrt(1 + source.fields_ratio**2)
+                spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
             spectra_calc.calc.period = source.period
             spectra_calc.calc.length = source.source_length
         else:
@@ -4259,9 +4081,7 @@ class SpectraInterface:
         spectra_calc.calc.output_type = (
             spectra_calc.calc.CalcConfigs.Output.flux_density
         )
-        spectra_calc.calc.indep_var = (
-            spectra_calc.calc.CalcConfigs.Variable.mesh_xy
-        )
+        spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.mesh_xy
         if source.source_type != "bendingmagnet":
             target_k = target_k
             source_polarization = source.polarization
@@ -4273,20 +4093,12 @@ class SpectraInterface:
             elif source_polarization == "vp":
                 spectra_calc.calc.kx = target_k
             else:
-                spectra_calc.calc.kx = target_k / _np.sqrt(
-                    1 + source.fields_ratio**2
-                )
-                spectra_calc.calc.ky = (
-                    spectra_calc.calc.kx * source.fields_ratio
-                )
-            spectra_calc.calc.method = (
-                spectra_calc.calc.CalcConfigs.Method.far_field
-            )
+                spectra_calc.calc.kx = target_k / _np.sqrt(1 + source.fields_ratio**2)
+                spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
+            spectra_calc.calc.method = spectra_calc.calc.CalcConfigs.Method.far_field
         else:
             spectra_calc.calc.by = source.b_peak
-            spectra_calc.calc.method = (
-                spectra_calc.calc.CalcConfigs.Method.near_field
-            )
+            spectra_calc.calc.method = spectra_calc.calc.CalcConfigs.Method.near_field
         spectra_calc.calc.x_nr_pts = x_nr_pts
         spectra_calc.calc.y_nr_pts = y_nr_pts
         spectra_calc.calc.x_range = [
@@ -4313,13 +4125,9 @@ class SpectraInterface:
                 )
                 target_harmonic = int(target_energy / fundamental_energy)
                 target_harmonic = (
-                    target_harmonic - 1
-                    if target_harmonic % 2 == 0
-                    else target_harmonic
+                    target_harmonic - 1 if target_harmonic % 2 == 0 else target_harmonic
                 )
-                target_harmonic = (
-                    1 if target_harmonic <= 0 else target_harmonic
-                )
+                target_harmonic = 1 if target_harmonic <= 0 else target_harmonic
                 spectra_calc.use_recovery_params = True
                 flux_distribuition = spectra_calc.apply_phase_error_matrix(
                     values=flux_distribuition,
@@ -4359,15 +4167,11 @@ class SpectraInterface:
         """
         spectra_calc: SpectraInterface = copy.deepcopy(self)
         spectra_calc.calc.source_type = source.source_type
-        spectra_calc.calc.indep_var = (
-            spectra_calc.calc.CalcConfigs.Variable.energy
-        )
+        spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.energy
         spectra_calc.calc.method = (
             spectra_calc.calc.CalcConfigs.Method.fixedpoint_near_field
         )
-        spectra_calc.calc.output_type = (
-            spectra_calc.calc.CalcConfigs.Output.flux
-        )
+        spectra_calc.calc.output_type = spectra_calc.calc.CalcConfigs.Output.flux
 
         spectra_calc.calc.slit_shape = slit_shape
         spectra_calc.calc.slit_acceptance = [
@@ -4390,12 +4194,8 @@ class SpectraInterface:
             elif source_polarization == "vp":
                 spectra_calc.calc.kx = target_k
             else:
-                spectra_calc.calc.kx = target_k / _np.sqrt(
-                    1 + source.fields_ratio**2
-                )
-                spectra_calc.calc.ky = (
-                    spectra_calc.calc.kx * source.fields_ratio
-                )
+                spectra_calc.calc.kx = target_k / _np.sqrt(1 + source.fields_ratio**2)
+                spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
         else:
             spectra_calc.calc.by = source.b_peak
 
@@ -4416,13 +4216,9 @@ class SpectraInterface:
                 )
                 target_harmonic = int(target_energy / fundamental_energy)
                 target_harmonic = (
-                    target_harmonic - 1
-                    if target_harmonic % 2 == 0
-                    else target_harmonic
+                    target_harmonic - 1 if target_harmonic % 2 == 0 else target_harmonic
                 )
-                target_harmonic = (
-                    1 if target_harmonic <= 0 else target_harmonic
-                )
+                target_harmonic = 1 if target_harmonic <= 0 else target_harmonic
                 spectra_calc.use_recovery_params = True
                 flux_total = spectra_calc.apply_phase_error_matrix(
                     values=flux_total,
@@ -4476,12 +4272,10 @@ class SpectraInterface:
                     input_brilliance = self.brilliances[i][:, :]
                     input_energies = self.energies[i][:, :]
                     if input_energies.shape[0] > 1:
-                        energies_, brilliance = (
-                            self.calc.process_brilliance_curve(
-                                input_energies,
-                                input_brilliance,
-                                superp_value=superp_value,
-                            )
+                        energies_, brilliance = self.calc.process_brilliance_curve(
+                            input_energies,
+                            input_brilliance,
+                            superp_value=superp_value,
                         )
                     else:
                         input_brilliance_b = input_brilliance[0]
@@ -4497,29 +4291,19 @@ class SpectraInterface:
                         brilliance = _np.interp(
                             energies_, input_energies_b, input_brilliance_b
                         )
-                        energies_ = _np.reshape(
-                            energies_, (1, _np.shape(energies_)[0])
-                        )
+                        energies_ = _np.reshape(energies_, (1, _np.shape(energies_)[0]))
                         brilliance = _np.reshape(
                             brilliance, (1, _np.shape(brilliance)[0])
                         )
                 else:
-                    input_brilliance = _np.array(
-                        self.brilliances[i], dtype=float
-                    )
+                    input_brilliance = _np.array(self.brilliances[i], dtype=float)
                     input_energies = _np.array(self.energies[i], dtype=float)
                     energies_ = _np.linspace(
                         _np.min(input_energies), _np.max(input_energies), 2001
                     )
-                    brilliance = _np.interp(
-                        energies_, input_energies, input_brilliance
-                    )
-                    energies_ = _np.reshape(
-                        energies_, (1, _np.shape(energies_)[0])
-                    )
-                    brilliance = _np.reshape(
-                        brilliance, (1, _np.shape(brilliance)[0])
-                    )
+                    brilliance = _np.interp(energies_, input_energies, input_brilliance)
+                    energies_ = _np.reshape(energies_, (1, _np.shape(energies_)[0]))
+                    brilliance = _np.reshape(brilliance, (1, _np.shape(brilliance)[0]))
 
                 energies.append(energies_)
                 brilliances.append(brilliance)
@@ -4645,12 +4429,8 @@ class SpectraInterface:
                             _np.max(input_energies_b),
                             2001,
                         )
-                        flux = _np.interp(
-                            energies_, input_energies_b, input_flux_b
-                        )
-                        energies_ = _np.reshape(
-                            energies_, (1, _np.shape(energies_)[0])
-                        )
+                        flux = _np.interp(energies_, input_energies_b, input_flux_b)
+                        energies_ = _np.reshape(energies_, (1, _np.shape(energies_)[0]))
                         flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
                 else:
                     input_flux = _np.array(self.fluxes[i], dtype=float)
@@ -4659,9 +4439,7 @@ class SpectraInterface:
                         _np.min(input_energies), _np.max(input_energies), 2001
                     )
                     flux = _np.interp(energies_, input_energies, input_flux)
-                    energies_ = _np.reshape(
-                        energies_, (1, _np.shape(energies_)[0])
-                    )
+                    energies_ = _np.reshape(energies_, (1, _np.shape(energies_)[0]))
                     flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
 
                 energies.append(energies_)
@@ -4794,11 +4572,7 @@ class SpectraInterface:
         if vmax is None:
             vmax = _np.max(self._flux_density_matrix)
 
-        step = (
-            5
-            if cscale == "linear"
-            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
-        )
+        step = 5 if cscale == "linear" else int(_np.log10(vmax) - _np.log10(vmin) + 1)
         vmin = vmin if cscale == "linear" else _np.log10(vmin)
         vmax = vmax if cscale == "linear" else _np.log10(vmax)
         fm = (
@@ -4898,11 +4672,7 @@ class SpectraInterface:
         if vmax is None:
             vmax = _np.max(flux_matrix)
 
-        step = (
-            5
-            if cscale == "linear"
-            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
-        )
+        step = 5 if cscale == "linear" else int(_np.log10(vmax) - _np.log10(vmin) + 1)
         vmin = vmin if cscale == "linear" else _np.log10(vmin)
         vmax = vmax if cscale == "linear" else _np.log10(vmax)
         fm = flux_matrix if cscale == "linear" else _np.log10(flux_matrix)
@@ -4922,9 +4692,7 @@ class SpectraInterface:
             if cscale == "linear"
             else colors.LogNorm(vmin=vmin, vmax=vmax),
         )
-        sm = _plt.cm.ScalarMappable(
-            _plt.Normalize(vmin=vmin, vmax=vmax), cmap=cmap
-        )
+        sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax), cmap=cmap)
         sm.set_array(fm)
         cbar = fig.colorbar(
             sm,
@@ -4978,13 +4746,8 @@ class SpectraInterface:
         length_number = info[2]
 
         # Getting the position of the best brilliance
-        j = int(
-            _np.argmax(brilliance_matrix.ravel())
-            / len(brilliance_matrix[0, :])
-        )
-        i = _np.argmax(brilliance_matrix.ravel()) % len(
-            brilliance_matrix[0, :]
-        )
+        j = int(_np.argmax(brilliance_matrix.ravel()) / len(brilliance_matrix[0, :]))
+        i = _np.argmax(brilliance_matrix.ravel()) % len(brilliance_matrix[0, :])
 
         # Label creation
         label = "Target Energy: {:.2f} KeV\n".format(self._target_energy / 1e3)
@@ -5008,18 +4771,10 @@ class SpectraInterface:
         if vmax is None:
             vmax = _np.max(brilliance_matrix)
 
-        step = (
-            5
-            if cscale == "linear"
-            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
-        )
+        step = 5 if cscale == "linear" else int(_np.log10(vmax) - _np.log10(vmin) + 1)
         vmin = vmin if cscale == "linear" else _np.log10(vmin)
         vmax = vmax if cscale == "linear" else _np.log10(vmax)
-        bm = (
-            brilliance_matrix
-            if cscale == "linear"
-            else _np.log10(brilliance_matrix)
-        )
+        bm = brilliance_matrix if cscale == "linear" else _np.log10(brilliance_matrix)
 
         ax.imshow(
             bm,
@@ -5036,9 +4791,7 @@ class SpectraInterface:
             if cscale == "linear"
             else colors.LogNorm(vmin=vmin, vmax=vmax),
         )
-        sm = _plt.cm.ScalarMappable(
-            _plt.Normalize(vmin=vmin, vmax=vmax), cmap=cmap
-        )
+        sm = _plt.cm.ScalarMappable(_plt.Normalize(vmin=vmin, vmax=vmax), cmap=cmap)
         sm.set_array(bm)
         cbar = fig.colorbar(
             sm,
@@ -5104,16 +4857,10 @@ class SpectraInterface:
         const = ((ECHARGE**4) * (self.accelerator.gamma**2)) / (
             12 * PI * VACUUM_PERMITTICITY * (EMASS**2) * (LSPEED**2)
         )
-        total_powers = (
-            const * (bs**2) * lengths * (current * 1e-3) / (1e3 * ECHARGE)
-        )
+        total_powers = const * (bs**2) * lengths * (current * 1e-3) / (1e3 * ECHARGE)
 
-        pts_period = len(
-            _np.where(info_unds_matrix[:, 2] == info_unds_matrix[0, 2])[0]
-        )
-        pts_length = len(
-            _np.where(info_unds_matrix[:, 1] == info_unds_matrix[0, 1])[0]
-        )
+        pts_period = len(_np.where(info_unds_matrix[:, 2] == info_unds_matrix[0, 2])[0])
+        pts_length = len(_np.where(info_unds_matrix[:, 1] == info_unds_matrix[0, 1])[0])
 
         total_powers = total_powers.reshape(pts_length, pts_period)
 
@@ -5127,11 +4874,7 @@ class SpectraInterface:
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
 
-        step = (
-            5
-            if cscale == "linear"
-            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
-        )
+        step = 5 if cscale == "linear" else int(_np.log10(vmax) - _np.log10(vmin) + 1)
         vmin = vmin if cscale == "linear" else _np.log10(vmin)
         vmax = vmax if cscale == "linear" else _np.log10(vmax)
         pm = total_powers if cscale == "linear" else _np.log10(total_powers)
@@ -5197,9 +4940,7 @@ class SpectraInterface:
             partial_power_matrix (numpy array): partial power matrix of undulators information to use in calculation
         """
         if partial_power_matrix is None:
-            raise ValueError(
-                "'partial_power_matrix' parameter has to be defined"
-            )
+            raise ValueError("'partial_power_matrix' parameter has to be defined")
 
         if self._info_matrix_flux is not None:
             info_unds_matrix = self._info_matrix_flux
@@ -5224,11 +4965,7 @@ class SpectraInterface:
         ax.set_ylabel("Length [m]")
         ax.set_xlabel("Period [mm]")
 
-        step = (
-            5
-            if cscale == "linear"
-            else int(_np.log10(vmax) - _np.log10(vmin) + 1)
-        )
+        step = 5 if cscale == "linear" else int(_np.log10(vmax) - _np.log10(vmin) + 1)
         vmin = vmin if cscale == "linear" else _np.log10(vmin)
         vmax = vmax if cscale == "linear" else _np.log10(vmax)
         partial_power_matrix = (
