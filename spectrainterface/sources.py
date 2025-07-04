@@ -120,6 +120,7 @@ class Undulator(SourceFunctions):
         super().__init__()
         self._undulator_type = "Halbach"
         self._gap = 0
+        self._min_gap = 0
         self._br = 1.37
         self._period = 50
         self._efficiency = 1.0
@@ -149,6 +150,15 @@ class Undulator(SourceFunctions):
             float: Gap [mm]
         """
         return self._gap
+
+    @property
+    def min_gap(self):
+        """Undulator minimum gap [mm].
+
+        Returns:
+            float: Minimum Gap [mm]
+        """
+        return self._min_gap
 
     @property
     def br(self):
@@ -259,6 +269,10 @@ class Undulator(SourceFunctions):
             raise ValueError("Gap must be positive.")
         else:
             self._gap = value
+
+    @min_gap.setter
+    def min_gap(self, value):
+        self._min_gap = value
 
     @br.setter
     def br(self, value):
@@ -431,7 +445,7 @@ class Undulator(SourceFunctions):
              object.
         """
         gap_minv, gap_minh = self.calc_min_gap(si_parameters)
-        gap_min = gap_minv if self.polarization == 'hp' else gap_minh
+        gap_min = gap_minv if self.polarization == "hp" else gap_minh
         b_max = self.get_beff(gap_min / self.period)
         k_max = self.undulator_b_to_k(b_max, self.period)
         return k_max
@@ -455,9 +469,7 @@ class Undulator(SourceFunctions):
         n = _np.arange(1, h_max, 2)
 
         k_max = self.calc_max_k(si_parameters)
-        ks = self.calc_k_target(
-            si_parameters.gamma, n, self.period, target_energy
-        )
+        ks = self.calc_k_target(si_parameters.gamma, n, self.period, target_energy)
         isnan = _np.isnan(ks)
         idcs_nan = _np.argwhere(~isnan)
         idcs_max = _np.argwhere(ks < k_max)
@@ -552,11 +564,7 @@ class Undulator(SourceFunctions):
         )
 
         total_power = (
-            const
-            * (b**2)
-            * self._source_length
-            * (current * 1e-3)
-            / (1e3 * ECHARGE)
+            const * (b**2) * self._source_length * (current * 1e-3) / (1e3 * ECHARGE)
         )
 
         return total_power
@@ -731,7 +739,7 @@ class APPLE2(Elliptic):
         self._period = period
         self._source_length = length
         self._source_type = "ellipticundulator"
-    
+
     @property
     def phase(self):
         """Undulator phase [mm].
@@ -740,7 +748,7 @@ class APPLE2(Elliptic):
             float: Phase [mm]
         """
         return self._phase
-    
+
     def get_beff(self, gap_over_period, phase=None):
         """Get peak magnetic field for a given device and gap.
 
@@ -764,7 +772,7 @@ class APPLE2(Elliptic):
             )
             * _np.abs(_np.cos(_np.pi / self._period * (phase - z0)))
         )
-    
+
     def calc_max_k(self, si_parameters):
         """Calc max K achieved by undulator.
 
@@ -958,9 +966,7 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
         self._br = 1.71
         self._polarization = "hp"
         self._efficiency = 1.0
-        self._halbach_coef = {
-            "hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}
-        }
+        self._halbach_coef = {"hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}}
         self._material = "PrFeB"
         self._source_type = "linearundulator"
 
