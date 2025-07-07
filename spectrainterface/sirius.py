@@ -296,8 +296,8 @@ class SIRIUS:
                 super().__init__(period, length)
                 self._label = "IVU18-2"
                 self._br = 1.27
-                self._gap = 4.5
-                self._min_gap = 4.5
+                self._gap = 4.3
+                self._min_gap = 4.3
                 self.vc_thickness = 0
                 self.vc_tolerance = 0.2501
                 self._polarization = "hp"
@@ -314,8 +314,8 @@ class SIRIUS:
                 super().__init__(period, length)
                 self._label = "IVU18-1"
                 self._br = 1.27
-                self._gap = 4.5
-                self._min_gap = 4.5
+                self._gap = 4.3
+                self._min_gap = 4.3
                 self._vc_thickness = 0
                 self._vc_tolerance = 0.2501
                 self._polarization = "hp"
