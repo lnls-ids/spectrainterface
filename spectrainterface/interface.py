@@ -2157,9 +2157,7 @@ class SpectraInterface:
             if source.min_gap == 0:
                 kmax = source.calc_max_k(spectra_calc.accelerator)
             else:
-                gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-                gap = gaph if source.polarization == "vp" else gapv
-                beff = source.get_beff(gap / source.period)
+                beff = source.get_beff(source.min_gap / source.period)
                 kmax = source.undulator_b_to_k(b=beff, period=source.period)
 
             if source.source_type == "wiggler":
@@ -2362,9 +2360,7 @@ class SpectraInterface:
 
         if source.source_type != "bendingmagnet":
             if source.min_gap != 0:
-                gapv, gaph = source.calc_min_gap(self.accelerator)
-                gap = gaph if source.polarization == "vp" else gapv
-                beff = source.get_beff(gap / source.period)
+                beff = source.get_beff(source.min_gap / source.period)
                 kmax = source.undulator_b_to_k(b=beff, period=source.period)
             else:
                 kmax = source.calc_max_k(spectra_calc.accelerator)
@@ -2639,9 +2635,7 @@ class SpectraInterface:
         if und.min_gap == 0:
             source_k_max = und.calc_max_k(self.accelerator)
         else:
-            gapv, gaph = und.calc_min_gap(self.accelerator)
-            gap = gaph if und.polarization == "vp" else gapv
-            beff = und.get_beff(gap / und.period)
+            beff = und.get_beff(und.min_gap / und.period)
             source_k_max = und.undulator_b_to_k(b=beff, period=und.period)
 
         first_hamonic_energy = und.get_harmonic_energy(
@@ -3707,9 +3701,7 @@ class SpectraInterface:
         if source.min_gap == 0:
             kmax_source = source.calc_max_k(self.accelerator)
         else:
-            gapv, gaph = source.calc_min_gap(self.accelerator)
-            gap = gaph if source.polarization == "vp" else gapv
-            beff = source.get_beff(gap / source.period)
+            beff = source.get_beff(source.min_gap / source.period)
             kmax_source = source.undulator_b_to_k(b=beff, period=source.period)
 
         # Automatic range adjust
@@ -3820,9 +3812,7 @@ class SpectraInterface:
         spectra_calc: SpectraInterface = copy.deepcopy(self)
         if source.source_type != "bendingmagnet":
             if source.min_gap != 0:
-                gapv, gaph = source.calc_min_gap(self.accelerator)
-                gap = gaph if source.polarization == "vp" else gapv
-                beff = source.get_beff(gap / source.period)
+                beff = source.get_beff(source.min_gap / source.period)
                 kmax = source.undulator_b_to_k(b=beff, period=source.period)
             else:
                 kmax = source.calc_max_k(spectra_calc.accelerator)
