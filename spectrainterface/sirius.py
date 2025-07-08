@@ -223,7 +223,7 @@ class SIRIUS:
                 """Class constructor."""
                 super().__init__(period, length)
                 self._material = "NdFeB"
-                self._label = "UE44"
+                self._label = "UE44-IPE"
                 self._gap = 11.4
                 self._min_gap = 11.4
                 self._br = 1.14
@@ -234,7 +234,7 @@ class SIRIUS:
             def __init__(self, period=58, length=1):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "APU58"
+                self._label = "APU58-IPE"
                 self._gap = 15.8
                 self._min_gap = 15.8
                 self._br = 1.34
@@ -246,7 +246,7 @@ class SIRIUS:
             def __init__(self, period=22, length=1.2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "APU22"
+                self._label = "APU22-SPU"
                 self._gap = 8
                 self._min_gap = 8
                 self._br = 1.34
@@ -259,7 +259,7 @@ class SIRIUS:
             def __init__(self, period=22, length=1.2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "APU22"
+                self._label = "APU22-MNC"
                 self._gap = 8
                 self._min_gap = 8
                 self._br = 1.34
@@ -283,7 +283,7 @@ class SIRIUS:
             def __init__(self, period=50, length=2.7):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "EPU50 (UVX)"
+                self._label = "EPU50-UVX"
                 self._br = 1.135
                 self._gap = 22
                 self._min_gap = 22
@@ -294,10 +294,10 @@ class SIRIUS:
             def __init__(self, period=18.5, length=2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "IVU18-2"
+                self._label = "IVU18-EMA"
                 self._br = 1.27
-                self._gap = 4.5
-                self._min_gap = 4.5
+                self._gap = 4.3
+                self._min_gap = 4.3
                 self.vc_thickness = 0
                 self.vc_tolerance = 0.2501
                 self._polarization = "hp"
@@ -312,10 +312,10 @@ class SIRIUS:
             def __init__(self, period=18.5, length=2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "IVU18-1"
+                self._label = "IVU18-PNR"
                 self._br = 1.27
-                self._gap = 4.5
-                self._min_gap = 4.5
+                self._gap = 4.3
+                self._min_gap = 4.3
                 self._vc_thickness = 0
                 self._vc_tolerance = 0.2501
                 self._polarization = "hp"
@@ -336,7 +336,7 @@ class SIRIUS:
                 """
                 super().__init__()
                 self._undulator_type = "DELTA"
-                self._label = "DELTA"
+                self._label = "DELTA52-SAB"
                 self._br = 1.39
                 self._polarization = "hp"
                 self._phase_coef = {
@@ -479,7 +479,7 @@ class SIRIUS:
                 """
                 super().__init__(period, length)
                 self._undulator_type = "CPMU"
-                self._label = "CPMU 13.6"
+                self._label = "CPMU13-HIB"
                 self._gap = 4.84
                 self._min_gap = 4.84
                 self.vc_tolerance = 0.160
@@ -500,7 +500,7 @@ class SIRIUS:
                 """
                 super().__init__(period, length)
                 self._undulator_type = "CPMU"
-                self._label = "CPMU 15.8"
+                self._label = "CPMU15-TIB"
                 self._gap = 3.7
                 self._min_gap = 3.7
                 self.vc_tolerance = 0.210
