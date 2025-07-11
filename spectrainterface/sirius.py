@@ -501,8 +501,29 @@ class SIRIUS:
                 super().__init__(period, length)
                 self._undulator_type = "CPMU"
                 self._label = "CPMU15-TIB"
-                self._gap = 3.7
-                self._min_gap = 3.7
+                self._gap = 3.8
+                self._min_gap = 3.6  # VCA
+                self.vc_tolerance = 0.210
+
+        class CPMU14_QRI(sources.CPMU_PrFeB_HEPS):  # noqa: N801
+            """Cpmu PrFeB Undulator class (HEPS).
+
+            Args:
+            Undulator (Undulator class): Undulator class
+            """
+
+            def __init__(self, period=14.2, length=2.03):
+                """Class constructor.
+
+                Args:
+                    period (float, optional): Undulator period [mm]
+                    length (float, optional): Undulator length [m]
+                """
+                super().__init__(period, length)
+                self._undulator_type = "CPMU"
+                self._label = "CPMU14-QRI"
+                self._gap = 3.8
+                self._min_gap = 3.6  # VCA
                 self.vc_tolerance = 0.210
 
         class VPU29_CNB(sources.VPU):  # noqa: N801
