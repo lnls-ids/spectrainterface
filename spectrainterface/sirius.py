@@ -174,36 +174,11 @@ class SIRIUS:
     class Sources:
         """SIRIUS Sources."""
 
-        class BC(sources.BendingMagnet):
-            """BC class.
+        class B1_CAX(sources.BendingMagnet):  # noqa: N801
+            """B1 class (CARCARÁ-X Beamline).
 
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 3.2
-                self._label = "BC"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
-
-        class B2(sources.BendingMagnet):
-            """B2 class.
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 0.5665
-                self._label = "B2"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
-
-        class B1(sources.BendingMagnet):
-            """B1 class.
+            Info:
+                Sector: 01SA (low_beta).
 
             Args:
                 BendingMagnet (Bending magnet class): BM class
@@ -213,83 +188,171 @@ class SIRIUS:
                 """Class constructor."""
                 super().__init__()
                 self._b_peak = 0.5642
-                self._label = "B1"
+                self._label = "B1-CAX"
                 self._meas_fname = REPOS_PATH + "/files/sirius/field_b1.txt"
 
-        class UE44_IPE(sources.APPLE2):  # noqa: N801
-            """UE44  class."""
+        class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
+            """Cpmu PrFeB Undulator class (HEPS) (TIMBÓ Beamline).
 
-            def __init__(self, period=44, length=3.4):
+            Info:
+                Sector: 04SB (low_beta)
+
+            Args:
+                Undulator (CPMU_PrFeB_HEPS class): Undulator class
+            """
+
+            def __init__(self, period=15.8, length=2.03):
+                """Class constructor.
+
+                Args:
+                    period (float, optional): Undulator period [mm]
+                    length (float, optional): Undulator length [m]
+                """
+                super().__init__(period, length)
+                self._undulator_type = "CPMU"
+                self._label = "CPMU15-TIB"
+                self._gap = 3.8
+                self._min_gap = 3.6  # VCA
+                self.vc_tolerance = 0.210
+
+        class B2_SIB(sources.BendingMagnet):  # noqa: N801
+            """B2 class (SIBIPIRUNA Beamline).
+
+            Info:
+                Sector: 04SB (b2)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 0.5665
+                self._label = "B2-SIB"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
+
+        class CPMU13_HIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
+            """Cpmu PrFeB Undulator class (HEPS) (HIBISCO Beamline).
+
+            Info:
+                Sector: 05SA (high_beta)
+
+            Args:
+                Undulator (CPMU_PrFeB_HEPS class): Undulator class
+            """
+
+            def __init__(self, period=13.6, length=2.03):
+                """Class constructor.
+
+                Args:
+                    period (float, optional): Undulator period [mm]
+                    length (float, optional): Undulator length [m]
+                """
+                super().__init__(period, length)
+                self._undulator_type = "CPMU"
+                self._label = "CPMU13-HIB"
+                self._gap = 4.84
+                self._min_gap = 4.84
+                self.vc_tolerance = 0.160
+
+        class BC_TEI(sources.BendingMagnet):  # noqa: N801
+            """BC class (TEIU Beamline).
+
+            Info:
+                Sector: 05SA (bc)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 3.2
+                self._label = "BC-TEI"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
+
+        class VPU29_CNB(sources.VPU):  # noqa: N801
+            """VPU29b / 2386b (CARNAUBA Beamline) class.
+
+            Info:
+                Sector: 06SB (low_beta)
+
+            Args:
+                Undulator (VPU class): Undulator class
+            """
+
+            def __init__(self, period=29.0, length=1.54):
                 """Class constructor."""
                 super().__init__(period, length)
+                self._label = "VPU29-CNB"
+                self._br = 1.304
+                self._gap = 9.7
+                self._min_gap = 9.7
+                self.vc_thickness = 0.5
+                self.vc_tolerance = 0.468
+                self._polarization = "vp"
+                self._halbach_coef = {
+                    "vp": {"a": 2.03304573, "b": -3.4431994, "c": 0.18171406},
+                }
                 self._material = "NdFeB"
-                self._label = "UE44-IPE"
-                self._gap = 11.4
-                self._min_gap = 11.4
-                self._br = 1.14
 
-        class APU58_IPE(sources.APU):  # noqa: N801
-            """APU58 class."""
+        class VPU29_CAT(sources.VPU):  # noqa: N801
+            """VPU29a (CATERETE Beamline) class.
 
-            def __init__(self, period=58, length=1):
+            Info:
+                Sector: 07SP (low_beta)
+
+            Args:
+                Undulator (VPU class): Undulator class
+            """
+
+            def __init__(self, period=29.0, length=1.54):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "APU58-IPE"
-                self._gap = 15.8
-                self._min_gap = 15.8
-                self._br = 1.34
-                self._z0 = 0
+                self._label = "VPU29-CAT"
+                self._br = 1.304
+                self._gap = 9.7
+                self._min_gap = 9.7
+                self.vc_thickness = 0.5
+                self.vc_tolerance = 0.468
+                self._polarization = "vp"
+                self._halbach_coef = {
+                    "vp": {
+                        "a": 2.03304573,
+                        "b": -3.4431994,
+                        "c": 0.18171406,
+                    },  # must to be update
+                }
+                self._material = "NdFeB"
 
-        class APU22_SPU(sources.APU):  # noqa: N801
-            """APU22 1991d class."""
+        class B2_IMB(sources.BendingMagnet):  # noqa: N801
+            """B2 class (IMBÚIA Beamline).
 
-            def __init__(self, period=22, length=1.2):
+            Info:
+                Sector: 04SB (b2)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
                 """Class constructor."""
-                super().__init__(period, length)
-                self._label = "APU22-SPU"
-                self._gap = 8
-                self._min_gap = 8
-                self._br = 1.34
-                self._z0 = 0.321
-                self._efficiency = 0.9981
-
-        class APU22_MNC(sources.APU):  # noqa: N801
-            """APU22 1991d class."""
-
-            def __init__(self, period=22, length=1.2):
-                """Class constructor."""
-                super().__init__(period, length)
-                self._label = "APU22-MNC"
-                self._gap = 8
-                self._min_gap = 8
-                self._br = 1.34
-                self._z0 = -0.300609
-                self._efficiency = 1.0022029
-
-        class EPU50(sources.APPLE2):
-            """EPU50 class."""
-
-            def __init__(self, period=50, length=3):
-                """Class constructor."""
-                super().__init__(period, length)
-                self._label = "EPU50"
-                self._br = 1.24
-                self._gap = 10.3
-                self._min_gap = 10.3
-
-        class EPU50_UVX(sources.APPLE2):  # noqa: N801
-            """EPU50 UVX class."""
-
-            def __init__(self, period=50, length=2.7):
-                """Class constructor."""
-                super().__init__(period, length)
-                self._label = "EPU50-UVX"
-                self._br = 1.135
-                self._gap = 22
-                self._min_gap = 22
+                super().__init__()
+                self._b_peak = 0.5665
+                self._label = "B2-IMB"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
 
         class IVU18_EMA(sources.IVU_NdFeB):  # noqa: N801
-            """IVU18-2 class (EMA beamline)."""
+            """IVU18-2 class (EMA beamline).
+
+            Info:
+                Sector: 08SB (low_beta)
+
+            Args:
+                Undulator (IVU_NdFeB class): Undulator Class
+            """
 
             def __init__(self, period=18.5, length=2):
                 """Class constructor."""
@@ -306,26 +369,69 @@ class SIRIUS:
                 }
                 self._material = "NdFeB"
 
-        class IVU18_PNR(sources.IVU_NdFeB):  # noqa: N801
-            """IVU18-1 class (PAINEIRA beamline)."""
+        class B2_TAT(sources.BendingMagnet):  # noqa: N801
+            """B2 class (TATU Beamline).
 
-            def __init__(self, period=18.5, length=2):
+            Info:
+                Sector: 08SB (b2)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 0.5665
+                self._label = "B2-TAT"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
+
+        class APU22_MNC(sources.APU):  # noqa: N801
+            """APU22 1991d class (MANACÁ Beamline).
+
+            Info:
+                Sector: 09SA (high_beta)
+
+            Args:
+                Undulator (APU class): Undulator class
+            """
+
+            def __init__(self, period=22, length=1.2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "IVU18-PNR"
-                self._br = 1.27
-                self._gap = 4.3
-                self._min_gap = 4.3
-                self._vc_thickness = 0
-                self._vc_tolerance = 0.2501
-                self._polarization = "hp"
-                self._halbach_coef = {
-                    "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
-                }
-                self._material = "NdFeB"
+                self._label = "APU22-MNC"
+                self._gap = 8
+                self._min_gap = 8
+                self._br = 1.34
+                self._z0 = -0.300609
+                self._efficiency = 1.0022029
+
+        class BC_SRI(sources.BendingMagnet):  # noqa: N801
+            """BC class (SERIEMA Beamline).
+
+            Info:
+                Sector: 09SA (bc)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 3.2
+                self._label = "BC-SRI"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
 
         class DELTA52_SAB(sources.Elliptic):  # noqa: N801
-            """DELTA Undulator class."""
+            """DELTA Undulator class.
+
+            Info:
+                Sector: 10SB (low_beta)
+
+            Args:
+                Undulator (Elliptic class): Undulator class
+            """
 
             def __init__(self, period=52.5, length=1.2):
                 """Class constructor.
@@ -463,53 +569,206 @@ class SIRIUS:
                     self.phase = phase0
                 return k_max
 
-        class CPMU13_HIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
-            """Cpmu PrFeB Undulator class (HEPS).
+        class BC_MGN(sources.BendingMagnet):  # noqa: N801
+            """BC class (MOGNO Beamline).
+
+            Info:
+                Sector: 10SB (bc)
 
             Args:
-            Undulator (Undulator class): Undulator class
+                BendingMagnet (Bending magnet class): BM class
             """
 
-            def __init__(self, period=13.6, length=2.03):
-                """Class constructor.
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 3.2
+                self._label = "BC-MGN"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
 
-                Args:
-                    period (float, optional): Undulator period [mm]
-                    length (float, optional): Undulator length [m]
-                """
-                super().__init__(period, length)
-                self._undulator_type = "CPMU"
-                self._label = "CPMU13-HIB"
-                self._gap = 4.84
-                self._min_gap = 4.84
-                self.vc_tolerance = 0.160
+        class UE44_IPE(sources.APPLE2):  # noqa: N801
+            """UE44  class (IPÊ Beamline).
 
-        class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
-            """Cpmu PrFeB Undulator class (HEPS).
+            Info:
+                Sector: 11SP (low_beta)
 
             Args:
-            Undulator (Undulator class): Undulator class
+                Undulator (APPLE2 class): Undulator class
             """
 
-            def __init__(self, period=15.8, length=2.03):
-                """Class constructor.
-
-                Args:
-                    period (float, optional): Undulator period [mm]
-                    length (float, optional): Undulator length [m]
-                """
+            def __init__(self, period=44, length=3.4):
+                """Class constructor."""
                 super().__init__(period, length)
-                self._undulator_type = "CPMU"
-                self._label = "CPMU15-TIB"
-                self._gap = 3.8
-                self._min_gap = 3.6  # VCA
-                self.vc_tolerance = 0.210
+                self._material = "NdFeB"
+                self._label = "UE44-IPE"
+                self._gap = 11.4
+                self._min_gap = 11.4
+                self._br = 1.14
+
+        class APU58_IPE(sources.APU):  # noqa: N801
+            """APU58 class (IPÊ Beamline).
+
+            Info:
+                Sector: 11SP (low_beta)
+
+            Args:
+                Undulator (APU class): Undulator class
+            """
+
+            def __init__(self, period=58, length=1):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "APU58-IPE"
+                self._gap = 15.8
+                self._min_gap = 15.8
+                self._br = 1.34
+                self._z0 = 0
+
+        class BC_MNT(sources.BendingMagnet):  # noqa: N801
+            """BC class (MANATI Beamline).
+
+            Info:
+                Sector: 11SB (bc)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 3.2
+                self._label = "BC-MGN"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
+
+        # class PITANGA 12SB (low_beta)
+
+        class B2_SAP(sources.BendingMagnet):  # noqa: N801
+            """B2 class (SAPÊ Beamline).
+
+            Info:
+                Sector: 13SA (b2)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 0.5665
+                self._label = "B2-SAP"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
+
+        class BC_QUA(sources.BendingMagnet):  # noqa: N801
+            """BC class (QUATI Beamline).
+
+            Info:
+                Sector: 13SA (bc)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 3.2
+                self._label = "BC-QUA"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
+
+        class IVU18_PNR(sources.IVU_NdFeB):  # noqa: N801
+            """IVU18-1 class (PAINEIRA beamline).
+
+            Info:
+                Sector: 14SB (low_beta)
+
+            Args:
+                Undulator (IVU_NdFeB class): Undulator class
+            """
+
+            def __init__(self, period=18.5, length=2):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "IVU18-PNR"
+                self._br = 1.27
+                self._gap = 4.3
+                self._min_gap = 4.3
+                self._vc_thickness = 0
+                self._vc_tolerance = 0.2501
+                self._polarization = "hp"
+                self._halbach_coef = {
+                    "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
+                }
+                self._material = "NdFeB"
+
+        class BC_JTB(sources.BendingMagnet):  # noqa: N801
+            """BC class (JATOBÁ Beamline).
+
+            Info:
+                Sector: 14SB (bc)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 3.2
+                self._label = "BC-JTB"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
+
+        # class SUSSUARANA 15SP (low_beta)
+
+        # class SAGUI 16SB (low_beta)
+
+        class APU22_SPU(sources.APU):  # noqa: N801
+            """APU22 1991d class (SAPUCAIA Beamline).
+
+            Info:
+                Sector: 17SA (high_beta)
+
+
+            Args:
+                Undulator (APU class): Undulator class
+            """
+
+            def __init__(self, period=22, length=1.2):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "APU22-SPU"
+                self._gap = 8
+                self._min_gap = 8
+                self._br = 1.34
+                self._z0 = 0.321
+                self._efficiency = 0.9981
+
+        class B2_CDR(sources.BendingMagnet):  # noqa: N801
+            """B2 class (CEDRO Beamline).
+
+            Info:
+                Sector: 17SA (b2)
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 0.5665
+                self._label = "B2-CDR"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
 
         class CPMU14_QRI(sources.CPMU_PrFeB_HEPS):  # noqa: N801
-            """Cpmu PrFeB Undulator class (HEPS).
+            """Cpmu PrFeB Undulator class (HEPS) (QUIRIQUIRI Beamline).
+
+            Info:
+                Sector: 18SB (low_beta)
 
             Args:
-            Undulator (Undulator class): Undulator class
+                Undulator (CPMU_PrFeB_HEPS class): Undulator class
             """
 
             def __init__(self, period=14.2, length=2.03):
@@ -526,42 +785,28 @@ class SIRIUS:
                 self._min_gap = 3.6  # VCA
                 self.vc_tolerance = 0.210
 
-        class VPU29_CNB(sources.VPU):  # noqa: N801
-            """VPU29b / 2386b (CARNAUBA) class."""
+        # class INGÁ 19SP (low_beta)
 
-            def __init__(self, period=29.0, length=1.54):
+        # class ARIRANHA 20SB (low_beta)
+
+        class EPU50(sources.APPLE2):
+            """EPU50 class."""
+
+            def __init__(self, period=50, length=3):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "VPU29-CNB"
-                self._br = 1.304
-                self._gap = 9.7
-                self._min_gap = 9.7
-                self.vc_thickness = 0.5
-                self.vc_tolerance = 0.468
-                self._polarization = "vp"
-                self._halbach_coef = {
-                    "vp": {"a": 2.03304573, "b": -3.4431994, "c": 0.18171406},
-                }
-                self._material = "NdFeB"
+                self._label = "EPU50"
+                self._br = 1.24
+                self._gap = 10.3
+                self._min_gap = 10.3
 
-        class VPU29_CAT(sources.VPU):  # noqa: N801
-            """VPU29a (CATERETE) class."""
+        class EPU50_UVX(sources.APPLE2):  # noqa: N801
+            """EPU50 UVX class."""
 
-            def __init__(self, period=29.0, length=1.54):
+            def __init__(self, period=50, length=2.7):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "VPU29-CAT"
-                self._br = 1.304
-                self._gap = 9.7
-                self._min_gap = 9.7
-                self.vc_thickness = 0.5
-                self.vc_tolerance = 0.468
-                self._polarization = "vp"
-                self._halbach_coef = {
-                    "vp": {
-                        "a": 2.03304573,
-                        "b": -3.4431994,
-                        "c": 0.18171406,
-                    },  # must to be update
-                }
-                self._material = "NdFeB"
+                self._label = "EPU50-UVX"
+                self._br = 1.135
+                self._gap = 22
+                self._min_gap = 22
