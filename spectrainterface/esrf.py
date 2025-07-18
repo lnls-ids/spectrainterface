@@ -15,7 +15,6 @@ class ESRF:
     """Class with ESRF parameters for radiation calculations."""
 
     class StorageRing(StorageRingParameters):
-
         extraction_dict = {
             "even_id": {
                 "betax": 35.2,
@@ -29,7 +28,6 @@ class ESRF:
                 "bsc0_h": 5.0,
                 "bsc0_v": 3.0,
             },
-
             "odd_id": {
                 "betax": 0.5,
                 "betay": 2.73,
@@ -42,7 +40,6 @@ class ESRF:
                 "bsc0_h": 5.0,
                 "bsc0_v": 3.0,
             },
-
             "bm_3mrad": {
                 "betax": 1.41,
                 "betay": 34.9,
@@ -53,7 +50,6 @@ class ESRF:
                 "etapx": 0,
                 "etapy": 0,
             },
-            
             "bm_9mrad": {
                 "betax": 0.99,
                 "betay": 34.9,
@@ -64,7 +60,6 @@ class ESRF:
                 "etapx": 0,
                 "etapy": 0,
             },
-
         }
 
         def __init__(self):
@@ -90,10 +85,9 @@ class ESRF:
 
             self._zero_emittance = False
             self._zero_energy_spread = False
-            self._injection_condition = "Align at Entrance"
+            self._injection_condition = None
 
-    class Sources():
-
+    class Sources:
         class BM(sources.BendingMagnet):
             """BC class.
 
@@ -116,10 +110,11 @@ class ESRF:
                 self._label = "U18"
                 self._br = 1.27
                 self._gap = 6
+                self._min_gap = 6
                 self._vc_thickness = 0
                 self._vc_tolerance = 0.35
                 self._polarization = "hp"
                 self._halbach_coef = {
                     "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
                 }
-                self._material = 'NdFeB'
+                self._material = "NdFeB"

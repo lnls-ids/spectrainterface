@@ -12,20 +12,20 @@ class StorageRingParameters:
     """Class with storage ring parameters for radiation calculations."""
 
     extraction_dict = {
-            "default": {
-                "betax": 1.499,
-                "betay": 1.435,
-                "alphax": 0,
-                "alphay": 0,
-                "etax": 0,
-                "etay": 0,
-                "etapx": 0,
-                "etapy": 0,
-                "bsc0_h": 3.4529,
-                "bsc0_v": 1.5588,
-            },
-        }
-    
+        "default": {
+            "betax": 1.499,
+            "betay": 1.435,
+            "alphax": 0,
+            "alphay": 0,
+            "etax": 0,
+            "etay": 0,
+            "etapx": 0,
+            "etapy": 0,
+            "bsc0_h": 3.4529,
+            "bsc0_v": 1.5588,
+        },
+    }
+
     def __init__(self):
         """Class constructor."""
 
@@ -48,7 +48,7 @@ class StorageRingParameters:
 
         self._zero_emittance = False
         self._zero_energy_spread = False
-        self._injection_condition = "Align at Entrance"
+        self._injection_condition = None
 
         # BSC parameters
         self._bsc0_h = 3.4529
@@ -107,8 +107,8 @@ class StorageRingParameters:
             float: Horizontal emittance
         """
         k = self.coupling_constant
-        return 1/(1+k)*self.nat_emittance
-    
+        return 1 / (1 + k) * self.nat_emittance
+
     @property
     def vertical_emmitance(self):
         """Vertical emittance.
@@ -117,7 +117,7 @@ class StorageRingParameters:
             float: Vertical emittance
         """
         k = self.coupling_constant
-        return k/(1+k)*self.nat_emittance
+        return k / (1 + k) * self.nat_emittance
 
     @property
     def energy_spread(self):
@@ -220,7 +220,7 @@ class StorageRingParameters:
         beta = self.betax
         eta = self.etax
         espread = self.energy_spread
-        return _np.sqrt(emit*beta + eta**2*espread**2)
+        return _np.sqrt(emit * beta + eta**2 * espread**2)
 
     @property
     def beamsizey(self):
@@ -233,8 +233,8 @@ class StorageRingParameters:
         beta = self.betay
         eta = self.etay
         espread = self.energy_spread
-        return _np.sqrt(emit*beta + eta**2*espread**2)
-    
+        return _np.sqrt(emit * beta + eta**2 * espread**2)
+
     @property
     def beamdivx(self):
         """Horizontal beam divergence.
@@ -243,10 +243,10 @@ class StorageRingParameters:
             float: Horizontal beam divergence [rad]
         """
         emit = self.horizontal_emmitance
-        gamma = (1+self.alphax**2)/self.betax
+        gamma = (1 + self.alphax**2) / self.betax
         etap = self.etapx
         espread = self.energy_spread
-        return _np.sqrt(emit*gamma + etap**2*espread**2)
+        return _np.sqrt(emit * gamma + etap**2 * espread**2)
 
     @property
     def beamdivy(self):
@@ -256,10 +256,10 @@ class StorageRingParameters:
             float: Vertical beam divergence [rad]
         """
         emit = self.vertical_emmitance
-        gamma = (1+self.alphay**2)/self.betay
+        gamma = (1 + self.alphay**2) / self.betay
         etap = self.etapy
         espread = self.energy_spread
-        return _np.sqrt(emit*gamma + etap**2*espread**2)
+        return _np.sqrt(emit * gamma + etap**2 * espread**2)
 
     @property
     def zero_emittance(self):
@@ -287,7 +287,7 @@ class StorageRingParameters:
             string: Initial condition of electron in magnetic fields.
         """
         return self._injection_condition
-    
+
     @property
     def extraction_point(self):
         """Extraction point.
@@ -376,7 +376,7 @@ class StorageRingParameters:
     @etapy.setter
     def etapy(self, value):
         self._etapy = value
-    
+
     @bsc0_h.setter
     def bsc0_h(self, value):
         self._bsc0_h = value
@@ -405,20 +405,20 @@ class StorageRingParameters:
             raise ValueError("Argument must be str!")
         else:
             self._injection_condition = value
-    
+
     def set_extraction_point(self, value):
         """Set extraction point."""
         self._extraction_point = value
-        self.betax = self.extraction_dict[value]['betax']
-        self.betay = self.extraction_dict[value]['betay']
-        self.alphax = self.extraction_dict[value]['alphax']
-        self.alphay = self.extraction_dict[value]['alphay']
-        self.etax = self.extraction_dict[value]['etax']
-        self.etay = self.extraction_dict[value]['etay']
-        self.etapx = self.extraction_dict[value]['etapx']
-        self.etapy = self.extraction_dict[value]['etapy']
-        self.bsc0_h = self.extraction_dict[value]['bsc0_h']
-        self.bsc0_v = self.extraction_dict[value]['bsc0_v']
+        self.betax = self.extraction_dict[value]["betax"]
+        self.betay = self.extraction_dict[value]["betay"]
+        self.alphax = self.extraction_dict[value]["alphax"]
+        self.alphay = self.extraction_dict[value]["alphay"]
+        self.etax = self.extraction_dict[value]["etax"]
+        self.etay = self.extraction_dict[value]["etay"]
+        self.etapx = self.extraction_dict[value]["etapx"]
+        self.etapy = self.extraction_dict[value]["etapy"]
+        self.bsc0_h = self.extraction_dict[value]["bsc0_h"]
+        self.bsc0_v = self.extraction_dict[value]["bsc0_v"]
 
     def calc_beam_stay_clear(self, pos):
         """Calculate horizontal and vertical BSC at a given position.
