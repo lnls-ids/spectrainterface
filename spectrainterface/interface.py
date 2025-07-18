@@ -2112,6 +2112,20 @@ class SpectraInterface:
             - (_np.sum(f_x * x) / _np.sum(f_x)) ** 2
         )
 
+    @staticmethod
+    def export_data(data: dict, filename: str):
+        """Export data function.
+
+        Args:
+            data (dict): data
+            filename (str): file name
+
+        Returns:
+            None
+        """
+        with open("{:}.json".format(filename), "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
     def apply_phase_error_matrix(self, values, harm, rec_param=True):
         """Add phase errors.
 
@@ -2249,7 +2263,7 @@ class SpectraInterface:
 
         return energies, brilliances
 
-    def calc_brilliance_curve(
+    def calc_brilliance_curve(  # noqa: C901
         self,
         harmonic_range=(1, 5),
         nr_pts_k=15,
@@ -2257,6 +2271,10 @@ class SpectraInterface:
         emax=20e3,
         x_accep=1,
         extraction_points=None,
+        export_data=False,
+        filename="data_brilliance",
+        superp_value=250,
+        process_curves=True,
     ):
         """Calc brilliance curve.
 
@@ -2269,9 +2287,15 @@ class SpectraInterface:
             x_accep (float): X acceptance for bending magnet radiation.
             extraction_points (list of string): List of extraction points for each
              source.
-
+            export_data (bool, optional): to export data.
+             export_data. Defaults to False.
+            filename (str, optional): filename.
+             filename. Defaults to 'data'.
+            superp_value (int, optional): Desired value of energy
+             superposition. Defaults to 250.
+            process_curves (bool, optional): If true energy superposition will
+             be processed. Defaults to True.
         """
-
         self._flag_brill_processed = False
         self.calc._slit_shape = ""
         source_list = self.sources
@@ -2332,6 +2356,70 @@ class SpectraInterface:
 
         self._energies = energies
         self._brilliances = brilliances
+
+        if export_data:
+            if process_curves is True:
+                energies = list()
+                brilliances = list()
+                for i, source in enumerate(self.sources):
+                    if (
+                        source.source_type != "wiggler"
+                        and source.source_type != "bendingmagnet"
+                    ):
+                        input_flux = self.brilliances[i][:, :]
+                        input_energies = self.energies[i][:, :]
+                        if input_energies.shape[0] > 1:
+                            energies_, flux = self.calc.process_brilliance_curve(
+                                input_energies,
+                                input_flux,
+                                superp_value=superp_value,
+                            )
+                        else:
+                            input_flux_b = input_flux[0]
+                            input_energies_b = input_energies[0]
+                            idx = _np.argsort(input_energies_b)
+                            input_energies_b = input_energies_b[idx]
+                            input_flux_b = input_flux_b[idx]
+                            energies_ = _np.linspace(
+                                _np.min(input_energies_b),
+                                _np.max(input_energies_b),
+                                2001,
+                            )
+                            flux = _np.interp(energies_, input_energies_b, input_flux_b)
+                            energies_ = _np.reshape(
+                                energies_, (1, _np.shape(energies_)[0])
+                            )
+                            flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
+                    else:
+                        input_flux = _np.array(self.brilliances[i], dtype=float)
+                        input_energies = _np.array(self.energies[i], dtype=float)
+                        energies_ = _np.linspace(
+                            _np.min(input_energies), _np.max(input_energies), 2001
+                        )
+                        flux = _np.interp(energies_, input_energies, input_flux)
+                        energies_ = _np.reshape(energies_, (1, _np.shape(energies_)[0]))
+                        flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
+
+                    energies.append(energies_)
+                    brilliances.append(flux)
+                energies = _np.array(energies, dtype=object)
+                brilliances = _np.array(brilliances, dtype=object)
+
+            data = dict()
+            data["calc"] = "Brilliances Curves"
+            data["units"] = ["eV", "ph/s/0.1%/mm²/mrad²/100mA"]
+            data["data"] = list()
+
+            for i, source in enumerate(self.sources):
+                data["data"].append(
+                    {
+                        "label": source.label,
+                        "energies": energies[i].tolist(),
+                        "brilliance": brilliances[i].tolist(),
+                    }
+                )
+
+            self.export_data(data=data, filename="{:}".format(filename))
 
     def _parallel_calc_flux_curve(self, args):
         (
@@ -2454,6 +2542,10 @@ class SpectraInterface:
         slit_shape="circslit",
         slit_acceptances=[[0, 0.04]],
         extraction_points=None,
+        export_data=False,
+        filename="data_flux",
+        superp_value=250,
+        process_curves=True,
     ):
         """Calc flux curves.
 
@@ -2470,6 +2562,14 @@ class SpectraInterface:
              Defaults to [0, 0.04].
             extraction_points (list of string): List of extraction points for each
              source.
+            export_data (bool, optional): to export data.
+             export_data. Defaults to False.
+            filename (str, optional): filename.
+             filename. Defaults to 'data'.
+            superp_value (int, optional): Desired value of energy
+             superposition. Defaults to 250.
+            process_curves (bool, optional): If true energy superposition will
+             be processed. Defaults to True.
 
         Raises:
             ValueError: _description_
@@ -2538,6 +2638,70 @@ class SpectraInterface:
 
         self._energies = energies
         self._fluxes = fluxes
+
+        if export_data:
+            if process_curves is True:
+                energies = list()
+                fluxes = list()
+                for i, source in enumerate(self.sources):
+                    if (
+                        source.source_type != "wiggler"
+                        and source.source_type != "bendingmagnet"
+                    ):
+                        input_flux = self.fluxes[i][:, :]
+                        input_energies = self.energies[i][:, :]
+                        if input_energies.shape[0] > 1:
+                            energies_, flux = self.calc.process_brilliance_curve(
+                                input_energies,
+                                input_flux,
+                                superp_value=superp_value,
+                            )
+                        else:
+                            input_flux_b = input_flux[0]
+                            input_energies_b = input_energies[0]
+                            idx = _np.argsort(input_energies_b)
+                            input_energies_b = input_energies_b[idx]
+                            input_flux_b = input_flux_b[idx]
+                            energies_ = _np.linspace(
+                                _np.min(input_energies_b),
+                                _np.max(input_energies_b),
+                                2001,
+                            )
+                            flux = _np.interp(energies_, input_energies_b, input_flux_b)
+                            energies_ = _np.reshape(
+                                energies_, (1, _np.shape(energies_)[0])
+                            )
+                            flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
+                    else:
+                        input_flux = _np.array(self.fluxes[i], dtype=float)
+                        input_energies = _np.array(self.energies[i], dtype=float)
+                        energies_ = _np.linspace(
+                            _np.min(input_energies), _np.max(input_energies), 2001
+                        )
+                        flux = _np.interp(energies_, input_energies, input_flux)
+                        energies_ = _np.reshape(energies_, (1, _np.shape(energies_)[0]))
+                        flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
+
+                    energies.append(energies_)
+                    fluxes.append(flux)
+                energies = _np.array(energies, dtype=object)
+                fluxes = _np.array(fluxes, dtype=object)
+
+            data = dict()
+            data["calc"] = "Flux Curves"
+            data["units"] = ["eV", "ph/s/0.1%/100mA"]
+            data["data"] = list()
+
+            for i, source in enumerate(self.sources):
+                data["data"].append(
+                    {
+                        "label": source.label,
+                        "energies": energies[i].tolist(),
+                        "flux": fluxes[i].tolist(),
+                    }
+                )
+
+            self.export_data(data=data, filename="{:}".format(filename))
 
     def _parallel_calc_flux_fpmethod(self, args):
         (
@@ -2608,7 +2772,7 @@ class SpectraInterface:
         even_harmonic=False,
         superb=701,
     ):
-        """Calculate flux curve generic, at res, out res, even harmonic, odd harmonic.
+        """Calculate flux curve generic, at res, out res, even and odd harmonic.
 
         Args:
             und (Undulator object): Must be an object from undulator class.
@@ -2623,11 +2787,14 @@ class SpectraInterface:
             distance_from_source (float, optional): Distance from source.
                 Defaults to 23.
             method (str, optional): Method of calc. Defaults to "farfield".
-            k_nr_pts (int, optional): Number of K points around of ressonance k.
+            k_nr_pts (int, optional): Number of K points around
+                                        of ressonance k.
                 Defaults to 1 to use ressonance k.
             dk (float, optional): Rate for change of k
-            even_harmonic (bool, optional): If it is false it will be calculated for the even harmonic
-            superb (int, optional): Extrapolation of the intersection of the curve
+            even_harmonic (bool, optional): If it is false it will be
+                                            calculated for the even harmonic
+            superb (int, optional): Extrapolation of the intersection
+                                    of the curve
 
         Returns:
             tuple: Fluxes, and Energies.
@@ -4385,9 +4552,22 @@ class SpectraInterface:
              superposition. Defaults to 250.
             title (str, optional): Plot title.
             xscale (str, optional): xscale axis
-             xscale. Defalts to 'linear'.
+             xscale. Defaults to 'linear'.
             yscale (str, optional): yscale axis
-             yscale. Defalts to 'log'.
+             yscale. Defaults to 'log'.
+            xlim (list, optional): xlim axes.
+            ylim (list, optional): ylim axes.
+            linewidth (int, optional): linewidth.
+            savefig (bool, optional): save fig.
+            figname (str, optional): figname.
+             figname. Defaults to 'flux.png'.
+            dpi (int, optional): dpi figure.
+             dpi. Defaults to 300.
+            legend_fs (int, optional): legend font size.
+             legend_fs. Defaults to 10.
+            legend_properties (bool, optional): lengend properties.
+             legend_properties. Defaults to True
+
         """
         if self._flag_flux_processed:
             process_curves = False
