@@ -2114,7 +2114,7 @@ class SpectraInterface:
 
     @staticmethod
     def export_data(data: dict, filename: str):
-        """ Export data function.
+        """Export data function.
 
         Args:
             data (dict): data
@@ -2124,7 +2124,7 @@ class SpectraInterface:
             None
         """
         with open("{:}.json".format(filename), "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False) 
+            json.dump(data, f, indent=4, ensure_ascii=False)
 
     def apply_phase_error_matrix(self, values, harm, rec_param=True):
         """Add phase errors.
@@ -2263,7 +2263,7 @@ class SpectraInterface:
 
         return energies, brilliances
 
-    def calc_brilliance_curve(
+    def calc_brilliance_curve(  # noqa: C901
         self,
         harmonic_range=(1, 5),
         nr_pts_k=15,
@@ -2274,7 +2274,7 @@ class SpectraInterface:
         export_data=False,
         filename="data_brilliance",
         superp_value=250,
-        process_curves=True
+        process_curves=True,
     ):
         """Calc brilliance curve.
 
@@ -2296,7 +2296,6 @@ class SpectraInterface:
             process_curves (bool, optional): If true energy superposition will
              be processed. Defaults to True.
         """
-
         self._flag_brill_processed = False
         self.calc._slit_shape = ""
         source_list = self.sources
@@ -2386,9 +2385,7 @@ class SpectraInterface:
                                 _np.max(input_energies_b),
                                 2001,
                             )
-                            flux = _np.interp(
-                                energies_, input_energies_b, input_flux_b
-                            )
+                            flux = _np.interp(energies_, input_energies_b, input_flux_b)
                             energies_ = _np.reshape(
                                 energies_, (1, _np.shape(energies_)[0])
                             )
@@ -2400,9 +2397,7 @@ class SpectraInterface:
                             _np.min(input_energies), _np.max(input_energies), 2001
                         )
                         flux = _np.interp(energies_, input_energies, input_flux)
-                        energies_ = _np.reshape(
-                            energies_, (1, _np.shape(energies_)[0])
-                        )
+                        energies_ = _np.reshape(energies_, (1, _np.shape(energies_)[0]))
                         flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
 
                     energies.append(energies_)
@@ -2415,17 +2410,16 @@ class SpectraInterface:
             data["units"] = ["eV", "ph/s/0.1%/mm²/mrad²/100mA"]
             data["data"] = list()
 
-            
             for i, source in enumerate(self.sources):
                 data["data"].append(
                     {
                         "label": source.label,
                         "energies": energies[i].tolist(),
-                        "brilliance": brilliances[i].tolist()
+                        "brilliance": brilliances[i].tolist(),
                     }
                 )
 
-            self.export_data(data=data, filename='{:}'.format(filename))
+            self.export_data(data=data, filename="{:}".format(filename))
 
     def _parallel_calc_flux_curve(self, args):
         (
@@ -2551,7 +2545,7 @@ class SpectraInterface:
         export_data=False,
         filename="data_flux",
         superp_value=250,
-        process_curves=True
+        process_curves=True,
     ):
         """Calc flux curves.
 
@@ -2673,9 +2667,7 @@ class SpectraInterface:
                                 _np.max(input_energies_b),
                                 2001,
                             )
-                            flux = _np.interp(
-                                energies_, input_energies_b, input_flux_b
-                            )
+                            flux = _np.interp(energies_, input_energies_b, input_flux_b)
                             energies_ = _np.reshape(
                                 energies_, (1, _np.shape(energies_)[0])
                             )
@@ -2687,9 +2679,7 @@ class SpectraInterface:
                             _np.min(input_energies), _np.max(input_energies), 2001
                         )
                         flux = _np.interp(energies_, input_energies, input_flux)
-                        energies_ = _np.reshape(
-                            energies_, (1, _np.shape(energies_)[0])
-                        )
+                        energies_ = _np.reshape(energies_, (1, _np.shape(energies_)[0]))
                         flux = _np.reshape(flux, (1, _np.shape(flux)[0]))
 
                     energies.append(energies_)
@@ -2702,17 +2692,16 @@ class SpectraInterface:
             data["units"] = ["eV", "ph/s/0.1%/100mA"]
             data["data"] = list()
 
-            
             for i, source in enumerate(self.sources):
                 data["data"].append(
                     {
                         "label": source.label,
                         "energies": energies[i].tolist(),
-                        "flux": fluxes[i].tolist()
+                        "flux": fluxes[i].tolist(),
                     }
                 )
 
-            self.export_data(data=data, filename='{:}'.format(filename))
+            self.export_data(data=data, filename="{:}".format(filename))
 
     def _parallel_calc_flux_fpmethod(self, args):
         (
@@ -2783,7 +2772,7 @@ class SpectraInterface:
         even_harmonic=False,
         superb=701,
     ):
-        """Calculate flux curve generic, at res, out res, even harmonic, odd harmonic.
+        """Calculate flux curve generic, at res, out res, even and odd harmonic.
 
         Args:
             und (Undulator object): Must be an object from undulator class.
@@ -2798,11 +2787,14 @@ class SpectraInterface:
             distance_from_source (float, optional): Distance from source.
                 Defaults to 23.
             method (str, optional): Method of calc. Defaults to "farfield".
-            k_nr_pts (int, optional): Number of K points around of ressonance k.
+            k_nr_pts (int, optional): Number of K points around
+                                        of ressonance k.
                 Defaults to 1 to use ressonance k.
             dk (float, optional): Rate for change of k
-            even_harmonic (bool, optional): If it is false it will be calculated for the even harmonic
-            superb (int, optional): Extrapolation of the intersection of the curve
+            even_harmonic (bool, optional): If it is false it will be
+                                            calculated for the even harmonic
+            superb (int, optional): Extrapolation of the intersection
+                                    of the curve
 
         Returns:
             tuple: Fluxes, and Energies.
