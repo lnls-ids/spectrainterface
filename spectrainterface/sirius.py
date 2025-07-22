@@ -174,11 +174,11 @@ class SIRIUS:
     class Sources:
         """SIRIUS Sources."""
 
-        class B1_CAX(sources.BendingMagnet):  # noqa: N801
-            """B1 class (CARCARÁ-X Beamline).
+        class B1(sources.BendingMagnet):  # noqa: N801
+            """B1 class.
 
-            Info:
-                Sector: 01SA (low_beta).
+            Beamlines - Sector:
+                CARCARÁ-X - 01;
 
             Args:
                 BendingMagnet (Bending magnet class): BM class
@@ -188,8 +188,51 @@ class SIRIUS:
                 """Class constructor."""
                 super().__init__()
                 self._b_peak = 0.5642
-                self._label = "B1-CAX"
+                self._label = "B1"
                 self._meas_fname = REPOS_PATH + "/files/sirius/field_b1.txt"
+
+        class B2(sources.BendingMagnet):  # noqa: N801
+            """B2 class.
+
+            Beamlines - Sector:
+                SIBIPIRUNA - 04;
+                IMBÚIA - 07;
+                TATU - 08;
+                SAPÊ - 13;
+                CEDRO - 17;
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 0.5665
+                self._label = "B2"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
+
+        class BC(sources.BendingMagnet):  # noqa: N801
+            """BC class.
+
+            Beamlines - Sector:
+                MANATI - 11;
+                TEIU - 05;
+                SERIEMA - 09;
+                MOGNO - 10;
+                QUATI - 13;
+                JATOBÁ - 14;
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 3.2
+                self._label = "BC"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
 
         class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
             """Cpmu PrFeB Undulator class (HEPS) (TIMBÓ Beamline).
@@ -215,23 +258,6 @@ class SIRIUS:
                 self._min_gap = 3.6  # VCA
                 self.vc_tolerance = 0.210
 
-        class B2_SIB(sources.BendingMagnet):  # noqa: N801
-            """B2 class (SIBIPIRUNA Beamline).
-
-            Info:
-                Sector: 04SB (b2)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 0.5665
-                self._label = "B2-SIB"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
-
         class CPMU13_HIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
             """Cpmu PrFeB Undulator class (HEPS) (HIBISCO Beamline).
 
@@ -255,23 +281,6 @@ class SIRIUS:
                 self._gap = 4.84
                 self._min_gap = 4.84
                 self.vc_tolerance = 0.160
-
-        class BC_TEI(sources.BendingMagnet):  # noqa: N801
-            """BC class (TEIU Beamline).
-
-            Info:
-                Sector: 05SA (bc)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 3.2
-                self._label = "BC-TEI"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
 
         class VPU29_CNB(sources.VPU):  # noqa: N801
             """VPU29b / 2386b (CARNAUBA Beamline) class.
@@ -327,23 +336,6 @@ class SIRIUS:
                 }
                 self._material = "NdFeB"
 
-        class B2_IMB(sources.BendingMagnet):  # noqa: N801
-            """B2 class (IMBÚIA Beamline).
-
-            Info:
-                Sector: 04SB (b2)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 0.5665
-                self._label = "B2-IMB"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
-
         class IVU18_EMA(sources.IVU_NdFeB):  # noqa: N801
             """IVU18-2 class (EMA beamline).
 
@@ -369,25 +361,8 @@ class SIRIUS:
                 }
                 self._material = "NdFeB"
 
-        class B2_TAT(sources.BendingMagnet):  # noqa: N801
-            """B2 class (TATU Beamline).
-
-            Info:
-                Sector: 08SB (b2)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 0.5665
-                self._label = "B2-TAT"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
-
         class APU22_MNC(sources.APU):  # noqa: N801
-            """APU22 1991d class (MANACÁ Beamline).
+            """APU22 1991b class (MANACÁ Beamline).
 
             Info:
                 Sector: 09SA (high_beta)
@@ -405,23 +380,6 @@ class SIRIUS:
                 self._br = 1.34
                 self._z0 = -0.300609
                 self._efficiency = 1.0022029
-
-        class BC_SRI(sources.BendingMagnet):  # noqa: N801
-            """BC class (SERIEMA Beamline).
-
-            Info:
-                Sector: 09SA (bc)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 3.2
-                self._label = "BC-SRI"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
 
         class DELTA52_SAB(sources.Elliptic):  # noqa: N801
             """DELTA Undulator class.
@@ -569,23 +527,6 @@ class SIRIUS:
                     self.phase = phase0
                 return k_max
 
-        class BC_MGN(sources.BendingMagnet):  # noqa: N801
-            """BC class (MOGNO Beamline).
-
-            Info:
-                Sector: 10SB (bc)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 3.2
-                self._label = "BC-MGN"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
-
         class UE44_IPE(sources.APPLE2):  # noqa: N801
             """UE44  class (IPÊ Beamline).
 
@@ -624,58 +565,7 @@ class SIRIUS:
                 self._br = 1.34
                 self._z0 = 0
 
-        class BC_MNT(sources.BendingMagnet):  # noqa: N801
-            """BC class (MANATI Beamline).
-
-            Info:
-                Sector: 11SB (bc)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 3.2
-                self._label = "BC-MGN"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
-
         # class PITANGA 12SB (low_beta)
-
-        class B2_SAP(sources.BendingMagnet):  # noqa: N801
-            """B2 class (SAPÊ Beamline).
-
-            Info:
-                Sector: 13SA (b2)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 0.5665
-                self._label = "B2-SAP"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
-
-        class BC_QUA(sources.BendingMagnet):  # noqa: N801
-            """BC class (QUATI Beamline).
-
-            Info:
-                Sector: 13SA (bc)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 3.2
-                self._label = "BC-QUA"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
 
         class IVU18_PNR(sources.IVU_NdFeB):  # noqa: N801
             """IVU18-1 class (PAINEIRA beamline).
@@ -702,23 +592,6 @@ class SIRIUS:
                 }
                 self._material = "NdFeB"
 
-        class BC_JTB(sources.BendingMagnet):  # noqa: N801
-            """BC class (JATOBÁ Beamline).
-
-            Info:
-                Sector: 14SB (bc)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 3.2
-                self._label = "BC-JTB"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
-
         # class SUSSUARANA 15SP (low_beta)
 
         # class SAGUI 16SB (low_beta)
@@ -743,23 +616,6 @@ class SIRIUS:
                 self._br = 1.34
                 self._z0 = 0.321
                 self._efficiency = 0.9981
-
-        class B2_CDR(sources.BendingMagnet):  # noqa: N801
-            """B2 class (CEDRO Beamline).
-
-            Info:
-                Sector: 17SA (b2)
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 0.5665
-                self._label = "B2-CDR"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
 
         class CPMU14_QRI(sources.CPMU_PrFeB_HEPS):  # noqa: N801
             """Cpmu PrFeB Undulator class (HEPS) (QUIRIQUIRI Beamline).
