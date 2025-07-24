@@ -1404,15 +1404,15 @@ class Calc(GeneralConfigs, SpectraTools):
             if self.source_type == self.SourceType.vertical_undulator:
                 input_temp["Light Source"]["K value"] = self.kx
 
-        if self.kx is not None and self.ky is not None:
+        if self.kx is not None or self.ky is not None:
             if (
                 self.source_type == self.SourceType.elliptic_undulator
                 or self.source_type == self.SourceType.figure8_undulator
                 or self.source_type == self.SourceType.vertical_figure8_undulator
             ):
                 input_temp["Light Source"]["K<sub>x,y</sub>"] = [
-                    self.kx,
-                    self.ky,
+                    self.kx if self.kx is not None else 0,
+                    self.ky if self.ky is not None else 0,
                 ]
 
         if self.by_peak is not None:
@@ -1753,6 +1753,10 @@ class Calc(GeneralConfigs, SpectraTools):
                         self._flux = self.apply_phase_errors(
                             self._flux, self._use_recovery_params
                         )
+                    self._brilliance = data[:, 2, :]
+                    self._pl = data[:, 3, :]
+                    self._pc = data[:, 4, :]
+                    self._pl45 = data[:, 5, :]
                 else:
                     self._kx = data[:, 1, :]
                     self._ky = data[:, 2, :]
@@ -2113,6 +2117,57 @@ class SpectraInterface:
         )
 
     @staticmethod
+    def _truncate_at_intersections(x_list, y_list, superb=2e3):
+        """Intersection function.
+
+        Args:
+            x_list (list): list of arrays.
+            y_list (list): list of arrays.
+            superb (float): extrapolation value of the intersection point.
+
+        Returns:
+            x_list_trunc (list): list of arrays.
+            y_list_trunc (list): list of arrays.
+        """
+        n = len(x_list)
+        xis = list()
+        x_list_trunc = list()
+        y_list_trunc = list()
+
+        for i in range(n - 1):
+            x1, y1 = x_list[i], y_list[i]
+            x2, y2 = x_list[i + 1], y_list[i + 1]
+            x_common = _np.linspace(
+                max(x1.min(), x2.min()), min(x1.max(), x2.max()), 500
+            )
+            y1c = _np.interp(x_common, x1, y1)
+            y2c = _np.interp(x_common, x2, y2)
+            d = y1c - y2c
+            idx = _np.where(d[:-1] * d[1:] < 0)[0]
+            if len(idx) == 0:
+                xis.append(x_list[i + 1].min())
+                mask = x_list[i] < x_list[i + 1].min() + superb  # verificar isso!
+                x_list_trunc.append(x_list[i][mask])
+                y_list_trunc.append(y_list[i][mask])
+                continue
+            i0 = idx[0]
+            xa, xb = x_common[i0], x_common[i0 + 1]
+            da, db = d[i0], d[i0 + 1]
+            t = -da / (db - da)
+            xi = xa + t * (xb - xa)
+            xis.append(xi)
+
+        for i in range(n - 1):
+            xi_left = xis[i + 1 - 1] if i + 1 > 0 else -_np.inf
+            xi_right = xis[i + 1] if i + 1 < n - 1 else _np.inf
+            mask = (x_list[i + 1] > xi_left - superb) & (
+                x_list[i + 1] < xi_right + superb
+            )
+            x_list_trunc.append(x_list[i + 1][mask])
+            y_list_trunc.append(y_list[i + 1][mask])
+
+        return x_list_trunc, y_list_trunc
+
     def export_data(data: dict, filename: str):
         """Export data function.
 
@@ -2770,7 +2825,8 @@ class SpectraInterface:
         k_nr_pts=1,
         deltak=0.99,
         even_harmonic=False,
-        superb=701,
+        superb=1e3,
+        kmin=0.1,
     ):
         """Calculate flux curve generic, at res, out res, even and odd harmonic.
 
@@ -2794,7 +2850,7 @@ class SpectraInterface:
             even_harmonic (bool, optional): If it is false it will be
                                             calculated for the even harmonic
             superb (int, optional): Extrapolation of the intersection
-                                    of the curve
+                                   of the curve
 
         Returns:
             tuple: Fluxes, and Energies.
@@ -2819,7 +2875,7 @@ class SpectraInterface:
             ns = ns[::2]
         else:
             ns = ns[1::2]
-        ks = _np.linspace(source_k_max, 0.2, 41)
+        ks = _np.linspace(source_k_max, kmin, 41)
 
         arglist = []
         for i, harmonic in enumerate(ns):
@@ -2827,10 +2883,7 @@ class SpectraInterface:
                 e = und.get_harmonic_energy(
                     harmonic, self.accelerator.gamma, 0, und.period, k
                 )
-                if (
-                    e < (harmonic + 2) * first_hamonic_energy + superb
-                    and e < emax + 5e3
-                ):
+                if e < (harmonic + 2) * first_hamonic_energy + 5e3 and e < emax + 2e3:
                     dks = _np.linspace(k, k * deltak, k_nr_pts)
                     for w, dk in enumerate(dks):
                         arglist += [
@@ -2934,6 +2987,8 @@ class SpectraInterface:
 
         fs = harmonic_result
         es = [harmonic[:, 1] for harmonic in harmonic_arglist]
+
+        es, fs = self._truncate_at_intersections(x_list=es, y_list=fs, superb=superb)
 
         return fs, es
 
@@ -3954,6 +4009,8 @@ class SpectraInterface:
         slit_acceptance: tuple = (0.060, 0.060),
         distance_from_source: float = 30,
         energy_range: tuple = (0, 20e3),
+        kmin: float = 0.1,
+        k_nr_pts: int = 41,
     ):
         """Degree Polarization Function.
 
@@ -3969,12 +4026,14 @@ class SpectraInterface:
                 Defaults to 30.
             energy_range (tuple): energy range to calculate [eV].
                 Defaults to (0, 20e3).
-
+            kmin (float): min deflection parameter
+            k_nr_pts (float): k points number
         Returns:
             Tuple of three elements.
                 first element (numpy array): energies
                 second element (numpy array): degree linear polarization.
                 third element (numpy array): degree circular polarization.
+                fourth element (numpy array): degree linear 45 polarization.
         """
         spectra_calc: SpectraInterface = copy.deepcopy(self)
         if source.source_type != "bendingmagnet":
@@ -3983,24 +4042,32 @@ class SpectraInterface:
                 kmax = source.undulator_b_to_k(b=beff, period=source.period)
             else:
                 kmax = source.calc_max_k(spectra_calc.accelerator)
+            kmax = source.calc_max_k(spectra_calc.accelerator)
+            fst_energy = source.get_harmonic_energy(
+                n=1,
+                gamma=spectra_calc.accelerator.gamma,
+                theta=0,
+                period=source.period,
+                k=kmax,
+            )
+            n = int(energy_range[1] / fst_energy)
+            n = n + 1 if n % 2 == 0 else n
+            harmonic_range = (1, n)
             if source.source_type == "wiggler":
                 spectra_calc.calc.source_type = source.source_type
                 spectra_calc.calc.method = (
                     spectra_calc.calc.CalcConfigs.Method.far_field
                 )
-                spectra_calc.calc.indep_var = (
-                    spectra_calc.calc.CalcConfigs.Variable.energy
-                )
+                spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.k
                 spectra_calc.calc.output_type = (
                     spectra_calc.calc.CalcConfigs.Output.flux
                 )
-                spectra_calc.calc.slit_shape = slit_shape
                 spectra_calc.calc.period = source.period
-                spectra_calc.calc.ky = kmax
-                spectra_calc.calc.observation_angle = slit_position
+                spectra_calc.calc.slit_shape = slit_shape
                 spectra_calc.calc.slit_acceptance = slit_acceptance
-                spectra_calc.calc.energy_range = energy_range
-                spectra_calc.calc.energy_step = 1
+                spectra_calc.calc.k_range = [kmin, kmax]
+                spectra_calc.calc.k_nr_pts = k_nr_pts
+                spectra_calc.calc.harmonic_range = harmonic_range
             else:
                 spectra_calc.calc._add_phase_errors = source.add_phase_errors
                 spectra_calc.calc._use_recovery_params = source.use_recovery_params
@@ -4010,12 +4077,15 @@ class SpectraInterface:
                 spectra_calc.calc.method = (
                     spectra_calc.calc.CalcConfigs.Method.far_field
                 )
-                spectra_calc.calc.indep_var = (
-                    spectra_calc.calc.CalcConfigs.Variable.energy
-                )
+                spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.k
                 spectra_calc.calc.source_type = source.source_type
                 spectra_calc.calc.slit_shape = slit_shape
                 spectra_calc.calc.period = source.period
+                spectra_calc.calc.slit_shape = slit_shape
+                spectra_calc.calc.slit_acceptance = slit_acceptance
+                spectra_calc.calc.k_range = [kmin, kmax]
+                spectra_calc.calc.k_nr_pts = k_nr_pts
+                spectra_calc.calc.harmonic_range = harmonic_range
                 if source.polarization == "hp":
                     spectra_calc.calc.source_type = (
                         spectra_calc.calc.SourceType.horizontal_undulator
@@ -4034,8 +4104,6 @@ class SpectraInterface:
                     spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
                 spectra_calc.calc.observation_angle = slit_position
                 spectra_calc.calc.slit_acceptance = slit_acceptance
-                spectra_calc.calc.energy_range = energy_range
-                spectra_calc.calc.energy_step = 1
         else:
             b = source.b_peak
             spectra_calc.calc.source_type = source.source_type
@@ -4055,8 +4123,9 @@ class SpectraInterface:
         energies = spectra_calc.calc.energies
         degree_pl = spectra_calc.calc._pl
         degree_pc = spectra_calc.calc._pc
+        degree_pl45 = spectra_calc.calc._pl45
         del spectra_calc
-        return energies, degree_pl, degree_pc
+        return energies, degree_pl, degree_pc, degree_pl45
 
     def calc_power_density(
         self,
