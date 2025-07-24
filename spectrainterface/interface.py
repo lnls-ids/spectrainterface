@@ -4005,7 +4005,6 @@ class SpectraInterface:
         self,
         source,
         slit_shape: str = "retslit",
-        slit_position: tuple = (0, 0),
         slit_acceptance: tuple = (0.060, 0.060),
         distance_from_source: float = 30,
         energy_range: tuple = (0, 20e3),
@@ -4102,7 +4101,6 @@ class SpectraInterface:
                     )
                     spectra_calc.calc.kx = kmax / _np.sqrt(1 + source.fields_ratio**2)
                     spectra_calc.calc.ky = spectra_calc.calc.kx * source.fields_ratio
-                spectra_calc.calc.observation_angle = slit_position
                 spectra_calc.calc.slit_acceptance = slit_acceptance
         else:
             b = source.b_peak
@@ -4111,7 +4109,6 @@ class SpectraInterface:
             spectra_calc.calc.indep_var = spectra_calc.calc.CalcConfigs.Variable.energy
             spectra_calc.calc.output_type = spectra_calc.calc.CalcConfigs.Output.flux
             spectra_calc.calc.slit_shape = slit_shape
-            spectra_calc.calc.observation_angle = slit_position
             spectra_calc.calc.slit_acceptance = slit_acceptance
             spectra_calc.calc.energy_range = energy_range
             spectra_calc.calc.energy_step = 1

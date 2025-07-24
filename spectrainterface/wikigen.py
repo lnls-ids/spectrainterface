@@ -1200,7 +1200,6 @@ class FunctionsManipulation:
             spectra_calc.calc_degree_polarization(
                 source=source,
                 slit_shape=slit_shape,
-                slit_position=slit_position,
                 slit_acceptance=slit_acceptance,
                 distance_from_source=distance_from_source,
                 energy_range=energy_range,
