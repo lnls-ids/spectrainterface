@@ -151,9 +151,7 @@ class FunctionsManipulation:
                 x=x_range[0] * (1 - 0.05),
                 y=y_range[0] * (1 - 0.17),
                 s=r"$R_1:$"
-                + "{:.1f} mm".format(
-                    slit_acceptance[0] * distance_from_source
-                ),
+                + "{:.1f} mm".format(slit_acceptance[0] * distance_from_source),
                 fontsize=8,
                 c="white",
             )
@@ -161,9 +159,7 @@ class FunctionsManipulation:
                 x=x_range[0] * (1 - 0.05),
                 y=y_range[0] * (1 - 0.05),
                 s=r"$R_2:$"
-                + "{:.1f} mm".format(
-                    slit_acceptance[1] * distance_from_source
-                ),
+                + "{:.1f} mm".format(slit_acceptance[1] * distance_from_source),
                 fontsize=8,
                 c="white",
             )
@@ -218,14 +214,11 @@ class FunctionsManipulation:
     @staticmethod
     def process_beam_size(spectra, source, calc_params):
         spectra_calc = copy.deepcopy(spectra)
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
         title = "Beam Size\n{:} ({:.1f} m, {:.2f} mm)".format(
-                source.label, source.source_length, source.period
-            )
+            source.label, source.source_length, source.period
+        )
         xlim = calc_params.e_range
         xscale = "linear"
         yscale = "linear"
@@ -323,17 +316,14 @@ class FunctionsManipulation:
     @staticmethod
     def process_beam_divergence(spectra, source, calc_params):
         spectra_calc = copy.deepcopy(spectra)
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
         title = "Beam Divergence\n{:} ({:.1f} m, {:.2f} mm)".format(
-                source.label, source.source_length, source.period
-            )
+            source.label, source.source_length, source.period
+        )
         xlim = calc_params.e_range
         xscale = "linear"
-        yscale ="linear"
+        yscale = "linear"
         linewidth = calc_params.linewidth
         savefig = calc_params.savefig
         figsize = calc_params.figsize
@@ -445,7 +435,9 @@ class FunctionsManipulation:
             data["Máx. K"] = _np.round(source_k_max, 6)
             if not source.undulator_type in ["APU", "DELTA"]:
                 gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-                data["Min. gap [mm]"] = _np.round(gapv if source.polarization=='hp' else gaph, 2)
+                data["Min. gap [mm]"] = _np.round(
+                    gapv if source.polarization == "hp" else gaph, 2
+                )
             else:
                 data["Gap [mm]"] = source.gap
             data["Polarization"] = source.polarization
@@ -454,9 +446,7 @@ class FunctionsManipulation:
             data["Source"] = source.material
 
             for i, info in enumerate(data):
-                ax.text(
-                    x=col, y=0.5 + i, s=data[info], va="center", ha="right"
-                )
+                ax.text(x=col, y=0.5 + i, s=data[info], va="center", ha="right")
                 ax.text(col - 1.1, 0.5 + i, info, weight="bold", ha="left")
             ax.plot([0, col + 1], [rows - 1, rows - 1], lw=".5", c="black")
             ax.plot([0, col + 1], [rows, rows], lw=".5", c="black")
@@ -499,13 +489,9 @@ class FunctionsManipulation:
             col = 1.2
             ax.set_ylim(0, rows)
             ax.set_xlim(0, col + 0.2)
-            data = {
-                "Máx. B [T]": _np.round(source.b_peak, 4)
-            }
+            data = {"Máx. B [T]": _np.round(source.b_peak, 4)}
             for i, info in enumerate(data):
-                ax.text(
-                    x=col, y=0.5 + i, s=data[info], va="center", ha="right"
-                )
+                ax.text(x=col, y=0.5 + i, s=data[info], va="center", ha="right")
                 ax.text(col - 1, 0.5 + i, info, weight="bold", ha="left")
             ax.plot([0, col + 1], [rows - 1, rows - 1], lw=".5", c="black")
             ax.plot([0, col + 1], [rows, rows], lw=".5", c="black")
@@ -534,17 +520,14 @@ class FunctionsManipulation:
     @staticmethod
     def process_gap_energy(spectra, source, calc_params):
         spectra_calc = copy.deepcopy(spectra)
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
         xlim = calc_params.e_range
         title = "Gap vs Energy\n{:} ({:.1f} m, {:.2f} mm)".format(
-                source.label, source.source_length, source.period
-            )
+            source.label, source.source_length, source.period
+        )
         xscale = "linear"
-        yscale =  "linear"
+        yscale = "linear"
         linewidth = calc_params.linewidth
         savefig = calc_params.savefig
         figsize = calc_params.figsize
@@ -552,9 +535,9 @@ class FunctionsManipulation:
         gapmin, gapmax = calc_params.gap_lim
 
         # gapmax = 25
-        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator) 
-        
-        gaps = _np.linspace(gapv if source.polarization=='hp' else gaph, gapmax, 501)
+        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
+
+        gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         gamma = spectra_calc.accelerator.gamma
@@ -603,7 +586,7 @@ class FunctionsManipulation:
             )
 
         # Fundamental Energy
-        gaps = _np.linspace(gapv if source.polarization=='hp' else gaph, gapmax, 501)
+        gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         Es = source.get_harmonic_energy(
@@ -650,14 +633,11 @@ class FunctionsManipulation:
     @staticmethod
     def process_gap_k(spectra, source, calc_params):
         spectra_calc = copy.deepcopy(spectra)
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
         title = "Gap vs K\n{:} ({:.1f} m, {:.2f} mm)".format(
-                source.label, source.source_length, source.period
-            )
+            source.label, source.source_length, source.period
+        )
         xscale = "linear"
         yscale = "linear"
         linewidth = calc_params.linewidth
@@ -668,7 +648,7 @@ class FunctionsManipulation:
 
         # gapmax = 25
         gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-        gaps = _np.linspace(gapv if source.polarization=='hp' else gaph, gapmax, 501)
+        gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
 
@@ -712,14 +692,11 @@ class FunctionsManipulation:
     @staticmethod
     def process_gap_field(spectra, source, calc_params):
         spectra_calc = copy.deepcopy(spectra)
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
-        title =  "Gap vs B\n{:} ({:.1f} m, {:.2f} mm)".format(
-                source.label, source.source_length, source.period
-            )
+        title = "Gap vs B\n{:} ({:.1f} m, {:.2f} mm)".format(
+            source.label, source.source_length, source.period
+        )
         xscale = "linear"
         yscale = "linear"
         linewidth = calc_params.linewidth
@@ -730,7 +707,7 @@ class FunctionsManipulation:
 
         # gapmax = 25
         gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-        gaps = _np.linspace(gapv if source.polarization=='hp' else gaph, gapmax, 501)
+        gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
 
         _plt.figure(figsize=figsize)
@@ -764,7 +741,8 @@ class FunctionsManipulation:
         )
         text += "\n"
         text += r"$b=$ {:.4f}    c={:.4f}".format(
-            source.halbach_coef[source.polarization]["b"], source.halbach_coef[source.polarization]["c"]
+            source.halbach_coef[source.polarization]["b"],
+            source.halbach_coef[source.polarization]["c"],
         )
         _plt.text(x=gapmax / 3, y=(Bs[0] - Bs[-1]) / 2, s=text, fontsize=10)
         _plt.tick_params(
@@ -783,15 +761,12 @@ class FunctionsManipulation:
     @staticmethod
     def process_phase_field(spectra, source, calc_params):
         spectra_calc = copy.deepcopy(spectra)
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
         title = "Phase vs B\n{:} ({:.1f} m, {:.2f} mm)".format(
-                source.label, source.source_length, source.period
-            )
-        
+            source.label, source.source_length, source.period
+        )
+
         xscale = "linear"
         yscale = "linear"
         linewidth = calc_params.linewidth
@@ -800,9 +775,7 @@ class FunctionsManipulation:
         dpi = calc_params.dpi
 
         phases = _np.linspace(0, source.period / 2, 501)
-        Bs = source.get_beff(
-            gap_over_period=source.gap / source.period, phase=phases
-        )
+        Bs = source.get_beff(gap_over_period=source.gap / source.period, phase=phases)
 
         _plt.figure(figsize=figsize)
         _plt.title(title)
@@ -820,10 +793,12 @@ class FunctionsManipulation:
         )
         text = r"$B(z) = B_0|\cos\left(\frac{\pi}{\lambda_u}(z-z_0)\right)|$"
         text += "\n" + r"$B_0 = $" + "{:.4f}   ".format(Bs[0])
-        text += r"$z_0 = $" + "{:.4f}".format(source._phase_coef[source.polarization]['z0'])
+        text += r"$z_0 = $" + "{:.4f}".format(
+            source._phase_coef[source.polarization]["z0"]
+        )
         _plt.text(
             x=1.2 * source.period / 10,
-            y= 0.2* _np.abs((Bs[-1] - Bs[0]))/3,
+            y=0.2 * _np.abs((Bs[-1] - Bs[0])) / 3,
             s=text,
             fontsize=11,
         )
@@ -851,14 +826,11 @@ class FunctionsManipulation:
     @staticmethod
     def process_phase_k(spectra, source, calc_params):
         spectra_calc = copy.deepcopy(spectra)
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
         title = "Phase vs K\n{:} ({:.1f} m, {:.2f} mm)".format(
-                source.label, source.source_length, source.period
-            )
+            source.label, source.source_length, source.period
+        )
         xscale = "linear"
         yscale = "linear"
         linewidth = calc_params.linewidth
@@ -867,9 +839,7 @@ class FunctionsManipulation:
         dpi = calc_params.dpi
 
         phases = _np.linspace(0, source.period / 2, 501)
-        Bs = source.get_beff(
-            gap_over_period=source.gap / source.period, phase=phases
-        )
+        Bs = source.get_beff(gap_over_period=source.gap / source.period, phase=phases)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
 
         _plt.figure(figsize=figsize)
@@ -910,15 +880,12 @@ class FunctionsManipulation:
     @staticmethod
     def process_phase_energy(spectra, source, calc_params):
         spectra_calc = copy.deepcopy(spectra)
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
         xlim = calc_params.e_range
         title = "Phase vs Energy\n{:} ({:.1f} m, {:.2f} mm)".format(
-                source.label, source.source_length, source.period
-            )
+            source.label, source.source_length, source.period
+        )
 
         xscale = "linear"
         yscale = "linear"
@@ -928,9 +895,7 @@ class FunctionsManipulation:
         dpi = calc_params.dpi
 
         phases = _np.linspace(0, source.period / 2, 501)
-        Bs = source.get_beff(
-            gap_over_period=source.gap / source.period, phase=phases
-        )
+        Bs = source.get_beff(gap_over_period=source.gap / source.period, phase=phases)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         gamma = spectra_calc.accelerator.gamma
 
@@ -969,9 +934,7 @@ class FunctionsManipulation:
 
         # Fundamental Energy
         phases = _np.linspace(0, source.period / 2, 501)
-        Bs = source.get_beff(
-            gap_over_period=source.gap / source.period, phase=phases
-        )
+        Bs = source.get_beff(gap_over_period=source.gap / source.period, phase=phases)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         Es = source.get_harmonic_energy(
             n=1, gamma=gamma, theta=0, period=source.period, k=Ks
@@ -989,7 +952,9 @@ class FunctionsManipulation:
         _plt.xlabel("Phase [mm]")
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
-        _plt.ylim(int(min(Es[-1], Es[0])) * 1e-3 - 0.1, int(max(Es[0], Es[-1])) * 1e-3 + 1)
+        _plt.ylim(
+            int(min(Es[-1], Es[0])) * 1e-3 - 0.1, int(max(Es[0], Es[-1])) * 1e-3 + 1
+        )
         _plt.yscale(yscale)
         _plt.xlim(0, source.period / 2)
         _plt.xscale(xscale)
@@ -1018,16 +983,13 @@ class FunctionsManipulation:
         slit_shape = calc_params.slit_shape
         xlim = calc_params.e_range
         energy_range = [xlim[0] * 1e3, xlim[1] * 1e3]
-        
+
         nr_pts_k = 31
         kmin = 0.2
         gamma = spectra_calc.accelerator.gamma
-        if (
-            source.source_type != "wiggler"
-            and source.source_type != "bendingmagnet"
-        ):
+        if source.source_type != "wiggler" and source.source_type != "bendingmagnet":
             source_k_max = source.calc_max_k(spectra_calc.accelerator)
-            
+
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
@@ -1037,24 +999,28 @@ class FunctionsManipulation:
                 n_harmonic = 1
         else:
             n_harmonic = 1
-        harmonic_range =  [1, n_harmonic]
-        process_curves =  True
+        harmonic_range = [1, n_harmonic]
+        process_curves = True
         superp_value = 250
         title = "Flux curve"
         xscale = "linear"
         yscale = "log"
-        figname = "flux_curve_{:}.png".format(source.label) if source.source_type == "bendingmagnet" else (
-                    "flux_curve_{:}_{:.0f}m_{:.0f}mm.png".format(
-                        source.label, source.source_length, source.period
-                    )
+        figname = (
+            "flux_curve_{:}.png".format(source.label)
+            if source.source_type == "bendingmagnet"
+            else (
+                "flux_curve_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
                 )
+            )
+        )
         linewidth = calc_params.linewidth
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         dpi = calc_params.dpi
         legend_fs = 10
         legend_properties = True
-        
+
         spectra_calc.sources = [source]
         spectra_calc.calc_flux_curve(
             energy_range=energy_range,
@@ -1065,28 +1031,19 @@ class FunctionsManipulation:
             slit_acceptances=[slit_acceptance],
             extraction_points=[spectra_calc.accelerator.extraction_point],
         )
-        if (
-            source.source_type != "wiggler"
-            and source.source_type != "bendingmagnet"
-        ):
+        if source.source_type != "wiggler" and source.source_type != "bendingmagnet":
             idx_xlim = _np.argmin(
                 _np.abs(spectra_calc._energies[0, -1, :] - (xlim[1] * 1e3))
             )
-            min_flux = float(
-                    10 ** int(_np.log10(spectra_calc._fluxes[0, -1, idx_xlim - 1]))
-                ) if source.polarization != 'cp' else float(
-                    10 ** int(_np.log10(spectra_calc._fluxes[0, -1, 0]))
-                )
-            max_flux = float(
-                10 ** (int(_np.log10(_np.max(spectra_calc._fluxes))) + 1)
+            min_flux = (
+                float(10 ** int(_np.log10(spectra_calc._fluxes[0, -1, idx_xlim - 1])))
+                if source.polarization != "cp"
+                else float(10 ** int(_np.log10(spectra_calc._fluxes[0, -1, 0])))
             )
+            max_flux = float(10 ** (int(_np.log10(_np.max(spectra_calc._fluxes))) + 1))
         else:
-            min_flux = float(
-                10 ** (int(_np.log10(spectra_calc._fluxes[0, -1])) - 1)
-            )
-            max_flux = float(
-                10 ** (int(_np.log10(_np.max(spectra_calc._fluxes))) + 1)
-            )
+            min_flux = float(10 ** (int(_np.log10(spectra_calc._fluxes[0, -1])) - 1))
+            max_flux = float(10 ** (int(_np.log10(_np.max(spectra_calc._fluxes))) + 1))
         ylim = [min_flux, max_flux]
         spectra_calc.plot_flux_curve(
             process_curves=process_curves,
@@ -1114,15 +1071,12 @@ class FunctionsManipulation:
                 spectra_calc.use_recovery_params = True
         nr_pts_k = 31
         kmin = 0.2
-        xlim =calc_params.e_range
+        xlim = calc_params.e_range
         emax = xlim[1] * 1e3
         gamma = spectra_calc.accelerator.gamma
-        if (
-            source.source_type != "wiggler"
-            and source.source_type != "bendingmagnet"
-        ):
+        if source.source_type != "wiggler" and source.source_type != "bendingmagnet":
             source_k_max = source.calc_max_k(spectra_calc.accelerator)
-            
+
             first_hamonic_energy = source.get_harmonic_energy(
                 1, gamma, 0, source.period, source_k_max
             )
@@ -1135,8 +1089,8 @@ class FunctionsManipulation:
         harmonic_range = [[1, n_harmonic]]
         x_accep = 1
 
-        process_curves =  True
-        superp_value =  250
+        process_curves = True
+        superp_value = 250
         title = "Brilliance curve"
         xscale = "linear"
         yscale = "log"
@@ -1144,17 +1098,17 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         figname = (
-                "brilliance_curve_{:}.png".format(source.label)
-                if source.source_type == "bendingmagnet"
-                else (
-                    "brilliance_curve_{:}_{:.0f}m_{:.0f}mm.png".format(
-                        source.label, source.source_length, source.period
-                    )
+            "brilliance_curve_{:}.png".format(source.label)
+            if source.source_type == "bendingmagnet"
+            else (
+                "brilliance_curve_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
                 )
             )
+        )
         dpi = calc_params.dpi
         legend_fs = 10
-        legend_properties =  True
+        legend_properties = True
         spectra_calc.sources = [source]
         spectra_calc.calc_brilliance_curve(
             harmonic_range=harmonic_range,
@@ -1164,17 +1118,19 @@ class FunctionsManipulation:
             x_accep=x_accep,
             extraction_points=[spectra_calc.accelerator.extraction_point],
         )
-        if (
-            source.source_type != "wiggler"
-            and source.source_type != "bendingmagnet"
-        ):
+        if source.source_type != "wiggler" and source.source_type != "bendingmagnet":
             idx_xlim = _np.argmin(
                 _np.abs(spectra_calc._energies[0, -1, :] - (xlim[1] * 1e3))
             )
-            min_brilliance = float(
-                10**int(_np.log10(spectra_calc._brilliances[0, -1, idx_xlim - 1]) - 1) 
-            ) if source.polarization != 'cp' else float(
-                10**int(_np.log10(spectra_calc._brilliances[0, -1, 0])) 
+            min_brilliance = (
+                float(
+                    10
+                    ** int(
+                        _np.log10(spectra_calc._brilliances[0, -1, idx_xlim - 1]) - 1
+                    )
+                )
+                if source.polarization != "cp"
+                else float(10 ** int(_np.log10(spectra_calc._brilliances[0, -1, 0])))
             )
             max_brilliance = float(
                 10 ** (int(_np.log10(_np.max(spectra_calc._brilliances))) + 1)
@@ -1229,26 +1185,28 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         figname = (
-                "degree_polarization_{:}.png".format(source.label)
-                if source.source_type == "bendingmagnet"
-                else (
-                    "degree_polarization_{:}_{:.0f}m_{:.0f}mm.png".format(
-                        source.label, source.source_length, source.period
-                    )
+            "degree_polarization_{:}.png".format(source.label)
+            if source.source_type == "bendingmagnet"
+            else (
+                "degree_polarization_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
                 )
             )
+        )
         dpi = calc_params.dpi
         legend_fs = 9
 
-        energies, degree_pl, degree_pc, degree_pl45 = spectra_calc.calc_degree_polarization(
-            source=source,
-            slit_shape=slit_shape,
-            slit_position=slit_position,
-            slit_acceptance=slit_acceptance,
-            distance_from_source=distance_from_source,
-            energy_range=energy_range,
-            kmin=0.1,
-            k_nr_pts=41
+        energies, degree_pl, degree_pc, degree_pl45 = (
+            spectra_calc.calc_degree_polarization(
+                source=source,
+                slit_shape=slit_shape,
+                slit_position=slit_position,
+                slit_acceptance=slit_acceptance,
+                distance_from_source=distance_from_source,
+                energy_range=energy_range,
+                kmin=0.1,
+                k_nr_pts=41,
+            )
         )
 
         _plt.figure(figsize=figsize)
@@ -1269,11 +1227,17 @@ class FunctionsManipulation:
             energies.T * 1e-3,
             degree_pc.T**2,
             "-C2",
-            linewidth=linewidth-1,
+            linewidth=linewidth - 1,
         )
         _plt.xlabel("Energy [keV]")
         _plt.ylabel("Polarization Degree")
-        _plt.legend([pl_plot[0], pc_plot[0], pl45_plot[0]], ['PL²', 'PC²', 'PL45²'], loc=5, ncol=3, fontsize=legend_fs)
+        _plt.legend(
+            [pl_plot[0], pc_plot[0], pl45_plot[0]],
+            ["PL²", "PC²", "PL45²"],
+            loc=5,
+            ncol=3,
+            fontsize=legend_fs,
+        )
         _plt.minorticks_on()
         _plt.grid(which="major", alpha=0.3)
         _plt.grid(which="minor", alpha=0.1)
@@ -1316,14 +1280,14 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         dpi = calc_params.dpi
         figname = (
-                "partial_power_{:}.png".format(source.label)
-                if source.source_type == "bendingmagnet"
-                else (
-                    "partial_power_{:}_{:.0f}m_{:.0f}mm.png".format(
-                        source.label, source.source_length, source.period
-                    )
+            "partial_power_{:}.png".format(source.label)
+            if source.source_type == "bendingmagnet"
+            else (
+                "partial_power_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
                 )
             )
+        )
         if source.source_type == "bendingmagnet":
             x_range = (-1, 1)
             y_range = (-0.3, 0.3)
@@ -1436,16 +1400,14 @@ class FunctionsManipulation:
             ax.text(
                 x=x_range[0] * (1 - 0.05),
                 y=y_range[0] * (1 - 0.05) + 0.05,
-                s=r"$R_1:$"
-                + "{:.1f} \u03bcrad".format(slit_acceptance[0] * 1e3),
+                s=r"$R_1:$" + "{:.1f} \u03bcrad".format(slit_acceptance[0] * 1e3),
                 fontsize=8,
                 c="white",
             )
             ax.text(
                 x=x_range[0] * (1 - 0.05),
                 y=y_range[0] * (1 - 0.05),
-                s=r"$R_2:$"
-                + "{:.1f} \u03bcrad".format(slit_acceptance[1] * 1e3),
+                s=r"$R_2:$" + "{:.1f} \u03bcrad".format(slit_acceptance[1] * 1e3),
                 fontsize=8,
                 c="white",
             )
@@ -1478,10 +1440,7 @@ class FunctionsManipulation:
     def process_beam_div_size_wigner(spectra, source, calc_params):
         spectra_calc: SpectraInterface = copy.deepcopy(spectra)
 
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
 
         xlim = calc_params.e_range
@@ -1530,10 +1489,7 @@ class FunctionsManipulation:
             linewidth=linewidth,
         )
         _plt.legend()
-        valmax = (
-            max(_np.nanmax(div_size_x[:, 0]), _np.nanmax(div_size_y[:, 0]))
-            * 1e3
-        )
+        valmax = max(_np.nanmax(div_size_x[:, 0]), _np.nanmax(div_size_y[:, 0])) * 1e3
         valmax = (int(valmax / 2) + 2) * 2
         _plt.ylim(0, valmax)
         _plt.xlim(0, xlim[1])
@@ -1583,10 +1539,7 @@ class FunctionsManipulation:
         )
         _plt.legend()
 
-        valmax = (
-            max(_np.nanmax(div_size_x[:, 1]), _np.nanmax(div_size_y[:, 1]))
-            * 1e3
-        )
+        valmax = max(_np.nanmax(div_size_x[:, 1]), _np.nanmax(div_size_y[:, 1])) * 1e3
         valmax = (int(valmax / 5) + 2) * 5
 
         _plt.ylim(0, valmax)
@@ -1618,10 +1571,7 @@ class FunctionsManipulation:
             if source.use_recovery_params and source.add_phase_errors:
                 spectra_calc.use_recovery_params = True
 
-        if (
-            source.source_type == "bendingmagnet"
-            or source.source_type == "wiggler"
-        ):
+        if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
 
         distance_from_source = calc_params.distance_from_source
@@ -1673,9 +1623,7 @@ class FunctionsManipulation:
                             _np.argmin(
                                 [
                                     _np.min(_np.abs(i - xlim[1] * 1e3))
-                                    for i in _np.array(
-                                        es_at_res, dtype="object"
-                                    )
+                                    for i in _np.array(es_at_res, dtype="object")
                                 ]
                             )
                         ]
@@ -1686,14 +1634,7 @@ class FunctionsManipulation:
         valmax = float(
             10
             ** int(
-                _np.log10(
-                    max(
-                        [
-                            i.max()
-                            for i in _np.array(fs_out_res, dtype="object")
-                        ]
-                    )
-                )
+                _np.log10(max([i.max() for i in _np.array(fs_out_res, dtype="object")]))
                 + 1
             )
         )
@@ -1765,7 +1706,6 @@ class FunctionsManipulation:
 
 
 class IDParameters:
-
     def __init__(self):
         self._polarization = None
         self._type = None
@@ -1776,7 +1716,7 @@ class IDParameters:
         self._label = None
         self._vc_tolerance = None
         self._halbach_coef = None
-    
+
     @property
     def polarization(self):
         return self._polarization
@@ -1851,7 +1791,6 @@ class IDParameters:
 
 
 class Calculations:
-
     def __init__(self):
         self._gap_energy = False
         self._gap_field = False
@@ -1870,11 +1809,11 @@ class Calculations:
         self._degree_polarization = False
         self._degree_coherence = False
         self._flux_distribution_2d = False
-    
+
     @property
     def gap_energy(self):
         return self._gap_energy
-    
+
     @property
     def gap_field(self):
         return self._gap_field
@@ -1890,63 +1829,63 @@ class Calculations:
     @property
     def phase_k(self):
         return self._phase_k
-    
+
     @property
     def phase_field(self):
         return self._phase_field
 
-    @property 
+    @property
     def table_parameters(self):
         return self._table_parameters
 
-    @property 
+    @property
     def flux(self):
         return self._flux
 
-    @property 
+    @property
     def flux_curve_generic(self):
         return self._flux_curve_generic
 
-    @property 
+    @property
     def brilliance(self):
         return self._brilliance
 
-    @property 
+    @property
     def beam_size(self):
         return self._beam_size
 
-    @property 
+    @property
     def beam_divergence(self):
         return self._beam_divergence
 
-    @property 
+    @property
     def beam_div_size_wigner(self):
         return self._beam_div_size_wigner
 
-    @property 
+    @property
     def power(self):
         return self._power
 
-    @property 
+    @property
     def degree_polarization(self):
         return self._degree_polarization
 
-    @property 
+    @property
     def degree_coherence(self):
         return self._degree_coherence
 
-    @property 
+    @property
     def flux_distribution_2d(self):
         return self._flux_distribution_2d
 
     @gap_energy.setter
     def gap_energy(self, value):
         self._gap_energy = value
-    
+
     @gap_field.setter
     def gap_field(self, value):
         self._gap_field = value
-    
+
     @gap_k.setter
     def gap_k(self, value):
         self._gap_k = value
@@ -2009,7 +1948,6 @@ class Calculations:
 
 
 class CalcParameters:
-
     def __init__(self):
         self._beta_section = None
         self._target_energy = None
@@ -2096,7 +2034,7 @@ class CalcParameters:
     @property
     def dpi(self):
         return self._dpi
-    
+
     @beta_section.setter
     def beta_section(self, value):
         self._beta_section = value
@@ -2167,7 +2105,6 @@ class CalcParameters:
 
 
 class Process(FunctionsManipulation):
-
     def __init__(self):
         super().__init__()
         self._calc_options = Calculations()
@@ -2175,11 +2112,11 @@ class Process(FunctionsManipulation):
         self._calc_params = CalcParameters()
         self._spectra = SpectraInterface()
         self._source = None
-    
+
     @property
     def calc_options(self):
         return self._calc_options
-    
+
     @property
     def id_params(self):
         return self._id_params
@@ -2205,28 +2142,28 @@ class Process(FunctionsManipulation):
         self._spectra.accelerator.zero_energy_spread = False
         self._spectra.accelerator.set_bsc_orion_reduction()
         if self._calc_params.beta_section == "bc":
-            self._spectra.accelerator.set_extraction_point('bc')
+            self._spectra.accelerator.set_extraction_point("bc")
         elif self._calc_params.beta_section == "b1":
-            self._spectra.accelerator.set_extraction_point('b1')
+            self._spectra.accelerator.set_extraction_point("b1")
         elif self._calc_params.beta_section == "b2":
-            self._spectra.accelerator.set_extraction_point('b2')
+            self._spectra.accelerator.set_extraction_point("b2")
         elif self._calc_params.beta_section == "high":
-            self._spectra.accelerator.set_extraction_point('high_beta')
+            self._spectra.accelerator.set_extraction_point("high_beta")
         elif self._calc_params.beta_section == "low":
-            self._spectra.accelerator.set_extraction_point('low_beta')
+            self._spectra.accelerator.set_extraction_point("low_beta")
         else:
             raise ValueError(
                 "Beta section '{:}' does not exist. Choose one of these: 'bc', 'b1', 'b2', 'high', 'low'".format(  # noqa: E501
                     self._calc_params.beta_section
                 )
             )
-    
+
     def _initialize_source(self, verb=True):
         # Und Type Assembly
         und_class = self._id_params.type + (
             "_" + self._id_params.material if len(self._id_params.material) > 0 else ""
         )
-        
+
         # Mount Module
         module_sources = importlib.import_module("spectrainterface.sources")
 
@@ -2250,20 +2187,27 @@ class Process(FunctionsManipulation):
 
         # Mount Module Sirius
         module_sirius = getattr(
-            importlib.import_module("spectrainterface.sirius"),
-            "SIRIUS"
+            importlib.import_module("spectrainterface.sirius"), "SIRIUS"
         )
         module_sirius_sources = getattr(module_sirius, "Sources")
 
         # Get Source Classes inside Module Sirius
         sirius_classes = _np.array(
-            [name for name, obj in inspect.getmembers(module_sirius_sources, inspect.isclass)]
+            [
+                name
+                for name, obj in inspect.getmembers(
+                    module_sirius_sources, inspect.isclass
+                )
+            ]
         )
         sources += list(sirius_classes)
 
         # Verify if exist Und type inside Module Sources
         source_class_exist = list(
-            map(lambda x: und_class.upper() in x.upper(), [name.upper() for name in sources])
+            map(
+                lambda x: und_class.upper() in x.upper(),
+                [name.upper() for name in sources],
+            )
         )
         idxs = _np.where(source_class_exist)[0]
         if len(idxs) == 0:
@@ -2275,7 +2219,11 @@ class Process(FunctionsManipulation):
         idx = idxs[0]
         source_selected = sources[idx]
 
-        module = module_sources if source_selected in source_classes else module_sirius_sources
+        module = (
+            module_sources
+            if source_selected in source_classes
+            else module_sirius_sources
+        )
 
         # Source Initialization
         if source_selected in ["B1", "B2", "BC"]:
@@ -2290,14 +2238,30 @@ class Process(FunctionsManipulation):
             if self._id_params.period is None or self._id_params.length is None:
                 source = getattr(module, source_selected)()
             else:
-                source = getattr(module, source_selected)(self._id_params.period, self._id_params.length)
-            source.label = source.label if self._id_params.label is None else self._id_params.label
-            source.vc_tolerance = source.vc_tolerance if self._id_params.vc_tolerance is None else  self._id_params.vc_tolerance
-            source.halbach_coef = source.halbach_coef if self._id_params.halbach_coef is None else self._id_params.halbach_coef
-            source.polarization = source.polarization if self._id_params.polarization is None else self._id_params.polarization
+                source = getattr(module, source_selected)(
+                    self._id_params.period, self._id_params.length
+                )
+            source.label = (
+                source.label if self._id_params.label is None else self._id_params.label
+            )
+            source.vc_tolerance = (
+                source.vc_tolerance
+                if self._id_params.vc_tolerance is None
+                else self._id_params.vc_tolerance
+            )
+            source.halbach_coef = (
+                source.halbach_coef
+                if self._id_params.halbach_coef is None
+                else self._id_params.halbach_coef
+            )
+            source.polarization = (
+                source.polarization
+                if self._id_params.polarization is None
+                else self._id_params.polarization
+            )
             # Phase Errors
             AGUS = ["APU", "APPLE2", "DELTA"]
-            if self._id_params.phase_error is not None: 
+            if self._id_params.phase_error is not None:
                 if self._id_params.phase_error > 0:
                     source.add_phase_errors = True
                     source.use_recovery_params = True
@@ -2306,7 +2270,7 @@ class Process(FunctionsManipulation):
                 gap = source.gap
             else:
                 gapv, gaph = source.calc_min_gap(self._spectra.accelerator)
-            
+
             kmax = source.calc_max_k(self._spectra.accelerator)
 
             if verb:
@@ -2317,19 +2281,32 @@ class Process(FunctionsManipulation):
                     )
                 )
 
-
                 if source.polarization == "cp":
-                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in AGUS else "Min. gapv: {:.4f} mm | Min gaph: {:.3f} mm".format(gapv, gaph))
+                    print(
+                        "Gap: {:.3f} mm".format(gap)
+                        if source._undulator_type in AGUS
+                        else "Min. gapv: {:.4f} mm | Min gaph: {:.3f} mm".format(
+                            gapv, gaph
+                        )
+                    )
                 elif source.polarization == "hp":
-                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in AGUS else "Min. gapv: {:.4f} mm".format(gapv))
+                    print(
+                        "Gap: {:.3f} mm".format(gap)
+                        if source._undulator_type in AGUS
+                        else "Min. gapv: {:.4f} mm".format(gapv)
+                    )
                 else:
-                    print("Gap: {:.3f} mm".format(gap) if source._undulator_type in AGUS else "Min. gaph: {:.3f} mm".format(gaph))
+                    print(
+                        "Gap: {:.3f} mm".format(gap)
+                        if source._undulator_type in AGUS
+                        else "Min. gaph: {:.3f} mm".format(gaph)
+                    )
                 print(
                     "Máx. k: {:.4f} | Máx. B: {:.2f} T".format(
                         kmax, source.undulator_k_to_b(kmax, source.period)
                     )
                 )
-        
+
         self._source = source
 
     def _pre_configuration(self, verb=True):
@@ -2343,7 +2320,7 @@ class Process(FunctionsManipulation):
                     1, self._spectra.accelerator.gamma, 0, self._source.period, k_max
                 )
                 n = int(self._calc_params.target_energy / first_hamonic_energy)
-                if n > 0 and not self._id_params.polarization == 'cp':
+                if n > 0 and not self._id_params.polarization == "cp":
                     n_harmonic = n - 1 if n % 2 == 0 else n
                 else:
                     n_harmonic = 1
@@ -2359,12 +2336,13 @@ class Process(FunctionsManipulation):
                 print("Target k: ", self._calc_params.target_k)
         else:
             self._calc_params.target_k = 0
-        
+
     def run(self, verb=True):
         self._pre_configuration(verb)
 
         for option in self.calc_options.__dict__:
             if self.calc_options.__dict__[option]:
-                function = dict(inspect.getmembers(self, inspect.isfunction))['process'+option]
+                function = dict(inspect.getmembers(self, inspect.isfunction))[
+                    "process" + option
+                ]
                 function(self._spectra, self._source, self._calc_params)
-
