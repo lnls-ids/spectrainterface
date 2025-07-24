@@ -649,6 +649,11 @@ class APU(Halbach):
         """
         return self._phase
 
+    @phase.setter
+    def phase(self, value):
+        """Phase setter."""
+        self._phase = value
+
     def get_beff(self, gap_over_period, phase=None):
         """Get peak magnetic field for a given device and gap.
 
