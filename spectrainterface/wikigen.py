@@ -2228,6 +2228,7 @@ class Process(FunctionsManipulation):
                     self._calc_params.beta_section
                 )
             )
+        self._spectra.accelerator.set_bsc_orion_reduction()
     
     def _initialize_source(self, verb=True):
         # Und Type Assembly
