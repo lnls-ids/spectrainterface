@@ -2134,6 +2134,8 @@ class SpectraInterface:
         x_list_trunc = list()
         y_list_trunc = list()
 
+        flag = True
+
         for i in range(n - 1):
             x1, y1 = x_list[i], y_list[i]
             x2, y2 = x_list[i + 1], y_list[i + 1]
@@ -2146,9 +2148,10 @@ class SpectraInterface:
             idx = _np.where(d[:-1] * d[1:] < 0)[0]
             if len(idx) == 0:
                 xis.append(x_list[i + 1].min())
-                mask = x_list[i] < x_list[i + 1].min() + superb  # verificar isso!
+                mask = x_list[i] < x_list[i + 1].min() + superb
                 x_list_trunc.append(x_list[i][mask])
                 y_list_trunc.append(y_list[i][mask])
+                flag = False
                 continue
             i0 = idx[0]
             xa, xb = x_common[i0], x_common[i0 + 1]
@@ -2156,6 +2159,11 @@ class SpectraInterface:
             t = -da / (db - da)
             xi = xa + t * (xb - xa)
             xis.append(xi)
+
+        if flag:
+            mask = x_list[0] < x_list[1].min() + superb
+            x_list_trunc.append(x_list[0][mask])
+            y_list_trunc.append(y_list[0][mask])
 
         for i in range(n - 1):
             xi_left = xis[i + 1 - 1] if i + 1 > 0 else -_np.inf
