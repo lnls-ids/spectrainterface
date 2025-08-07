@@ -1118,7 +1118,7 @@ class FunctionsManipulation:
             x_accep=x_accep,
             extraction_points=[spectra_calc.accelerator.extraction_point],
         )
-        if source.source_type != "wiggler" and source.source_type != "bendingmagnet":
+        if source.source_type != "wiggler" or source.source_type != "bendingmagnet":
             idx_xlim = _np.argmin(
                 _np.abs(spectra_calc._energies[0, -1, :] - (xlim[1] * 1e3))
             )
@@ -1126,7 +1126,7 @@ class FunctionsManipulation:
                 float(
                     10
                     ** int(
-                        _np.log10(spectra_calc._brilliances[0, -1, idx_xlim - 1]) - 1
+                        _np.log10(spectra_calc._brilliances[0, -1, idx_xlim - 1]) + 1
                     )
                 )
                 if source.polarization != "cp"
