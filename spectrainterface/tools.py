@@ -343,7 +343,7 @@ class SourceFunctions:
     @staticmethod
     def _get_list_of_pol(undulator_type):
         polarizations = dict()
-        polarizations["APPLE2"] = ["hp", "vp", "cp"]
+        polarizations["APPLE2"] = ["hp", "vp", "cp", "lp54y", "lp54x"]
         polarizations["DELTA"] = ["hp", "vp", "cp"]
         polarizations["Halbach"] = ["hp"]
         polarizations["Hybrid"] = ["hp", "vp"]
