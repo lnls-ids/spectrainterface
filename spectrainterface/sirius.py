@@ -545,7 +545,21 @@ class SIRIUS:
                 self._label = "UE44-IPE"
                 self._gap = 11.4
                 self._min_gap = 11.4
-                self._br = 1.14
+                self._br = 1.19  # adjusted to get (ky, kx) = (3.65,2.62) ~ (3.5, 2.7) (mr = 1.24 from the paper)  # noqa: E501
+                self._halbach_coef = {  #
+                    "hp": {"a": 1.4934, "b": -2.5933, "c": -0.4855},
+                    "vp": {"a": 2.0362, "b": -5.4204, "c": 1.1888},
+                    "cp": {"a": 1.9306, "b": -4.5455, "c": 0.8731},
+                    "lp54y": {"a": 1.2027, "b": -3.7715, "c": 0.3518},
+                    "lp54x": {"a": 1.3622, "b": -4.5694, "c": 0.7927},
+                }
+                self._phase_coef = {
+                    "hp": {"ef": 1.0205, "z0": -0.0280},
+                    "vp": {"ef": 0.9933, "z0": -0.0620},
+                    "cp": {"ef": 0.9801, "z0": 0.0143},
+                    "lp54y": {"ef": 1.0005, "z0": -0.0382},
+                    "lp54x": {"ef": 0.9951, "z0": -0.0367},
+                }
 
         class APU58_IPE(sources.APU):  # noqa: N801
             """APU58 class (IPÊ Beamline).
