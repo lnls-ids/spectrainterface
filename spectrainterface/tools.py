@@ -149,9 +149,7 @@ class SourceFunctions:
         return _np.abs(i2)
 
     @staticmethod
-    def create_field_profile(
-        nr_periods, period, bx=None, by=None, pts_period=1001
-    ):
+    def create_field_profile(nr_periods, period, bx=None, by=None, pts_period=1001):
         """Create a sinusoidal field with first and second integrals zero.
 
         Args:
@@ -228,9 +226,7 @@ class SourceFunctions:
         Returns:
             float: Harmonic energy [eV].
         """
-        lamb = SourceFunctions.get_harmonic_wavelength(
-            n, gamma, theta, period, k
-        )
+        lamb = SourceFunctions.get_harmonic_wavelength(n, gamma, theta, period, k)
         energy = PLANCK * 2 * PI * LSPEED / lamb / ECHARGE
         return energy
 
@@ -347,7 +343,7 @@ class SourceFunctions:
     @staticmethod
     def _get_list_of_pol(undulator_type):
         polarizations = dict()
-        polarizations["APPLE2"] = ["hp", "vp", "cp"]
+        polarizations["APPLE2"] = ["hp", "vp", "cp", "lp54y", "lp54x"]
         polarizations["DELTA"] = ["hp", "vp", "cp"]
         polarizations["Halbach"] = ["hp"]
         polarizations["Hybrid"] = ["hp", "vp"]
@@ -444,14 +440,7 @@ class SourceFunctions:
         """
         hc = PLANCK * 2 * PI * LSPEED / ECHARGE
 
-        x = (
-            2
-            * PI
-            * harmonic
-            * und_length
-            / (und_period * 1e-3)
-            * energy_spread
-        )
+        x = 2 * PI * harmonic * und_length / (und_period * 1e-3) * energy_spread
         a1 = _np.sqrt(2 * PI) * x * erf(_np.sqrt(2) * x)
         Qax = _np.sqrt(2 * x**2 / (-1 + _np.exp(-2 * x**2) + a1))
         div_sigma = _np.sqrt(
@@ -460,9 +449,7 @@ class SourceFunctions:
 
         a1s = _np.sqrt(2 * PI) * (x / 4) * erf(_np.sqrt(2) * (x / 4))
         Qas = (
-            _np.sqrt(
-                2 * (x / 4) ** 2 / (-1 + _np.exp(-2 * (x / 4) ** 2) + a1s)
-            )
+            _np.sqrt(2 * (x / 4) ** 2 / (-1 + _np.exp(-2 * (x / 4) ** 2) + a1s))
         ) ** (2 / 3.0)
         size_sigma = _np.sqrt(
             emittance * beta
@@ -570,9 +557,7 @@ class SourceFunctions:
         return const * integral * (current * 1e-3)
 
     @staticmethod
-    def calc_k_target(
-        gamma: float, n: int, period: float, target_energy: float
-    ):
+    def calc_k_target(gamma: float, n: int, period: float, target_energy: float):
         """Calc k for target energy given harmonic number and period.
 
         Args:

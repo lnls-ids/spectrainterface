@@ -1,7 +1,6 @@
 """SIRIUS parameters."""
 
 import numpy as _np
-import matplotlib.pyplot as _plt
 import mathphys.constants as _constants
 import os
 from spectrainterface.accelerator import StorageRingParameters
@@ -174,36 +173,11 @@ class SIRIUS:
     class Sources:
         """SIRIUS Sources."""
 
-        class BC(sources.BendingMagnet):
-            """BC class.
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 3.2
-                self._label = "BC"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
-
-        class B2(sources.BendingMagnet):
-            """B2 class.
-
-            Args:
-                BendingMagnet (Bending magnet class): BM class
-            """
-
-            def __init__(self):
-                """Class constructor."""
-                super().__init__()
-                self._b_peak = 0.5665
-                self._label = "B2"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
-
-        class B1(sources.BendingMagnet):
+        class B1(sources.BendingMagnet):  # noqa: N801
             """B1 class.
+
+            Beamlines - Sector:
+                CARCARÁ-X - 01;
 
             Args:
                 BendingMagnet (Bending magnet class): BM class
@@ -216,80 +190,160 @@ class SIRIUS:
                 self._label = "B1"
                 self._meas_fname = REPOS_PATH + "/files/sirius/field_b1.txt"
 
-        class UE44_IPE(sources.APPLE2):  # noqa: N801
-            """UE44  class."""
+        class B2(sources.BendingMagnet):  # noqa: N801
+            """B2 class.
 
-            def __init__(self, period=44, length=3.4):
+            Beamlines - Sector:
+                SIBIPIRUNA - 04;
+                IMBÚIA - 07;
+                TATU - 08;
+                SAPÊ - 13;
+                CEDRO - 17;
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 0.5665
+                self._label = "B2"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
+
+        class BC(sources.BendingMagnet):  # noqa: N801
+            """BC class.
+
+            Beamlines - Sector:
+                MANATI - 11;
+                TEIU - 05;
+                SERIEMA - 09;
+                MOGNO - 10;
+                QUATI - 13;
+                JATOBÁ - 14;
+
+            Args:
+                BendingMagnet (Bending magnet class): BM class
+            """
+
+            def __init__(self):
+                """Class constructor."""
+                super().__init__()
+                self._b_peak = 3.2
+                self._label = "BC"
+                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
+
+        class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
+            """Cpmu PrFeB Undulator class (HEPS) (TIMBÓ Beamline).
+
+            Info:
+                Sector: 04SB (low_beta)
+
+            Args:
+                Undulator (CPMU_PrFeB_HEPS class): Undulator class
+            """
+
+            def __init__(self, period=15.8, length=2.03):
+                """Class constructor.
+
+                Args:
+                    period (float, optional): Undulator period [mm]
+                    length (float, optional): Undulator length [m]
+                """
+                super().__init__(period, length)
+                self._undulator_type = "CPMU"
+                self._label = "CPMU15-TIB"
+                self._gap = 3.8
+                self._min_gap = 3.6  # VCA
+                self.vc_tolerance = 0.210
+
+        class CPMU13_HIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
+            """Cpmu PrFeB Undulator class (HEPS) (HIBISCO Beamline).
+
+            Info:
+                Sector: 05SA (high_beta)
+
+            Args:
+                Undulator (CPMU_PrFeB_HEPS class): Undulator class
+            """
+
+            def __init__(self, period=13.6, length=2.03):
+                """Class constructor.
+
+                Args:
+                    period (float, optional): Undulator period [mm]
+                    length (float, optional): Undulator length [m]
+                """
+                super().__init__(period, length)
+                self._undulator_type = "CPMU"
+                self._label = "CPMU13-HIB"
+                self._gap = 4.84
+                self._min_gap = 4.84
+                self.vc_tolerance = 0.160
+
+        class VPU29_CNB(sources.VPU):  # noqa: N801
+            """VPU29b / 2386b (CARNAUBA Beamline) class.
+
+            Info:
+                Sector: 06SB (low_beta)
+
+            Args:
+                Undulator (VPU class): Undulator class
+            """
+
+            def __init__(self, period=29.0, length=1.54):
                 """Class constructor."""
                 super().__init__(period, length)
+                self._label = "VPU29-CNB"
+                self._br = 1.304
+                self._gap = 9.7
+                self._min_gap = 9.7
+                self.vc_thickness = 0.5
+                self.vc_tolerance = 0.468
+                self._polarization = "vp"
+                self._halbach_coef = {
+                    "vp": {"a": 2.03304573, "b": -3.4431994, "c": 0.18171406},
+                }
                 self._material = "NdFeB"
-                self._label = "UE44-IPE"
-                self._gap = 11.4
-                self._min_gap = 11.4
-                self._br = 1.14
 
-        class APU58_IPE(sources.APU):  # noqa: N801
-            """APU58 class."""
+        class VPU29_CAT(sources.VPU):  # noqa: N801
+            """VPU29a (CATERETE Beamline) class.
 
-            def __init__(self, period=58, length=1):
+            Info:
+                Sector: 07SP (low_beta)
+
+            Args:
+                Undulator (VPU class): Undulator class
+            """
+
+            def __init__(self, period=29.0, length=1.54):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "APU58-IPE"
-                self._gap = 15.8
-                self._min_gap = 15.8
-                self._br = 1.34
-                self._z0 = 0
-
-        class APU22_SPU(sources.APU):  # noqa: N801
-            """APU22 1991d class."""
-
-            def __init__(self, period=22, length=1.2):
-                """Class constructor."""
-                super().__init__(period, length)
-                self._label = "APU22-SPU"
-                self._gap = 8
-                self._min_gap = 8
-                self._br = 1.34
-                self._z0 = 0.321
-                self._efficiency = 0.9981
-
-        class APU22_MNC(sources.APU):  # noqa: N801
-            """APU22 1991d class."""
-
-            def __init__(self, period=22, length=1.2):
-                """Class constructor."""
-                super().__init__(period, length)
-                self._label = "APU22-MNC"
-                self._gap = 8
-                self._min_gap = 8
-                self._br = 1.34
-                self._z0 = -0.300609
-                self._efficiency = 1.0022029
-
-        class EPU50(sources.APPLE2):
-            """EPU50 class."""
-
-            def __init__(self, period=50, length=3):
-                """Class constructor."""
-                super().__init__(period, length)
-                self._label = "EPU50"
-                self._br = 1.24
-                self._gap = 10.3
-                self._min_gap = 10.3
-
-        class EPU50_UVX(sources.APPLE2):  # noqa: N801
-            """EPU50 UVX class."""
-
-            def __init__(self, period=50, length=2.7):
-                """Class constructor."""
-                super().__init__(period, length)
-                self._label = "EPU50-UVX"
-                self._br = 1.135
-                self._gap = 22
-                self._min_gap = 22
+                self._label = "VPU29-CAT"
+                self._br = 1.304
+                self._gap = 9.7
+                self._min_gap = 9.7
+                self.vc_thickness = 0.5
+                self.vc_tolerance = 0.468
+                self._polarization = "vp"
+                self._halbach_coef = {
+                    "vp": {
+                        "a": 2.03304573,
+                        "b": -3.4431994,
+                        "c": 0.18171406,
+                    },  # must to be update
+                }
+                self._material = "NdFeB"
 
         class IVU18_EMA(sources.IVU_NdFeB):  # noqa: N801
-            """IVU18-2 class (EMA beamline)."""
+            """IVU18-2 class (EMA beamline).
+
+            Info:
+                Sector: 08SB (low_beta)
+
+            Args:
+                Undulator (IVU_NdFeB class): Undulator Class
+            """
 
             def __init__(self, period=18.5, length=2):
                 """Class constructor."""
@@ -306,26 +360,36 @@ class SIRIUS:
                 }
                 self._material = "NdFeB"
 
-        class IVU18_PNR(sources.IVU_NdFeB):  # noqa: N801
-            """IVU18-1 class (PAINEIRA beamline)."""
+        class APU22_MNC(sources.APU):  # noqa: N801
+            """APU22 1991b class (MANACÁ Beamline).
 
-            def __init__(self, period=18.5, length=2):
+            Info:
+                Sector: 09SA (high_beta)
+
+            Args:
+                Undulator (APU class): Undulator class
+            """
+
+            def __init__(self, period=22, length=1.2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "IVU18-PNR"
-                self._br = 1.27
-                self._gap = 4.3
-                self._min_gap = 4.3
-                self._vc_thickness = 0
-                self._vc_tolerance = 0.2501
-                self._polarization = "hp"
-                self._halbach_coef = {
-                    "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
+                self._label = "APU22-MNC"
+                self._gap = 8
+                self._min_gap = 8
+                self._br = 1.34
+                self._phase_coef = {
+                    "hp": {"ef": 1.0022029, "z0": -0.300609},
                 }
-                self._material = "NdFeB"
 
         class DELTA52_SAB(sources.Elliptic):  # noqa: N801
-            """DELTA Undulator class."""
+            """DELTA Undulator class.
+
+            Info:
+                Sector: 10SB (low_beta)
+
+            Args:
+                Undulator (Elliptic class): Undulator class
+            """
 
             def __init__(self, period=52.5, length=1.2):
                 """Class constructor.
@@ -346,7 +410,7 @@ class SIRIUS:
                 }
                 self._gap = 13.6
                 self._min_gap = 13.6
-                self._phase = 0
+                self._phase = 52.5/2
                 self._halbach_coef = {
                     "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
                     "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
@@ -463,14 +527,121 @@ class SIRIUS:
                     self.phase = phase0
                 return k_max
 
-        class CPMU13_HIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
-            """Cpmu PrFeB Undulator class (HEPS).
+        class UE44_IPE(sources.APPLE2):  # noqa: N801
+            """UE44  class (IPÊ Beamline).
+
+            Info:
+                Sector: 11SP (low_beta)
 
             Args:
-            Undulator (Undulator class): Undulator class
+                Undulator (APPLE2 class): Undulator class
             """
 
-            def __init__(self, period=13.6, length=2.03):
+            def __init__(self, period=44, length=3.4):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._material = "NdFeB"
+                self._label = "UE44-IPE"
+                self._gap = 11.4
+                self._min_gap = 11.4
+                self._br = 1.19  # adjusted to get (ky, kx) = (3.65,2.62) ~ (3.5, 2.7) (mr = 1.24 from the paper)  # noqa: E501
+                self._halbach_coef = {  #
+                    "hp": {"a": 1.4934, "b": -2.5933, "c": -0.4855},
+                    "vp": {"a": 2.0362, "b": -5.4204, "c": 1.1888},
+                    "cp": {"a": 1.9306, "b": -4.5455, "c": 0.8731},
+                    "lp54y": {"a": 1.2027, "b": -3.7715, "c": 0.3518},
+                    "lp54x": {"a": 1.3622, "b": -4.5694, "c": 0.7927},
+                }
+                self._phase_coef = {
+                    "hp": {"ef": 1.0205, "z0": -0.0280},
+                    "vp": {"ef": 0.9933, "z0": -0.0620},
+                    "cp": {"ef": 0.9801, "z0": 0.0143},
+                    "lp54y": {"ef": 1.0005, "z0": -0.0382},
+                    "lp54x": {"ef": 0.9951, "z0": -0.0367},
+                }
+
+        class APU58_IPE(sources.APU):  # noqa: N801
+            """APU58 class (IPÊ Beamline).
+
+            Info:
+                Sector: 11SP (low_beta)
+
+            Args:
+                Undulator (APU class): Undulator class
+            """
+
+            def __init__(self, period=58, length=1):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "APU58-IPE"
+                self._gap = 15.8
+                self._min_gap = 15.8
+                self._br = 1.34
+
+        # class PITANGA 12SB (low_beta)
+
+        class IVU18_PNR(sources.IVU_NdFeB):  # noqa: N801
+            """IVU18-1 class (PAINEIRA beamline).
+
+            Info:
+                Sector: 14SB (low_beta)
+
+            Args:
+                Undulator (IVU_NdFeB class): Undulator class
+            """
+
+            def __init__(self, period=18.5, length=2):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "IVU18-PNR"
+                self._br = 1.27
+                self._gap = 4.3
+                self._min_gap = 4.3
+                self._vc_thickness = 0
+                self._vc_tolerance = 0.2501
+                self._polarization = "hp"
+                self._halbach_coef = {
+                    "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
+                }
+                self._material = "NdFeB"
+
+        # class SUSSUARANA 15SP (low_beta)
+
+        # class SAGUI 16SB (low_beta)
+
+        class APU22_SPU(sources.APU):  # noqa: N801
+            """APU22 1991d class (SAPUCAIA Beamline).
+
+            Info:
+                Sector: 17SA (high_beta)
+
+
+            Args:
+                Undulator (APU class): Undulator class
+            """
+
+            def __init__(self, period=22, length=1.2):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = "APU22-SPU"
+                self._gap = 8
+                self._min_gap = 8
+                self._br = 1.34
+                self._phase_coef = {
+                    "hp": {"ef": 0.9981, "z0": 0.321},
+                }
+
+        class CPMU14_QRI(sources.CPMU_PrFeB_HEPS):  # noqa: N801
+            """Cpmu PrFeB Undulator class (HEPS) (QUIRIQUIRI Beamline).
+
+            Info:
+                Sector: 18SB (low_beta)
+
+            Args:
+                Undulator (CPMU_PrFeB_HEPS class): Undulator class
+            """
+
+            def __init__(self, period=14.2, length=2.03):
                 """Class constructor.
 
                 Args:
@@ -479,68 +650,33 @@ class SIRIUS:
                 """
                 super().__init__(period, length)
                 self._undulator_type = "CPMU"
-                self._label = "CPMU13-HIB"
-                self._gap = 4.84
-                self._min_gap = 4.84
-                self.vc_tolerance = 0.160
-
-        class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
-            """Cpmu PrFeB Undulator class (HEPS).
-
-            Args:
-            Undulator (Undulator class): Undulator class
-            """
-
-            def __init__(self, period=15.8, length=2.03):
-                """Class constructor.
-
-                Args:
-                    period (float, optional): Undulator period [mm]
-                    length (float, optional): Undulator length [m]
-                """
-                super().__init__(period, length)
-                self._undulator_type = "CPMU"
-                self._label = "CPMU15-TIB"
-                self._gap = 3.7
-                self._min_gap = 3.7
+                self._label = "CPMU14-QRI"
+                self._gap = 3.8
+                self._min_gap = 3.6  # VCA
                 self.vc_tolerance = 0.210
 
-        class VPU29_CNB(sources.VPU):  # noqa: N801
-            """VPU29b / 2386b (CARNAUBA) class."""
+        # class INGÁ 19SP (low_beta)
 
-            def __init__(self, period=29.0, length=1.54):
+        # class ARIRANHA 20SB (low_beta)
+
+        class EPU50(sources.APPLE2):
+            """EPU50 class."""
+
+            def __init__(self, period=50, length=3):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "VPU29-CNB"
-                self._br = 1.304
-                self._gap = 9.7
-                self._min_gap = 9.7
-                self.vc_thickness = 0.5
-                self.vc_tolerance = 0.468
-                self._polarization = "vp"
-                self._halbach_coef = {
-                    "vp": {"a": 2.03304573, "b": -3.4431994, "c": 0.18171406},
-                }
-                self._material = "NdFeB"
+                self._label = "EPU50"
+                self._br = 1.24
+                self._gap = 10.3
+                self._min_gap = 10.3
 
-        class VPU29_CAT(sources.VPU):  # noqa: N801
-            """VPU29a (CATERETE) class."""
+        class EPU50_UVX(sources.APPLE2):  # noqa: N801
+            """EPU50 UVX class."""
 
-            def __init__(self, period=29.0, length=1.54):
+            def __init__(self, period=50, length=2.7):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "VPU29-CAT"
-                self._br = 1.304
-                self._gap = 9.7
-                self._min_gap = 9.7
-                self.vc_thickness = 0.5
-                self.vc_tolerance = 0.468
-                self._polarization = "vp"
-                self._halbach_coef = {
-                    "vp": {
-                        "a": 2.03304573,
-                        "b": -3.4431994,
-                        "c": 0.18171406,
-                    },  # must to be update
-                }
-                self._material = "NdFeB"
+                self._label = "EPU50-UVX"
+                self._br = 1.135
+                self._gap = 22
+                self._min_gap = 22

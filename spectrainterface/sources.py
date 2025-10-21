@@ -635,10 +635,11 @@ class APU(Halbach):
         self._undulator_type = "APU"
         self._phase = 0
         self._label = "APU"
-        self._gap = 8
+        self._gap = 0
         self._br = 1.34
-        self._z0 = 0
-        self._efficiency = 1
+        self._phase_coef = {
+            "hp": {"ef": 1, "z0": 0},
+        }
 
     @property
     def phase(self):
@@ -649,9 +650,14 @@ class APU(Halbach):
         """
         return self._phase
 
+    @property
+    def phase_coef(self):
+        """Undulator calibration coefficients."""
+        return self._phase_coef
+
     @phase.setter
     def phase(self, value):
-        """Phase setter."""
+        """Undulator phase setter [mm]."""
         self._phase = value
 
     def get_beff(self, gap_over_period, phase=None):
@@ -665,11 +671,11 @@ class APU(Halbach):
         """
         phase = self.phase if phase is None else phase
         br = self.br
-        z0 = self._z0
+        z0 = self.phase_coef[self.polarization]["z0"]
         a = self.halbach_coef[self.polarization]["a"]
         b = self.halbach_coef[self.polarization]["b"]
         c = self.halbach_coef[self.polarization]["c"]
-        efficiency = self.efficiency
+        efficiency = self.phase_coef[self.polarization]["ef"]
         return (
             efficiency
             * SourceFunctions.beff_function(
@@ -683,10 +689,21 @@ class APU(Halbach):
 
         Args:
             si_parameters (StorageRingParameters): StorageRingParameters
-             object.
+            object.
         """
-        b_max = self.get_beff(self.gap / self.period)
-        k_max = self.undulator_b_to_k(b_max, self.period)
+        if self.gap != 0:
+            phase0 = self.phase
+            self.phase = self.phase_coef[self.polarization]["z0"]
+            k_max = self.get_k()
+            self.phase = phase0
+        else:
+            gap_minv, gap_minh = self.calc_min_gap(si_parameters)
+            gap_min = gap_minv if self.polarization == "hp" else gap_minh
+            phase0 = self.phase
+            self.phase = self.phase_coef[self.polarization]["z0"]
+            b_max = self.get_beff(gap_min / self.period)
+            k_max = self.undulator_b_to_k(b_max, self.period)
+            self.phase = phase0
         return k_max
 
 
@@ -742,8 +759,11 @@ class APPLE2(Elliptic):
             "vp": {"a": 1.926, "b": -5.629, "c": 1.448},
             "cp": {"a": 1.356, "b": -4.875, "c": 0.947},
         }
-        self._z0 = 0
-        self._efficiency = 1
+        self._phase_coef = {
+            "hp": {"ef": 1, "z0": 0},
+            "vp": {"ef": 1, "z0": 0},
+            "cp": {"ef": 1, "z0": 0},
+        }
         self._phase = 0
         self._period = period
         self._source_length = length
@@ -758,6 +778,16 @@ class APPLE2(Elliptic):
         """
         return self._phase
 
+    @property
+    def phase_coef(self):
+        """Undulator calibration coefficients."""
+        return self._phase_coef
+
+    @phase.setter
+    def phase(self, value):
+        """Undulator phase setter [mm]."""
+        self._phase = value
+
     def get_beff(self, gap_over_period, phase=None):
         """Get peak magnetic field for a given device and gap.
 
@@ -769,11 +799,11 @@ class APPLE2(Elliptic):
         """
         phase = self.phase if phase is None else phase
         br = self.br
-        z0 = self._z0
+        z0 = self.phase_coef[self.polarization]["z0"]
         a = self.halbach_coef[self.polarization]["a"]
         b = self.halbach_coef[self.polarization]["b"]
         c = self.halbach_coef[self.polarization]["c"]
-        efficiency = self.efficiency
+        efficiency = self.phase_coef[self.polarization]["ef"]
         return (
             efficiency
             * SourceFunctions.beff_function(
@@ -975,6 +1005,7 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
         self._br = 1.71
         self._polarization = "hp"
         self._efficiency = 1.0
+        self._vc_tolerance = 0.158
         self._halbach_coef = {"hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}}
         self._material = "PrFeB"
         self._source_type = "linearundulator"
