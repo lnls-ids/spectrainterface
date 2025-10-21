@@ -1,7 +1,6 @@
 """SIRIUS parameters."""
 
 import numpy as _np
-import matplotlib.pyplot as _plt
 import mathphys.constants as _constants
 import os
 from spectrainterface.accelerator import StorageRingParameters
@@ -411,7 +410,7 @@ class SIRIUS:
                 }
                 self._gap = 13.6
                 self._min_gap = 13.6
-                self._phase = 0
+                self._phase = 52.5/2
                 self._halbach_coef = {
                     "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
                     "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
