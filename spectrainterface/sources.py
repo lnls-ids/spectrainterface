@@ -20,8 +20,8 @@ class BendingMagnet(SourceFunctions):
         """Class constructor."""
         super().__init__()
         self._b_peak = 1
-        self._source_type = "bendingmagnet"
-        self._label = "label"
+        self._source_type = 'bendingmagnet'
+        self._label = 'label'
         self._meas_fname = None
 
     @property
@@ -90,6 +90,7 @@ class BendingMagnet(SourceFunctions):
             gamma (float): Lorentz fator
             acceptance (float): slit acceptance [mrad]
             current (float): electron beam current [mA]
+
         Returns:
             float: Total power of source light [kW]
         """
@@ -118,14 +119,14 @@ class Undulator(SourceFunctions):
     def __init__(self):
         """Class constructor."""
         super().__init__()
-        self._undulator_type = "Halbach"
+        self._undulator_type = 'Halbach'
         self._gap = 0
         self._min_gap = 0
         self._br = 1.37
         self._period = 50
         self._efficiency = 1.0
-        self._label = "label"
-        self._polarization = "hp"
+        self._label = 'label'
+        self._polarization = 'hp'
         self._halbach_coef = dict()
         self._material = None
         self._vc_thickness = 0.5
@@ -266,10 +267,10 @@ class Undulator(SourceFunctions):
     @gap.setter
     def gap(self, value):
         if value < 0:
-            raise ValueError("Gap must be positive.")
+            raise ValueError('Gap must be positive.')
         if value < self._min_gap:
             raise ValueError(
-                f"Gap must be greater than minimum gap: {self.min_gap:.2f} mm"
+                f'Gap must be greater than minimum gap: {self.min_gap:.2f} mm'
             )
         else:
             self._gap = value
@@ -300,7 +301,7 @@ class Undulator(SourceFunctions):
         if value in allowed_pol:
             self._polarization = value
         else:
-            raise ValueError("Polarization not allowed.")
+            raise ValueError('Polarization not allowed.')
 
     @halbach_coef.setter
     def halbach_coef(self, value):
@@ -317,14 +318,14 @@ class Undulator(SourceFunctions):
     @add_phase_errors.setter
     def add_phase_errors(self, value):
         if type(value) is not bool:
-            raise ValueError("Add phase error must be a boolean")  # noqa: E501
+            raise ValueError('Add phase error must be a boolean')  # noqa: E501
         else:
             self._add_phase_errors = value
 
     @use_recovery_params.setter
     def use_recovery_params(self, value):
         if type(value) is not bool:
-            raise ValueError("Use recovery params must be a boolean")  # noqa: E501
+            raise ValueError('Use recovery params must be a boolean')  # noqa: E501
         else:
             self._use_rec_params = value
 
@@ -338,9 +339,9 @@ class Undulator(SourceFunctions):
             _type_: _description_
         """
         br = self.br
-        a = self.halbach_coef[self.polarization]["a"]
-        b = self.halbach_coef[self.polarization]["b"]
-        c = self.halbach_coef[self.polarization]["c"]
+        a = self.halbach_coef[self.polarization]['a']
+        b = self.halbach_coef[self.polarization]['b']
+        c = self.halbach_coef[self.polarization]['c']
         efficiency = self.efficiency
 
         return efficiency * SourceFunctions.beff_function(
@@ -368,7 +369,7 @@ class Undulator(SourceFunctions):
         pos = self.source_length / 2
 
         if si_parameters is None:
-            raise ValueError("Accelerator must be selected.")
+            raise ValueError('Accelerator must be selected.')
         else:
             acc = si_parameters
 
@@ -386,7 +387,7 @@ class Undulator(SourceFunctions):
     def calc_max_length(
         self,
         si_parameters=None,
-        section="SB",
+        section='SB',
         vc_thickness=None,
         vc_tolerance=None,
     ):
@@ -415,12 +416,12 @@ class Undulator(SourceFunctions):
         if si_parameters is None:
             acc = StorageRingParameters()
             acc.set_bsc_with_ivu18()
-            if section == "sb" or section == "sp":
+            if section == 'sb' or section == 'sp':
                 acc.set_low_beta_section()
-            elif section == "sa":
+            elif section == 'sa':
                 acc.set_high_beta_section()
             else:
-                raise ValueError("Section not defined.")
+                raise ValueError('Section not defined.')
         else:
             acc = si_parameters
 
@@ -449,7 +450,7 @@ class Undulator(SourceFunctions):
              object.
         """
         gap_minv, gap_minh = self.calc_min_gap(si_parameters)
-        gap_min = gap_minv if self.polarization == "hp" else gap_minh
+        gap_min = gap_minv if self.polarization == 'hp' else gap_minh
         b_max = self.get_beff(gap_min / self.period)
         k_max = self.undulator_b_to_k(b_max, self.period)
         return k_max
@@ -473,7 +474,9 @@ class Undulator(SourceFunctions):
         n = _np.arange(1, h_max, 2)
 
         k_max = self.calc_max_k(si_parameters)
-        ks = self.calc_k_target(si_parameters.gamma, n, self.period, target_energy)
+        ks = self.calc_k_target(
+            si_parameters.gamma, n, self.period, target_energy
+        )
         isnan = _np.isnan(ks)
         idcs_nan = _np.argwhere(~isnan)
         idcs_max = _np.argwhere(ks < k_max)
@@ -487,9 +490,9 @@ class Undulator(SourceFunctions):
             k=kres,
             period=self.period,
             br=self.br,
-            a=self.halbach_coef["hp"]["a"],
-            b=self.halbach_coef["hp"]["b"],
-            c=self.halbach_coef["hp"]["c"],
+            a=self.halbach_coef['hp']['a'],
+            b=self.halbach_coef['hp']['b'],
+            c=self.halbach_coef['hp']['c'],
         )
         harms = n[idcs]
         return _np.array([harms, gaps]).T
@@ -517,7 +520,7 @@ class Undulator(SourceFunctions):
         Returns:
             float: br value
         """
-        b_max = {"hp": b_max[0], "vp": b_max[1], "cp": b_max[2]}
+        b_max = {'hp': b_max[0], 'vp': b_max[1], 'cp': b_max[2]}
 
         br0 = self._br
         gap0 = self._gap
@@ -557,18 +560,22 @@ class Undulator(SourceFunctions):
             gamma (float): Lorentz fator
             b (float): Field amplitude [T]
             current (float): electron beam current [mA]
+
         Returns:
             float: Total power of source light [kW]
         """
-
-        b = _np.sqrt(2 * b**2) if self._polarization == "cp" else b
+        b = _np.sqrt(2 * b**2) if self._polarization == 'cp' else b
 
         const = ((ECHARGE**4) * (gamma**2)) / (
             12 * PI * VACUUM_PERMITTICITY * (EMASS**2) * (LSPEED**2)
         )
 
         total_power = (
-            const * (b**2) * self._source_length * (current * 1e-3) / (1e3 * ECHARGE)
+            const
+            * (b**2)
+            * self._source_length
+            * (current * 1e-3)
+            / (1e3 * ECHARGE)
         )
 
         return total_power
@@ -589,15 +596,15 @@ class Wiggler(Undulator):
             length (float, optional): Undulator length [m]
         """
         super().__init__()
-        self._undulator_type = "wiggler"
-        self._label = "Wiggler"
+        self._undulator_type = 'wiggler'
+        self._label = 'Wiggler'
         self._br = 1.37
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 1
-        self._halbach_coef = {"hp": {"a": 1.732, "b": -3.238, "c": 0.0}}
+        self._halbach_coef = {'hp': {'a': 1.732, 'b': -3.238, 'c': 0.0}}
         self._period = period
         self._source_length = length
-        self._source_type = "wiggler"
+        self._source_type = 'wiggler'
 
 
 class Halbach(Undulator):
@@ -615,15 +622,15 @@ class Halbach(Undulator):
             length (float, optional): Undulator length [m]
         """
         super().__init__()
-        self._undulator_type = "Halbach"
-        self._label = "Halbach"
+        self._undulator_type = 'Halbach'
+        self._label = 'Halbach'
         self._br = 1.37
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 1
-        self._halbach_coef = {"hp": {"a": 1.732, "b": -3.238, "c": 0.0}}
+        self._halbach_coef = {'hp': {'a': 1.732, 'b': -3.238, 'c': 0.0}}
         self._period = period
         self._source_length = length
-        self._source_type = "linearundulator"
+        self._source_type = 'linearundulator'
 
 
 class APU(Halbach):
@@ -632,13 +639,13 @@ class APU(Halbach):
     def __init__(self, period=22, length=1):
         """Class constructor."""
         super().__init__(period, length)
-        self._undulator_type = "APU"
+        self._undulator_type = 'APU'
         self._phase = 0
-        self._label = "APU"
+        self._label = 'APU'
         self._gap = 0
         self._br = 1.34
         self._phase_coef = {
-            "hp": {"ef": 1, "z0": 0},
+            'hp': {'ef': 1, 'z0': 0},
         }
 
     @property
@@ -671,11 +678,11 @@ class APU(Halbach):
         """
         phase = self.phase if phase is None else phase
         br = self.br
-        z0 = self.phase_coef[self.polarization]["z0"]
-        a = self.halbach_coef[self.polarization]["a"]
-        b = self.halbach_coef[self.polarization]["b"]
-        c = self.halbach_coef[self.polarization]["c"]
-        efficiency = self.phase_coef[self.polarization]["ef"]
+        z0 = self.phase_coef[self.polarization]['z0']
+        a = self.halbach_coef[self.polarization]['a']
+        b = self.halbach_coef[self.polarization]['b']
+        c = self.halbach_coef[self.polarization]['c']
+        efficiency = self.phase_coef[self.polarization]['ef']
         return (
             efficiency
             * SourceFunctions.beff_function(
@@ -693,14 +700,14 @@ class APU(Halbach):
         """
         if self.gap != 0:
             phase0 = self.phase
-            self.phase = self.phase_coef[self.polarization]["z0"]
+            self.phase = self.phase_coef[self.polarization]['z0']
             k_max = self.get_k()
             self.phase = phase0
         else:
             gap_minv, gap_minh = self.calc_min_gap(si_parameters)
-            gap_min = gap_minv if self.polarization == "hp" else gap_minh
+            gap_min = gap_minv if self.polarization == 'hp' else gap_minh
             phase0 = self.phase
-            self.phase = self.phase_coef[self.polarization]["z0"]
+            self.phase = self.phase_coef[self.polarization]['z0']
             b_max = self.get_beff(gap_min / self.period)
             k_max = self.undulator_b_to_k(b_max, self.period)
             self.phase = phase0
@@ -718,7 +725,7 @@ class Elliptic(Undulator):
         """Class consteuctor."""
         super().__init__()
         self._fields_ratio = 1
-        self._source_type = "ellipticundulator"
+        self._source_type = 'ellipticundulator'
 
     @property
     def fields_ratio(self):
@@ -749,25 +756,25 @@ class APPLE2(Elliptic):
             length (float, optional): Undulator length [m].
         """
         super().__init__()
-        self._undulator_type = "APPLE2"
-        self._label = "APPLE-II"
+        self._undulator_type = 'APPLE2'
+        self._label = 'APPLE-II'
         self._br = 1.37
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 1
         self._halbach_coef = {
-            "hp": {"a": 1.732, "b": -3.238, "c": 0.0},
-            "vp": {"a": 1.926, "b": -5.629, "c": 1.448},
-            "cp": {"a": 1.356, "b": -4.875, "c": 0.947},
+            'hp': {'a': 1.732, 'b': -3.238, 'c': 0.0},
+            'vp': {'a': 1.926, 'b': -5.629, 'c': 1.448},
+            'cp': {'a': 1.356, 'b': -4.875, 'c': 0.947},
         }
         self._phase_coef = {
-            "hp": {"ef": 1, "z0": 0},
-            "vp": {"ef": 1, "z0": 0},
-            "cp": {"ef": 1, "z0": 0},
+            'hp': {'ef': 1, 'z0': 0},
+            'vp': {'ef': 1, 'z0': 0},
+            'cp': {'ef': 1, 'z0': 0},
         }
         self._phase = 0
         self._period = period
         self._source_length = length
-        self._source_type = "ellipticundulator"
+        self._source_type = 'ellipticundulator'
 
     @property
     def phase(self):
@@ -799,11 +806,11 @@ class APPLE2(Elliptic):
         """
         phase = self.phase if phase is None else phase
         br = self.br
-        z0 = self.phase_coef[self.polarization]["z0"]
-        a = self.halbach_coef[self.polarization]["a"]
-        b = self.halbach_coef[self.polarization]["b"]
-        c = self.halbach_coef[self.polarization]["c"]
-        efficiency = self.phase_coef[self.polarization]["ef"]
+        z0 = self.phase_coef[self.polarization]['z0']
+        a = self.halbach_coef[self.polarization]['a']
+        b = self.halbach_coef[self.polarization]['b']
+        c = self.halbach_coef[self.polarization]['c']
+        efficiency = self.phase_coef[self.polarization]['ef']
         return (
             efficiency
             * SourceFunctions.beff_function(
@@ -819,8 +826,14 @@ class APPLE2(Elliptic):
             si_parameters (StorageRingParameters): StorageRingParameters
              object.
         """
-        b_max = self.get_beff(self.gap / self.period)
-        k_max = self.undulator_b_to_k(b_max, self.period)
+        if self._gap != 0:
+            b_max = self.get_beff(self.gap / self.period)
+            k_max = self.undulator_b_to_k(b_max, self.period)
+        else:
+            gap_minv, gap_minh = self.calc_min_gap(si_parameters)
+            gap_min = gap_minv if self.polarization == 'hp' else gap_minh
+            b_max = self.get_beff(gap_min / self.period)
+            k_max = self.undulator_b_to_k(b_max, self.period)
         return k_max
 
 
@@ -839,18 +852,18 @@ class Hybrid_Nd(Undulator):
             length (float, optional): Undulator length [m]
         """
         super().__init__()
-        self._undulator_type = "Hybrid"
-        self._label = "Hybrid (Nd)"
+        self._undulator_type = 'Hybrid'
+        self._label = 'Hybrid (Nd)'
         self._br = 1.24
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 1
         self._halbach_coef = {
-            "hp": {"a": 2.552, "b": -4.431, "c": 1.101},
-            "vp": {"a": 2.552, "b": -4.431, "c": 1.101},
+            'hp': {'a': 2.552, 'b': -4.431, 'c': 1.101},
+            'vp': {'a': 2.552, 'b': -4.431, 'c': 1.101},
         }
         self._period = period
         self._source_length = length
-        self._source_type = "linearundulator"
+        self._source_type = 'linearundulator'
 
 
 class VPU(Hybrid_Nd):
@@ -859,11 +872,11 @@ class VPU(Hybrid_Nd):
     def __init__(self, period=29, length=1.5):
         """Class constructor."""
         super().__init__(period, length)
-        self._undulator_type = "VPU"
-        self._material = "NdFeB"
-        self._polarization = "vp"
-        self._source_type = "verticalundulator"
-        self._label = "VPU"
+        self._undulator_type = 'VPU'
+        self._material = 'NdFeB'
+        self._polarization = 'vp'
+        self._source_type = 'verticalundulator'
+        self._label = 'VPU'
         self._gap = 9.7
 
 
@@ -882,15 +895,15 @@ class Hybrid_SmCo(Undulator):
             length (float, optional): Undulator length [m]
         """
         super().__init__()
-        self._undulator_type = "Hybrid"
-        self._label = "Hybrid (SmCo)"
+        self._undulator_type = 'Hybrid'
+        self._label = 'Hybrid (SmCo)'
         self._br = 1.24
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 1
-        self._halbach_coef = {"hp": {"a": 2.789, "b": -4.853, "c": 1.550}}
+        self._halbach_coef = {'hp': {'a': 2.789, 'b': -4.853, 'c': 1.550}}
         self._period = period
         self._source_length = length
-        self._source_type = "linearundulator"
+        self._source_type = 'linearundulator'
 
 
 class IVU_NdFeB(Hybrid_Nd):
@@ -908,7 +921,7 @@ class IVU_NdFeB(Hybrid_Nd):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._label = "IVU (Nd)"
+        self._label = 'IVU (Nd)'
         self.vc_thickness = 0
         self.vc_tolerance = 0.2
 
@@ -928,13 +941,13 @@ class CPMU_Nd(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU"
-        self._label = "CPMU (Nd)"
+        self._undulator_type = 'CPMU'
+        self._label = 'CPMU (Nd)'
         self._br = 1.5
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 0.9
-        self._halbach_coef = {"hp": {"a": 2.268, "b": -3.895, "c": 0.554}}
-        self._source_type = "linearundulator"
+        self._halbach_coef = {'hp': {'a': 2.268, 'b': -3.895, 'c': 0.554}}
+        self._source_type = 'linearundulator'
 
 
 class CPMU_PrNd(IVU_NdFeB):
@@ -952,13 +965,13 @@ class CPMU_PrNd(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU"
-        self._label = "CPMU (PrNd)"
+        self._undulator_type = 'CPMU'
+        self._label = 'CPMU (PrNd)'
         self._br = 1.62
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 0.9
-        self._halbach_coef = {"hp": {"a": 2.132, "b": -3.692, "c": 0.391}}
-        self._source_type = "linearundulator"
+        self._halbach_coef = {'hp': {'a': 2.132, 'b': -3.692, 'c': 0.391}}
+        self._source_type = 'linearundulator'
 
 
 class CPMU_Pr(IVU_NdFeB):
@@ -976,13 +989,13 @@ class CPMU_Pr(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU"
-        self._label = "CPMU (Pr)"
+        self._undulator_type = 'CPMU'
+        self._label = 'CPMU (Pr)'
         self._br = 1.67
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 0.9
-        self._halbach_coef = {"hp": {"a": 2.092, "b": -3.655, "c": 0.376}}
-        self._source_type = "linearundulator"
+        self._halbach_coef = {'hp': {'a': 2.092, 'b': -3.655, 'c': 0.376}}
+        self._source_type = 'linearundulator'
 
 
 class CPMU_PrFeB_HEPS(IVU_NdFeB):
@@ -1000,15 +1013,17 @@ class CPMU_PrFeB_HEPS(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU"
-        self._label = "CPMU (PrFeB)"
+        self._undulator_type = 'CPMU'
+        self._label = 'CPMU (PrFeB)'
         self._br = 1.71
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 1.0
         self._vc_tolerance = 0.158
-        self._halbach_coef = {"hp": {"a": 1.797533, "b": -2.87665627, "c": -0.4065176}}
-        self._material = "PrFeB"
-        self._source_type = "linearundulator"
+        self._halbach_coef = {
+            'hp': {'a': 1.797533, 'b': -2.87665627, 'c': -0.4065176}
+        }
+        self._material = 'PrFeB'
+        self._source_type = 'linearundulator'
 
 
 class CPMU_PrFeB_HEPS_model(IVU_NdFeB):
@@ -1026,13 +1041,13 @@ class CPMU_PrFeB_HEPS_model(IVU_NdFeB):
             length (float, optional): Undulator length [m]
         """
         super().__init__(period, length)
-        self._undulator_type = "CPMU"
-        self._label = "CPMU (PrFeB)"
+        self._undulator_type = 'CPMU'
+        self._label = 'CPMU (PrFeB)'
         self._br = 1.689
-        self._polarization = "hp"
+        self._polarization = 'hp'
         self._efficiency = 1.0
         self._halbach_coef = {
-            "hp": {"a": 2.42609676, "b": -4.20036671, "c": 0.79735306}
+            'hp': {'a': 2.42609676, 'b': -4.20036671, 'c': 0.79735306}
         }
-        self._material = "PrFeB"
-        self._source_type = "linearundulator"
+        self._material = 'PrFeB'
+        self._source_type = 'linearundulator'

@@ -18,55 +18,55 @@ class SIRIUS:
         """SIRIUS Storage Ring."""
 
         extraction_dict = {
-            "low_beta": {
-                "betax": 1.499,
-                "betay": 1.435,
-                "alphax": 0,
-                "alphay": 0,
-                "etax": 0,
-                "etay": 0,
-                "etapx": 0,
-                "etapy": 0,
+            'low_beta': {
+                'betax': 1.499,
+                'betay': 1.435,
+                'alphax': 0,
+                'alphay': 0,
+                'etax': 0,
+                'etay': 0,
+                'etapx': 0,
+                'etapy': 0,
             },
-            "high_beta": {
-                "betax": 17.20,
-                "betay": 3.605,
-                "alphax": 0,
-                "alphay": 0,
-                "etax": 0,
-                "etay": 0,
-                "etapx": 0,
-                "etapy": 0,
+            'high_beta': {
+                'betax': 17.20,
+                'betay': 3.605,
+                'alphax': 0,
+                'alphay': 0,
+                'etax': 0,
+                'etay': 0,
+                'etapx': 0,
+                'etapy': 0,
             },
-            "bc": {
-                "betax": 0.338,
-                "betay": 5.356,
-                "alphax": 0.003,
-                "alphay": 0,
-                "etax": 0.002,
-                "etay": 0,
-                "etapx": 0,
-                "etapy": 0,
+            'bc': {
+                'betax': 0.338,
+                'betay': 5.356,
+                'alphax': 0.003,
+                'alphay': 0,
+                'etax': 0.002,
+                'etay': 0,
+                'etapx': 0,
+                'etapy': 0,
             },
-            "b1": {
-                "betax": 1.660,
-                "betay": 26.820,
-                "alphax": 2.908,
-                "alphay": -6.564,
-                "etax": 0.122e-3,
-                "etay": 0,
-                "etapx": 3.211e-3,
-                "etapy": 0,
+            'b1': {
+                'betax': 1.660,
+                'betay': 26.820,
+                'alphax': 2.908,
+                'alphay': -6.564,
+                'etax': 0.122e-3,
+                'etay': 0,
+                'etapx': 3.211e-3,
+                'etapy': 0,
             },
-            "b2": {
-                "betax": 1.265,
-                "betay": 25.5,
-                "alphax": 1.94,
-                "alphay": 0,
-                "etax": 0.025,
-                "etay": 0,
-                "etapx": 0,
-                "etapy": 0,
+            'b2': {
+                'betax': 1.265,
+                'betay': 25.5,
+                'alphax': 1.94,
+                'alphay': 0,
+                'etax': 0.025,
+                'etay': 0,
+                'etapx': 0,
+                'etapy': 0,
             },
         }
 
@@ -87,7 +87,7 @@ class SIRIUS:
             self._etay = 0  # [m]
             self._etapx = 0
             self._etapy = 0
-            self._extraction_point = "low_beta"
+            self._extraction_point = 'low_beta'
 
             self._zero_emittance = False
             self._zero_energy_spread = False
@@ -151,22 +151,22 @@ class SIRIUS:
         def set_extraction_point(self, value):
             """Set extraction point."""
             self._extraction_point = value
-            self.betax = self.extraction_dict[value]["betax"]
-            self.betay = self.extraction_dict[value]["betay"]
-            self.alphax = self.extraction_dict[value]["alphax"]
-            self.alphay = self.extraction_dict[value]["alphay"]
-            self.etax = self.extraction_dict[value]["etax"]
-            self.etay = self.extraction_dict[value]["etay"]
-            self.etapx = self.extraction_dict[value]["etapx"]
-            self.etapy = self.extraction_dict[value]["etapy"]
+            self.betax = self.extraction_dict[value]['betax']
+            self.betay = self.extraction_dict[value]['betay']
+            self.alphax = self.extraction_dict[value]['alphax']
+            self.alphay = self.extraction_dict[value]['alphay']
+            self.etax = self.extraction_dict[value]['etax']
+            self.etay = self.extraction_dict[value]['etay']
+            self.etapx = self.extraction_dict[value]['etapx']
+            self.etapy = self.extraction_dict[value]['etapy']
             self._update_bsc()
 
         def _update_bsc(self):
-            if self.extraction_point in ["low_beta", "high_beta"]:
-                if self.extraction_point == "low_beta":
+            if self.extraction_point in ['low_beta', 'high_beta']:
+                if self.extraction_point == 'low_beta':
                     self._bsc0_h = self._bsc0_h_lowbeta
                     self._bsc0_v = self._bsc0_v_lowbeta
-                elif self.extraction_point == "high_beta":
+                elif self.extraction_point == 'high_beta':
                     self._bsc0_h = self._bsc0_h_highbeta
                     self._bsc0_v = self._bsc0_v_highbeta
 
@@ -187,8 +187,8 @@ class SIRIUS:
                 """Class constructor."""
                 super().__init__()
                 self._b_peak = 0.5642
-                self._label = "B1"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_b1.txt"
+                self._label = 'B1'
+                self._meas_fname = REPOS_PATH + '/files/sirius/field_b1.txt'
 
         class B2(sources.BendingMagnet):  # noqa: N801
             """B2 class.
@@ -208,8 +208,8 @@ class SIRIUS:
                 """Class constructor."""
                 super().__init__()
                 self._b_peak = 0.5665
-                self._label = "B2"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_b2.txt"
+                self._label = 'B2'
+                self._meas_fname = REPOS_PATH + '/files/sirius/field_b2.txt'
 
         class BC(sources.BendingMagnet):  # noqa: N801
             """BC class.
@@ -230,8 +230,8 @@ class SIRIUS:
                 """Class constructor."""
                 super().__init__()
                 self._b_peak = 3.2
-                self._label = "BC"
-                self._meas_fname = REPOS_PATH + "/files/sirius/field_bc.txt"
+                self._label = 'BC'
+                self._meas_fname = REPOS_PATH + '/files/sirius/field_bc.txt'
 
         class CPMU15_TIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
             """Cpmu PrFeB Undulator class (HEPS) (TIMBÓ Beamline).
@@ -251,8 +251,8 @@ class SIRIUS:
                     length (float, optional): Undulator length [m]
                 """
                 super().__init__(period, length)
-                self._undulator_type = "CPMU"
-                self._label = "CPMU15-TIB"
+                self._undulator_type = 'CPMU'
+                self._label = 'CPMU15-TIB'
                 self._gap = 3.8
                 self._min_gap = 3.6  # VCA
                 self.vc_tolerance = 0.210
@@ -275,8 +275,8 @@ class SIRIUS:
                     length (float, optional): Undulator length [m]
                 """
                 super().__init__(period, length)
-                self._undulator_type = "CPMU"
-                self._label = "CPMU13-HIB"
+                self._undulator_type = 'CPMU'
+                self._label = 'CPMU13-HIB'
                 self._gap = 4.84
                 self._min_gap = 4.84
                 self.vc_tolerance = 0.160
@@ -294,17 +294,17 @@ class SIRIUS:
             def __init__(self, period=29.0, length=1.54):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "VPU29-CNB"
+                self._label = 'VPU29-CNB'
                 self._br = 1.304
                 self._gap = 9.7
                 self._min_gap = 9.7
                 self.vc_thickness = 0.5
                 self.vc_tolerance = 0.468
-                self._polarization = "vp"
+                self._polarization = 'vp'
                 self._halbach_coef = {
-                    "vp": {"a": 2.03304573, "b": -3.4431994, "c": 0.18171406},
+                    'vp': {'a': 2.03304573, 'b': -3.4431994, 'c': 0.18171406},
                 }
-                self._material = "NdFeB"
+                self._material = 'NdFeB'
 
         class VPU29_CAT(sources.VPU):  # noqa: N801
             """VPU29a (CATERETE Beamline) class.
@@ -319,21 +319,21 @@ class SIRIUS:
             def __init__(self, period=29.0, length=1.54):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "VPU29-CAT"
+                self._label = 'VPU29-CAT'
                 self._br = 1.304
                 self._gap = 9.7
                 self._min_gap = 9.7
                 self.vc_thickness = 0.5
                 self.vc_tolerance = 0.468
-                self._polarization = "vp"
+                self._polarization = 'vp'
                 self._halbach_coef = {
-                    "vp": {
-                        "a": 2.03304573,
-                        "b": -3.4431994,
-                        "c": 0.18171406,
+                    'vp': {
+                        'a': 2.03304573,
+                        'b': -3.4431994,
+                        'c': 0.18171406,
                     },  # must to be update
                 }
-                self._material = "NdFeB"
+                self._material = 'NdFeB'
 
         class IVU18_EMA(sources.IVU_NdFeB):  # noqa: N801
             """IVU18-2 class (EMA beamline).
@@ -348,17 +348,17 @@ class SIRIUS:
             def __init__(self, period=18.5, length=2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "IVU18-EMA"
+                self._label = 'IVU18-EMA'
                 self._br = 1.27
                 self._gap = 4.3
                 self._min_gap = 4.3
                 self.vc_thickness = 0
                 self.vc_tolerance = 0.2501
-                self._polarization = "hp"
+                self._polarization = 'hp'
                 self._halbach_coef = {
-                    "hp": {"a": 2.26223181, "b": -3.69776472, "c": 0.32867209},
+                    'hp': {'a': 2.26223181, 'b': -3.69776472, 'c': 0.32867209},
                 }
-                self._material = "NdFeB"
+                self._material = 'NdFeB'
 
         class APU22_MNC(sources.APU):  # noqa: N801
             """APU22 1991b class (MANACÁ Beamline).
@@ -373,12 +373,12 @@ class SIRIUS:
             def __init__(self, period=22, length=1.2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "APU22-MNC"
+                self._label = 'APU22-MNC'
                 self._gap = 8
                 self._min_gap = 8
                 self._br = 1.34
                 self._phase_coef = {
-                    "hp": {"ef": 1.0022029, "z0": -0.300609},
+                    'hp': {'ef': 1.0022029, 'z0': -0.300609},
                 }
 
         class DELTA52_SAB(sources.Elliptic):  # noqa: N801
@@ -399,27 +399,27 @@ class SIRIUS:
                     length (float, optional): Undulator length [m].
                 """
                 super().__init__()
-                self._undulator_type = "DELTA"
-                self._label = "DELTA52-SAB"
+                self._undulator_type = 'DELTA'
+                self._label = 'DELTA52-SAB'
                 self._br = 1.39
-                self._polarization = "hp"
+                self._polarization = 'hp'
                 self._phase_coef = {
-                    "hp": {"ef": 1.00566, "z0": 25.89527},
-                    "vp": {"ef": 0.99032, "z0": 26.08821},
-                    "cp": {"ef": 0.71497, "z0": 25.89593},
+                    'hp': {'ef': 1.00566, 'z0': 25.89527},
+                    'vp': {'ef': 0.99032, 'z0': 26.08821},
+                    'cp': {'ef': 0.71497, 'z0': 25.89593},
                 }
                 self._gap = 13.6
                 self._min_gap = 13.6
-                self._phase = 52.5/2
+                self._phase = 52.5 / 2
                 self._halbach_coef = {
-                    "hp": {"a": 1.696, "b": -2.349, "c": -0.658},
-                    "vp": {"a": 1.696, "b": -2.349, "c": -0.658},
-                    "cp": {"a": 1.696, "b": -2.349, "c": -0.658},
+                    'hp': {'a': 1.696, 'b': -2.349, 'c': -0.658},
+                    'vp': {'a': 1.696, 'b': -2.349, 'c': -0.658},
+                    'cp': {'a': 1.696, 'b': -2.349, 'c': -0.658},
                 }
-                self._material = "NdFeB"
+                self._material = 'NdFeB'
                 self._period = period
                 self._source_length = length
-                self._source_type = "ellipticundulator"
+                self._source_type = 'ellipticundulator'
 
             @property
             def phase(self):
@@ -466,7 +466,7 @@ class SIRIUS:
                 pos = self.source_length / 2
 
                 if si_parameters is None:
-                    raise ValueError("Accelerator must be selected")
+                    raise ValueError('Accelerator must be selected')
                 else:
                     acc = si_parameters
 
@@ -492,11 +492,11 @@ class SIRIUS:
                 """
                 phase = self.phase if phase is None else phase
                 br = self.br
-                z0 = self.phase_coef[self.polarization]["z0"]
-                a = self.halbach_coef[self.polarization]["a"]
-                b = self.halbach_coef[self.polarization]["b"]
-                c = self.halbach_coef[self.polarization]["c"]
-                efficiency = self.phase_coef[self.polarization]["ef"]
+                z0 = self.phase_coef[self.polarization]['z0']
+                a = self.halbach_coef[self.polarization]['a']
+                b = self.halbach_coef[self.polarization]['b']
+                c = self.halbach_coef[self.polarization]['c']
+                efficiency = self.phase_coef[self.polarization]['ef']
                 return (
                     efficiency
                     * self.beff_function(
@@ -514,14 +514,16 @@ class SIRIUS:
                 """
                 if self.gap != 0:
                     phase0 = self.phase
-                    self.phase = self.phase_coef[self.polarization]["z0"]
+                    self.phase = self.phase_coef[self.polarization]['z0']
                     k_max = self.get_k()
                     self.phase = phase0
                 else:
                     gap_minv, gap_minh = self.calc_min_gap(si_parameters)
-                    gap_min = gap_minv if self.polarization == "hp" else gap_minh
+                    gap_min = (
+                        gap_minv if self.polarization == 'hp' else gap_minh
+                    )
                     phase0 = self.phase
-                    self.phase = self.phase_coef[self.polarization]["z0"]
+                    self.phase = self.phase_coef[self.polarization]['z0']
                     b_max = self.get_beff(gap_min / self.period)
                     k_max = self.undulator_b_to_k(b_max, self.period)
                     self.phase = phase0
@@ -540,24 +542,24 @@ class SIRIUS:
             def __init__(self, period=44, length=3.4):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._material = "NdFeB"
-                self._label = "UE44-IPE"
+                self._material = 'NdFeB'
+                self._label = 'UE44-IPE'
                 self._gap = 11.4
                 self._min_gap = 11.4
                 self._br = 1.19  # adjusted to get (ky, kx) = (3.65,2.62) ~ (3.5, 2.7) (mr = 1.24 from the paper)  # noqa: E501
                 self._halbach_coef = {  #
-                    "hp": {"a": 1.4934, "b": -2.5933, "c": -0.4855},
-                    "vp": {"a": 2.0362, "b": -5.4204, "c": 1.1888},
-                    "cp": {"a": 1.9306, "b": -4.5455, "c": 0.8731},
-                    "lp54y": {"a": 1.2027, "b": -3.7715, "c": 0.3518},
-                    "lp54x": {"a": 1.3622, "b": -4.5694, "c": 0.7927},
+                    'hp': {'a': 1.4934, 'b': -2.5933, 'c': -0.4855},
+                    'vp': {'a': 2.0362, 'b': -5.4204, 'c': 1.1888},
+                    'cp': {'a': 1.9306, 'b': -4.5455, 'c': 0.8731},
+                    'lp54y': {'a': 1.2027, 'b': -3.7715, 'c': 0.3518},
+                    'lp54x': {'a': 1.3622, 'b': -4.5694, 'c': 0.7927},
                 }
                 self._phase_coef = {
-                    "hp": {"ef": 1.0205, "z0": -0.0280},
-                    "vp": {"ef": 0.9933, "z0": -0.0620},
-                    "cp": {"ef": 0.9801, "z0": 0.0143},
-                    "lp54y": {"ef": 1.0005, "z0": -0.0382},
-                    "lp54x": {"ef": 0.9951, "z0": -0.0367},
+                    'hp': {'ef': 1.0205, 'z0': -0.0280},
+                    'vp': {'ef': 0.9933, 'z0': -0.0620},
+                    'cp': {'ef': 0.9801, 'z0': 0.0143},
+                    'lp54y': {'ef': 1.0005, 'z0': -0.0382},
+                    'lp54x': {'ef': 0.9951, 'z0': -0.0367},
                 }
 
         class APU58_IPE(sources.APU):  # noqa: N801
@@ -573,7 +575,7 @@ class SIRIUS:
             def __init__(self, period=58, length=1):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "APU58-IPE"
+                self._label = 'APU58-IPE'
                 self._gap = 15.8
                 self._min_gap = 15.8
                 self._br = 1.34
@@ -593,17 +595,17 @@ class SIRIUS:
             def __init__(self, period=18.5, length=2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "IVU18-PNR"
+                self._label = 'IVU18-PNR'
                 self._br = 1.27
                 self._gap = 4.3
                 self._min_gap = 4.3
                 self._vc_thickness = 0
                 self._vc_tolerance = 0.2501
-                self._polarization = "hp"
+                self._polarization = 'hp'
                 self._halbach_coef = {
-                    "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
+                    'hp': {'a': 2.29044642, 'b': -3.71638253, 'c': 0.34898287},
                 }
-                self._material = "NdFeB"
+                self._material = 'NdFeB'
 
         # class SUSSUARANA 15SP (low_beta)
 
@@ -623,12 +625,12 @@ class SIRIUS:
             def __init__(self, period=22, length=1.2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "APU22-SPU"
+                self._label = 'APU22-SPU'
                 self._gap = 8
                 self._min_gap = 8
                 self._br = 1.34
                 self._phase_coef = {
-                    "hp": {"ef": 0.9981, "z0": 0.321},
+                    'hp': {'ef': 0.9981, 'z0': 0.321},
                 }
 
         class CPMU14_QRI(sources.CPMU_PrFeB_HEPS):  # noqa: N801
@@ -649,8 +651,8 @@ class SIRIUS:
                     length (float, optional): Undulator length [m]
                 """
                 super().__init__(period, length)
-                self._undulator_type = "CPMU"
-                self._label = "CPMU14-QRI"
+                self._undulator_type = 'CPMU'
+                self._label = 'CPMU14-QRI'
                 self._gap = 3.8
                 self._min_gap = 3.6  # VCA
                 self.vc_tolerance = 0.210
@@ -665,7 +667,7 @@ class SIRIUS:
             def __init__(self, period=50, length=3):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "EPU50"
+                self._label = 'EPU50'
                 self._br = 1.24
                 self._gap = 10.3
                 self._min_gap = 10.3
@@ -676,7 +678,29 @@ class SIRIUS:
             def __init__(self, period=50, length=2.7):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "EPU50-UVX"
+                self._label = 'EPU50-UVX'
                 self._br = 1.135
                 self._gap = 22
                 self._min_gap = 22
+                self._halbach_coef = {
+                    'hp': {'a': 1.5980, 'b': -3.0639, 'c': -0.0440},
+                    'vp': {'a': 1.5222, 'b': -4.3649, 'c': 0.4080},
+                    'cp': {'a': 1.4714, 'b': -3.7903, 'c': 0.2800},
+                }
+
+            def get_beff(self, gap_over_period):
+                """Get peak magnetic field for a given device and gap.
+
+                Args:
+                    gap_over_period (float): gap normalized by the undulator period.
+
+                Returns:
+                    _type_: _description_
+                """
+                br = self.br
+                a = self.halbach_coef[self.polarization]['a']
+                b = self.halbach_coef[self.polarization]['b']
+                c = self.halbach_coef[self.polarization]['c']
+                return self.beff_function(
+                    gap_over_period=gap_over_period, br=br, a=a, b=b, c=c
+                )

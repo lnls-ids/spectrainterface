@@ -1,7 +1,6 @@
 """Storage ring parameters."""
 
 import numpy as _np
-import matplotlib.pyplot as _plt
 import mathphys.constants as _constants
 
 ECHARGE = _constants.elementary_charge
@@ -12,23 +11,22 @@ class StorageRingParameters:
     """Class with storage ring parameters for radiation calculations."""
 
     extraction_dict = {
-        "default": {
-            "betax": 1.499,
-            "betay": 1.435,
-            "alphax": 0,
-            "alphay": 0,
-            "etax": 0,
-            "etay": 0,
-            "etapx": 0,
-            "etapy": 0,
-            "bsc0_h": 3.4529,
-            "bsc0_v": 1.5588,
+        'default': {
+            'betax': 1.499,
+            'betay': 1.435,
+            'alphax': 0,
+            'alphay': 0,
+            'etax': 0,
+            'etay': 0,
+            'etapx': 0,
+            'etapy': 0,
+            'bsc0_h': 3.4529,
+            'bsc0_v': 1.5588,
         },
     }
 
     def __init__(self):
         """Class constructor."""
-
         self._energy = 3  # [GeV]
         self._current = 100  # [mA]
         self._sigmaz = 2.9  # [mm]
@@ -44,7 +42,7 @@ class StorageRingParameters:
         self._etay = 0  # [m]
         self._etapx = 0
         self._etapy = 0
-        self._extraction_point = "default"
+        self._extraction_point = 'default'
 
         self._zero_emittance = False
         self._zero_energy_spread = False
@@ -388,37 +386,37 @@ class StorageRingParameters:
     @zero_emittance.setter
     def zero_emittance(self, value):
         if type(value) is not bool:
-            raise ValueError("Argument must be bool!")
+            raise ValueError('Argument must be bool!')
         else:
             self._zero_emittance = value
 
     @zero_energy_spread.setter
     def zero_energy_spread(self, value):
         if type(value) is not bool:
-            raise ValueError("Argument must be bool!")
+            raise ValueError('Argument must be bool!')
         else:
             self._zero_energy_spread = value
 
     @injection_condition.setter
     def injection_condition(self, value):
         if type(value) is not str:
-            raise ValueError("Argument must be str!")
+            raise ValueError('Argument must be str!')
         else:
             self._injection_condition = value
 
     def set_extraction_point(self, value):
         """Set extraction point."""
         self._extraction_point = value
-        self.betax = self.extraction_dict[value]["betax"]
-        self.betay = self.extraction_dict[value]["betay"]
-        self.alphax = self.extraction_dict[value]["alphax"]
-        self.alphay = self.extraction_dict[value]["alphay"]
-        self.etax = self.extraction_dict[value]["etax"]
-        self.etay = self.extraction_dict[value]["etay"]
-        self.etapx = self.extraction_dict[value]["etapx"]
-        self.etapy = self.extraction_dict[value]["etapy"]
-        self.bsc0_h = self.extraction_dict[value]["bsc0_h"]
-        self.bsc0_v = self.extraction_dict[value]["bsc0_v"]
+        self.betax = self.extraction_dict[value]['betax']
+        self.betay = self.extraction_dict[value]['betay']
+        self.alphax = self.extraction_dict[value]['alphax']
+        self.alphay = self.extraction_dict[value]['alphay']
+        self.etax = self.extraction_dict[value]['etax']
+        self.etay = self.extraction_dict[value]['etay']
+        self.etapx = self.extraction_dict[value]['etapx']
+        self.etapy = self.extraction_dict[value]['etapy']
+        self.bsc0_h = self.extraction_dict[value]['bsc0_h']
+        self.bsc0_v = self.extraction_dict[value]['bsc0_v']
 
     def calc_beam_stay_clear(self, pos):
         """Calculate horizontal and vertical BSC at a given position.

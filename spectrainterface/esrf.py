@@ -1,9 +1,6 @@
 """ESRF parameters - only for tests."""
 
-import numpy as _np
-import matplotlib.pyplot as _plt
 import mathphys.constants as _constants
-import os
 from spectrainterface.accelerator import StorageRingParameters
 from spectrainterface import sources
 
@@ -16,49 +13,49 @@ class ESRF:
 
     class StorageRing(StorageRingParameters):
         extraction_dict = {
-            "even_id": {
-                "betax": 35.2,
-                "betay": 2.52,
-                "alphax": 0,
-                "alphay": 0,
-                "etax": 0.137,
-                "etay": 0,
-                "etapx": 0,
-                "etapy": 0,
-                "bsc0_h": 5.0,
-                "bsc0_v": 3.0,
+            'even_id': {
+                'betax': 35.2,
+                'betay': 2.52,
+                'alphax': 0,
+                'alphay': 0,
+                'etax': 0.137,
+                'etay': 0,
+                'etapx': 0,
+                'etapy': 0,
+                'bsc0_h': 5.0,
+                'bsc0_v': 3.0,
             },
-            "odd_id": {
-                "betax": 0.5,
-                "betay": 2.73,
-                "alphax": 0,
-                "alphay": 0,
-                "etax": 0.037,
-                "etay": 0,
-                "etapx": 0,
-                "etapy": 0,
-                "bsc0_h": 5.0,
-                "bsc0_v": 3.0,
+            'odd_id': {
+                'betax': 0.5,
+                'betay': 2.73,
+                'alphax': 0,
+                'alphay': 0,
+                'etax': 0.037,
+                'etay': 0,
+                'etapx': 0,
+                'etapy': 0,
+                'bsc0_h': 5.0,
+                'bsc0_v': 3.0,
             },
-            "bm_3mrad": {
-                "betax": 1.41,
-                "betay": 34.9,
-                "alphax": 0,
-                "alphay": 0,
-                "etax": 0.061,
-                "etay": 0,
-                "etapx": 0,
-                "etapy": 0,
+            'bm_3mrad': {
+                'betax': 1.41,
+                'betay': 34.9,
+                'alphax': 0,
+                'alphay': 0,
+                'etax': 0.061,
+                'etay': 0,
+                'etapx': 0,
+                'etapy': 0,
             },
-            "bm_9mrad": {
-                "betax": 0.99,
-                "betay": 34.9,
-                "alphax": 0,
-                "alphay": 0,
-                "etax": 0.045,
-                "etay": 0,
-                "etapx": 0,
-                "etapy": 0,
+            'bm_9mrad': {
+                'betax': 0.99,
+                'betay': 34.9,
+                'alphax': 0,
+                'alphay': 0,
+                'etax': 0.045,
+                'etay': 0,
+                'etapx': 0,
+                'etapy': 0,
             },
         }
 
@@ -79,7 +76,7 @@ class ESRF:
             self._etay = 0  # [m]
             self._etapx = 0
             self._etapy = 0
-            self._extraction_point = "odd_id"
+            self._extraction_point = 'odd_id'
             self._bsc0_h = 5.0
             self._bsc0_v = 3.0
 
@@ -99,7 +96,7 @@ class ESRF:
                 """Class constructor."""
                 super().__init__()
                 self._b_peak = 0.47
-                self._label = "BM"
+                self._label = 'BM'
 
         class U18(sources.IVU_NdFeB):
             """IVU18 class."""
@@ -107,14 +104,14 @@ class ESRF:
             def __init__(self, period=18, length=2):
                 """Class constructor."""
                 super().__init__(period, length)
-                self._label = "U18"
+                self._label = 'U18'
                 self._br = 1.27
                 self._gap = 6
                 self._min_gap = 6
                 self._vc_thickness = 0
                 self._vc_tolerance = 0.35
-                self._polarization = "hp"
+                self._polarization = 'hp'
                 self._halbach_coef = {
-                    "hp": {"a": 2.29044642, "b": -3.71638253, "c": 0.34898287},
+                    'hp': {'a': 2.29044642, 'b': -3.71638253, 'c': 0.34898287},
                 }
-                self._material = "NdFeB"
+                self._material = 'NdFeB'
