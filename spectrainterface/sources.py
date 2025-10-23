@@ -90,6 +90,7 @@ class BendingMagnet(SourceFunctions):
             gamma (float): Lorentz fator
             acceptance (float): slit acceptance [mrad]
             current (float): electron beam current [mA]
+
         Returns:
             float: Total power of source light [kW]
         """
@@ -557,10 +558,10 @@ class Undulator(SourceFunctions):
             gamma (float): Lorentz fator
             b (float): Field amplitude [T]
             current (float): electron beam current [mA]
+
         Returns:
             float: Total power of source light [kW]
         """
-
         b = _np.sqrt(2 * b**2) if self._polarization == "cp" else b
 
         const = ((ECHARGE**4) * (gamma**2)) / (
@@ -819,8 +820,14 @@ class APPLE2(Elliptic):
             si_parameters (StorageRingParameters): StorageRingParameters
              object.
         """
-        b_max = self.get_beff(self.gap / self.period)
-        k_max = self.undulator_b_to_k(b_max, self.period)
+        if self._gap != 0:
+            b_max = self.get_beff(self.gap / self.period)
+            k_max = self.undulator_b_to_k(b_max, self.period)
+        else:
+            gap_minv, gap_minh = self.calc_min_gap(si_parameters)
+            gap_min = gap_minv if self.polarization == "hp" else gap_minh
+            b_max = self.get_beff(gap_min / self.period)
+            k_max = self.undulator_b_to_k(b_max, self.period)
         return k_max
 
 
