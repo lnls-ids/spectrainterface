@@ -11,6 +11,7 @@ To install `spectrainterface` in development mode, go to this repository path an
 ## Requirements:
 
 - mathphys 
+- scipy
 
 (see https://github.com/lnls-fac/mathphys for installation instructions) 
 
@@ -19,9 +20,9 @@ To install `spectrainterface` in development mode, go to this repository path an
 
 Gabriel Rezende da Ascenção
 
-Sergio Lordano
+Sergio Augusto Lordano Luiz
 
-Jefferson Vieira
+Jefferson Barros Vieira
 
 ## Acknowledgements
 
