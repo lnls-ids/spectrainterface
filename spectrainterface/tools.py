@@ -1,12 +1,10 @@
 """General tools to use with spectra."""
 
 import numpy as _np
-import matplotlib.pyplot as _plt
 import mathphys.constants as _constants
 from scipy.integrate import cumtrapz
 from scipy.optimize import minimize
 from scipy.special import erf
-from spectrainterface.accelerator import StorageRingParameters
 
 ECHARGE = _constants.elementary_charge
 EMASS = _constants.electron_mass
@@ -101,7 +99,7 @@ class SourceFunctions:
 
                 return new_gaps
             else:
-                raise ValueError("k must be array numpy or number")
+                raise ValueError('k must be array numpy or number')
         else:
             return (period / b) * _np.log(beff / (a * br))
 
@@ -149,7 +147,9 @@ class SourceFunctions:
         return _np.abs(i2)
 
     @staticmethod
-    def create_field_profile(nr_periods, period, bx=None, by=None, pts_period=1001):
+    def create_field_profile(
+        nr_periods, period, bx=None, by=None, pts_period=1001
+    ):
         """Create a sinusoidal field with first and second integrals zero.
 
         Args:
@@ -226,7 +226,9 @@ class SourceFunctions:
         Returns:
             float: Harmonic energy [eV].
         """
-        lamb = SourceFunctions.get_harmonic_wavelength(n, gamma, theta, period, k)
+        lamb = SourceFunctions.get_harmonic_wavelength(
+            n, gamma, theta, period, k
+        )
         energy = PLANCK * 2 * PI * LSPEED / lamb / ECHARGE
         return energy
 
@@ -250,13 +252,13 @@ class SourceFunctions:
             list of str: list of all hybrid devices
         """
         hybrids = [
-            "cpmu_pr",
-            "cpmu_prnd",
-            "cpmu_nd",
-            "ivu",
-            "hybrid",
-            "ivu_smco",
-            "hybrid_smco",
+            'cpmu_pr',
+            'cpmu_prnd',
+            'cpmu_nd',
+            'ivu',
+            'hybrid',
+            'ivu_smco',
+            'hybrid_smco',
         ]
         return hybrids
 
@@ -268,10 +270,10 @@ class SourceFunctions:
             list of str: list of all PPM devices
         """
         ppms = [
-            "planar",
-            "apple2",
-            "delta",
-            "delta_prototype",
+            'planar',
+            'apple2',
+            'delta',
+            'delta_prototype',
         ]
         return ppms
 
@@ -283,14 +285,14 @@ class SourceFunctions:
             list of str: list of all planar devices
         """
         planars = [
-            "cpmu_pr",
-            "cpmu_prnd",
-            "cpmu_nd",
-            "ivu",
-            "hybrid",
-            "ivu_smco",
-            "hybrid_smco",
-            "planar",
+            'cpmu_pr',
+            'cpmu_prnd',
+            'cpmu_nd',
+            'ivu',
+            'hybrid',
+            'ivu_smco',
+            'hybrid_smco',
+            'planar',
         ]
         return planars
 
@@ -302,11 +304,11 @@ class SourceFunctions:
             list of str: list of all in-vacuum devices
         """
         ivus = [
-            "ivu",
-            "ivu_smco",
-            "cpmu_nd",
-            "cpmu_pr",
-            "cpmu_prnd",
+            'ivu',
+            'ivu_smco',
+            'cpmu_nd',
+            'cpmu_pr',
+            'cpmu_prnd',
         ]
         return ivus
 
@@ -318,9 +320,9 @@ class SourceFunctions:
             list of str: list of all CPMU devices
         """
         cpmus = [
-            "cpmu_nd",
-            "cpmu_pr",
-            "cpmu_prnd",
+            'cpmu_nd',
+            'cpmu_pr',
+            'cpmu_prnd',
         ]
         return cpmus
 
@@ -343,14 +345,14 @@ class SourceFunctions:
     @staticmethod
     def _get_list_of_pol(undulator_type):
         polarizations = dict()
-        polarizations["APPLE2"] = ["hp", "vp", "cp", "lp54y", "lp54x"]
-        polarizations["DELTA"] = ["hp", "vp", "cp"]
-        polarizations["Halbach"] = ["hp"]
-        polarizations["Hybrid"] = ["hp", "vp"]
-        polarizations["CPMU"] = ["hp"]
-        polarizations["wiggler"] = ["hp"]
-        polarizations["APU"] = ["hp"]
-        polarizations["VPU"] = ["vp"]
+        polarizations['APPLE2'] = ['hp', 'vp', 'cp', 'lp54y', 'lp54x']
+        polarizations['DELTA'] = ['hp', 'vp', 'cp']
+        polarizations['Halbach'] = ['hp']
+        polarizations['Hybrid'] = ['hp', 'vp']
+        polarizations['CPMU'] = ['hp']
+        polarizations['wiggler'] = ['hp']
+        polarizations['APU'] = ['hp']
+        polarizations['VPU'] = ['vp']
 
         return polarizations[undulator_type]
 
@@ -364,14 +366,14 @@ class SourceFunctions:
         Returns:
             str: polarization label
         """
-        if polarization == "hp":
-            label = "Horizontal Polarization"
+        if polarization == 'hp':
+            label = 'Horizontal Polarization'
 
-        elif polarization == "vp":
-            label = "Vertical Polarization"
+        elif polarization == 'vp':
+            label = 'Vertical Polarization'
 
-        elif polarization == "cp":
-            label = "Circular Polarization"
+        elif polarization == 'cp':
+            label = 'Circular Polarization'
 
         return label
 
@@ -386,7 +388,7 @@ class SourceFunctions:
         Returns:
             str: prefix string
         """
-        return "und_" + device + "_" + polarization
+        return 'und_' + device + '_' + polarization
 
     @property
     def source_length(self):
@@ -440,7 +442,14 @@ class SourceFunctions:
         """
         hc = PLANCK * 2 * PI * LSPEED / ECHARGE
 
-        x = 2 * PI * harmonic * und_length / (und_period * 1e-3) * energy_spread
+        x = (
+            2
+            * PI
+            * harmonic
+            * und_length
+            / (und_period * 1e-3)
+            * energy_spread
+        )
         a1 = _np.sqrt(2 * PI) * x * erf(_np.sqrt(2) * x)
         Qax = _np.sqrt(2 * x**2 / (-1 + _np.exp(-2 * x**2) + a1))
         div_sigma = _np.sqrt(
@@ -449,7 +458,9 @@ class SourceFunctions:
 
         a1s = _np.sqrt(2 * PI) * (x / 4) * erf(_np.sqrt(2) * (x / 4))
         Qas = (
-            _np.sqrt(2 * (x / 4) ** 2 / (-1 + _np.exp(-2 * (x / 4) ** 2) + a1s))
+            _np.sqrt(
+                2 * (x / 4) ** 2 / (-1 + _np.exp(-2 * (x / 4) ** 2) + a1s)
+            )
         ) ** (2 / 3.0)
         size_sigma = _np.sqrt(
             emittance * beta
@@ -460,7 +471,7 @@ class SourceFunctions:
 
     @staticmethod
     def get_min_or_max_k(
-        period, photon_energy, k_extreme, what_harmonic="max", si_energy=3.0
+        period, photon_energy, k_extreme, what_harmonic='max', si_energy=3.0
     ):
         """Get max or min K-value and harmonic number for a given energy.
 
@@ -493,18 +504,18 @@ class SourceFunctions:
                 - 2
             )
             if K2 > 0:
-                if what_harmonic == "max":
+                if what_harmonic == 'max':
                     if K2**0.5 < k_extreme:
                         harmonic = h_n
                         k = K2**0.5
                     else:
                         break
-                elif what_harmonic == "min":
+                elif what_harmonic == 'min':
                     if K2**0.5 > k_extreme:
                         harmonic = h_n
                         k = K2**0.5
                         break
-                elif what_harmonic == "first":
+                elif what_harmonic == 'first':
                     harmonic = h_n
                     k = K2**0.5
                     break
@@ -557,7 +568,9 @@ class SourceFunctions:
         return const * integral * (current * 1e-3)
 
     @staticmethod
-    def calc_k_target(gamma: float, n: int, period: float, target_energy: float):
+    def calc_k_target(
+        gamma: float, n: int, period: float, target_energy: float
+    ):
         """Calc k for target energy given harmonic number and period.
 
         Args:
