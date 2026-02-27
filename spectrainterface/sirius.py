@@ -546,7 +546,7 @@ class SIRIUS:
                 self._label = 'UE44-IPE'
                 self._gap = 11.4
                 self._min_gap = 11.4
-                self._br = 1.19  # adjusted to get (ky, kx) = (3.65,2.62) ~ (3.5, 2.7) (mr = 1.24 from the paper)  # noqa: E501
+                self._br = 1.14  # adjusted to get (By, Bx) = (0.85, 0.61) T -> (Ky, Kx) = (3.5, 2.5) from the paper doi:10.1088/1742-6596/425/3/032020 (mr = 1.24 in the paper)  # noqa: E501
                 self._halbach_coef = {  #
                     'hp': {'a': 1.4934, 'b': -2.5933, 'c': -0.4855},
                     'vp': {'a': 2.0362, 'b': -5.4204, 'c': 1.1888},
