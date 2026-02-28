@@ -1801,10 +1801,21 @@ class Calc(GeneralConfigs, SpectraTools):
                         self._flux = self.apply_phase_errors(
                             self._flux, self._use_recovery_params
                         )
-                    self._brilliance = data[:, 2, :]
                     self._pl = data[:, 3, :]
                     self._pc = data[:, 4, :]
                     self._pl45 = data[:, 5, :]
+                if self.source_type == self.SourceType.elliptic_undulator:
+                    self._kx = data[:, 1, :]
+                    self._ky = data[:, 2, :]
+                    self._flux = data[:, 3, :]
+                    self._energies = variables[:, :]
+                    if self._add_phase_errors is True:
+                        self._flux = self.apply_phase_errors(
+                            self._flux, self._use_recovery_params
+                        )
+                    self._pl = data[:, 4, :]
+                    self._pc = data[:, 5, :]
+                    self._pl45 = data[:, 6, :]
                 else:
                     self._kx = data[:, 1, :]
                     self._ky = data[:, 2, :]
