@@ -148,7 +148,7 @@ class SourceFunctions:
 
     @staticmethod
     def create_field_profile(
-        nr_periods, period, bx=None, by=None, pts_period=1001
+        nr_periods, period, bx=None, by=None, phase=0, pts_period=1001
     ):
         """Create a sinusoidal field with first and second integrals zero.
 
@@ -157,6 +157,7 @@ class SourceFunctions:
             period (float): ID's period [mm]
             bx (float, optional): horizontal field amplitude. Defaults to None.
             by (float, optional): vertical field amplitude. Defaults to None.
+            phase (float, optional): phase shift between bx and by [rad].
             pts_period (int, optional): Pts per period. Defaults to 1001.
 
         Returns:
@@ -164,7 +165,13 @@ class SourceFunctions:
             coordinate (z) [m], second column contais vertical field
             [T], and third column constais horizontal field [T].
         """
-        field = _np.zeros(((nr_periods + 2) * pts_period, 3))
+        field = _np.zeros(
+            (
+                (nr_periods + 2) * pts_period
+                + int(pts_period * _np.abs(phase) / (2 * _np.pi)),
+                3,
+            )
+        )
 
         if by is not None:
             result = minimize(
@@ -175,7 +182,17 @@ class SourceFunctions:
             s, by = SourceFunctions._generate_field(
                 result.x, by, period, nr_periods, pts_period
             )
-            field[:, 1] = by
+            field[:, 1] = _np.concatenate(
+                [
+                    _np.zeros(int(pts_period * _np.abs(phase) / (2 * _np.pi))),
+                    by,
+                ]
+                if phase > 0
+                else [
+                    by,
+                    _np.zeros(int(pts_period * _np.abs(phase) / (2 * _np.pi))),
+                ]
+            )
 
         if bx is not None:
             result = minimize(
@@ -186,9 +203,29 @@ class SourceFunctions:
             s, bx = SourceFunctions._generate_field(
                 result.x, bx, period, nr_periods, pts_period
             )
-            field[:, 2] = bx
+            field[:, 2] = _np.concatenate(
+                [
+                    bx,
+                    _np.zeros(int(pts_period * _np.abs(phase) / (2 * _np.pi))),
+                ]
+                if phase > 0
+                else [
+                    _np.zeros(int(pts_period * _np.abs(phase) / (2 * _np.pi))),
+                    bx,
+                ]
+            )
 
-        field[:, 0] = 1e-3 * s
+        field[:, 0] = 1e-3 * _np.concatenate(
+            [
+                s,
+                s[-1]
+                + (s[1] - s[0])
+                * (
+                    _np.arange(int(pts_period * _np.abs(phase) / (2 * _np.pi)))
+                    + 1
+                ),
+            ]
+        )
         return field
 
     @staticmethod
