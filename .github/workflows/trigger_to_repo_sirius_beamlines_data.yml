@@ -16,7 +16,7 @@ jobs:
           TOKEN: ${{ secrets.PAT_TOKEN }} 
         run: |
           # Repo git clone
-          git clone https://x-access-token:${TOKEN}@://github.com/lnls-ids/sirius-beamlines-data.git target_repo
+          git clone https://x-access-token:${TOKEN}@github.com/lnls-ids/sirius-beamlines-data.git target_repo
           cd target_repo
           
           # Update the trigger file
