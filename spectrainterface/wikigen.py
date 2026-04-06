@@ -532,9 +532,9 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         dpi = calc_params.dpi
-        gapmin, gapmax = calc_params.gap_lim
 
-        # gapmax = 25
+        gapmin, gapmax = calc_params.gap_lim if calc_params.gap_lim is not None else (source.min_gap, 25)
+
         gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
 
         gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
@@ -644,9 +644,9 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         dpi = calc_params.dpi
-        gapmin, gapmax = calc_params.gap_lim
 
-        # gapmax = 25
+        gapmin, gapmax = calc_params.gap_lim if calc_params is not None else (source.min_gap, 25)
+
         gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
         gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
@@ -703,9 +703,9 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         dpi = calc_params.dpi
-        gapmin, gapmax = calc_params.gap_lim
 
-        # gapmax = 25
+        gapmin, gapmax = calc_params.gap_lim if calc_params.gap_lim is None else (source.min_gap, 25)
+
         gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
         gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
@@ -1966,6 +1966,7 @@ class CalcParameters:
         self._y_nr_pts = None
         self._e_range = None
         self._e_nr_pts = None
+        self._gap_lim = None
         self._figsize = None
         self._savefig = None
         self._linewidth = None
@@ -2022,6 +2023,10 @@ class CalcParameters:
     @property
     def e_nr_pts(self):
         return self._e_nr_pts
+
+    @property
+    def gap_lim(self):
+        return self._gap_lim
 
     @property
     def figsize(self):
@@ -2090,6 +2095,10 @@ class CalcParameters:
     @e_nr_pts.setter
     def e_nr_pts(self, value):
         self._e_nr_pts = value
+
+    @gap_lim.setter
+    def gap_lim(self, value):
+        self._gap_lim = value
 
     @figsize.setter
     def figsize(self, value):
