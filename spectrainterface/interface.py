@@ -4326,10 +4326,8 @@ class SpectraInterface:
                 spectra_calc.calc.slit_shape = slit_shape
                 spectra_calc.calc.slit_acceptance = slit_acceptance
                 spectra_calc.calc.k_range = [kmin, kmax]
-                print('k range: ', spectra_calc.calc.k_range)
                 spectra_calc.calc.k_nr_pts = k_nr_pts
                 spectra_calc.calc.harmonic_range = harmonic_range
-                print('harmonic range: ', spectra_calc.calc.harmonic_range)
                 if source.polarization == 'hp':
                     spectra_calc.calc.source_type = (
                         spectra_calc.calc.SourceType.horizontal_undulator
