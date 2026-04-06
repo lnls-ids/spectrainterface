@@ -704,5 +704,3 @@ class SIRIUS:
                 return self.beff_function(
                     gap_over_period=gap_over_period, br=br, a=a, b=b, c=c
                 )
-            
-# test workflow
