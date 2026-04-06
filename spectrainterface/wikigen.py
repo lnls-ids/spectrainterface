@@ -19,6 +19,432 @@ VACUUM_PERMITTICITY = mathphys.constants.vacuum_permitticity
 PI = _np.pi
 
 
+class IDParameters:
+    def __init__(self):
+        self._polarization = None
+        self._type = None
+        self._material = None
+        self._period = None
+        self._length = None
+        self._phase_error = None
+        self._label = None
+        self._vc_tolerance = None
+        self._halbach_coef = None
+
+    @property
+    def polarization(self):
+        return self._polarization
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def material(self):
+        return self._material
+
+    @property
+    def period(self):
+        return self._period
+
+    @property
+    def length(self):
+        return self._length
+
+    @property
+    def phase_error(self):
+        return self._phase_error
+
+    @property
+    def label(self):
+        return self._label
+
+    @property
+    def vc_tolerance(self):
+        return self._vc_tolerance
+
+    @property
+    def halbach_coef(self):
+        return self._halbach_coef
+
+    @polarization.setter
+    def polarization(self, value):
+        self._polarization = value
+
+    @type.setter
+    def type(self, value):
+        self._type = value
+
+    @material.setter
+    def material(self, value):
+        self._material = value
+
+    @period.setter
+    def period(self, value):
+        self._period = value
+
+    @length.setter
+    def length(self, value):
+        self._length = value
+
+    @phase_error.setter
+    def phase_error(self, value):
+        self._phase_error = value
+
+    @label.setter
+    def label(self, value):
+        self._label = value
+
+    @vc_tolerance.setter
+    def vc_tolerance(self, value):
+        self._vc_tolerance = value
+
+    @halbach_coef.setter
+    def halbach_coef(self, value):
+        self._halbach_coef = value
+
+
+class Calculations:
+    def __init__(self):
+        self._gap_energy = False
+        self._gap_field = False
+        self._gap_k = False
+        self._phase_energy = False
+        self._phase_field = False
+        self._phase_k = False
+        self._table_parameters = False
+        self._flux = False
+        self._flux_curve_generic = False
+        self._brilliance = False
+        self._beam_size = False
+        self._beam_divergence = False
+        self._beam_div_size_wigner = False
+        self._power = False
+        self._degree_polarization = False
+        self._degree_coherence = False
+        self._flux_distribution_2d = False
+
+    @property
+    def gap_energy(self):
+        return self._gap_energy
+
+    @property
+    def gap_field(self):
+        return self._gap_field
+
+    @property
+    def gap_k(self):
+        return self._gap_k
+
+    @property
+    def phase_energy(self):
+        return self._phase_energy
+
+    @property
+    def phase_k(self):
+        return self._phase_k
+
+    @property
+    def phase_field(self):
+        return self._phase_field
+
+    @property
+    def table_parameters(self):
+        return self._table_parameters
+
+    @property
+    def flux(self):
+        return self._flux
+
+    @property
+    def flux_curve_generic(self):
+        return self._flux_curve_generic
+
+    @property
+    def brilliance(self):
+        return self._brilliance
+
+    @property
+    def beam_size(self):
+        return self._beam_size
+
+    @property
+    def beam_divergence(self):
+        return self._beam_divergence
+
+    @property
+    def beam_div_size_wigner(self):
+        return self._beam_div_size_wigner
+
+    @property
+    def power(self):
+        return self._power
+
+    @property
+    def degree_polarization(self):
+        return self._degree_polarization
+
+    @property
+    def degree_coherence(self):
+        return self._degree_coherence
+
+    @property
+    def flux_distribution_2d(self):
+        return self._flux_distribution_2d
+
+    @gap_energy.setter
+    def gap_energy(self, value):
+        self._gap_energy = value
+
+    @gap_field.setter
+    def gap_field(self, value):
+        self._gap_field = value
+
+    @gap_k.setter
+    def gap_k(self, value):
+        self._gap_k = value
+
+    @phase_energy.setter
+    def phase_energy(self, value):
+        self._phase_energy = value
+
+    @phase_field.setter
+    def phase_field(self, value):
+        self._phase_field = value
+
+    @phase_k.setter
+    def phase_k(self, value):
+        self._phase_k = value
+
+    @table_parameters.setter
+    def table_parameters(self, value):
+        self._table_parameters = value
+
+    @flux.setter
+    def flux(self, value):
+        self._flux = value
+
+    @flux_curve_generic.setter
+    def flux_curve_generic(self, value):
+        self._flux_curve_generic = value
+
+    @brilliance.setter
+    def brilliance(self, value):
+        self._brilliance = value
+
+    @beam_size.setter
+    def beam_size(self, value):
+        self._beam_size = value
+
+    @beam_divergence.setter
+    def beam_divergence(self, value):
+        self._beam_divergence = value
+
+    @beam_div_size_wigner.setter
+    def beam_div_size_wigner(self, value):
+        self._beam_div_size_wigner = value
+
+    @power.setter
+    def power(self, value):
+        self._power = value
+
+    @degree_polarization.setter
+    def degree_polarization(self, value):
+        self._degree_polarization = value
+
+    @degree_coherence.setter
+    def degree_coherence(self, value):
+        self._degree_coherence = value
+
+    @flux_distribution_2d.setter
+    def flux_distribution_2d(self, value):
+        self._flux_distribution_2d = value
+
+
+class CalcParameters:
+    def __init__(self):
+        self._beta_section = None
+        self._target_energy = None
+        self._target_k = None
+        self._distance_from_source = None
+        self._slit_shape = None
+        self._slit_acceptance = None
+        self._slit_position = None
+        self._x_range = None
+        self._x_nr_pts = None
+        self._y_range = None
+        self._y_nr_pts = None
+        self._e_range = None
+        self._e_nr_pts = None
+        self._gap_lim = None
+        self._figsize = None
+        self._savefig = None
+        self._plotfig = None
+        self._export_data = False
+        self._linewidth = None
+        self._dpi = None
+
+    @property
+    def beta_section(self):
+        return self._beta_section
+
+    @property
+    def target_energy(self):
+        return self._target_energy
+
+    @property
+    def target_k(self):
+        return self._target_k
+
+    @property
+    def distance_from_source(self):
+        return self._distance_from_source
+
+    @property
+    def slit_shape(self):
+        return self._slit_shape
+
+    @property
+    def slit_acceptance(self):
+        return self._slit_acceptance
+
+    @property
+    def slit_position(self):
+        return self._slit_position
+
+    @property
+    def x_range(self):
+        return self._x_range
+
+    @property
+    def x_nr_pts(self):
+        return self._x_nr_pts
+
+    @property
+    def y_range(self):
+        return self._y_range
+
+    @property
+    def y_nr_pts(self):
+        return self._y_nr_pts
+
+    @property
+    def e_range(self):
+        return self._e_range
+
+    @property
+    def e_nr_pts(self):
+        return self._e_nr_pts
+
+    @property
+    def gap_lim(self):
+        return self._gap_lim
+
+    @property
+    def figsize(self):
+        return self._figsize
+
+    @property
+    def savefig(self):
+        return self._savefig
+
+    @property
+    def plotfig(self):
+        return self._plotfig
+
+    @property
+    def export_data(self):
+        return self._export_data
+
+    @property
+    def linewidth(self):
+        return self._linewidth
+
+    @property
+    def dpi(self):
+        return self._dpi
+
+    @beta_section.setter
+    def beta_section(self, value):
+        self._beta_section = value
+
+    @target_energy.setter
+    def target_energy(self, value):
+        self._target_energy = value
+
+    @target_k.setter
+    def target_k(self, value):
+        self._target_k = value
+
+    @distance_from_source.setter
+    def distance_from_source(self, value):
+        self._distance_from_source = value
+
+    @slit_shape.setter
+    def slit_shape(self, value):
+        self._slit_shape = value
+
+    @slit_acceptance.setter
+    def slit_acceptance(self, value):
+        self._slit_acceptance = value
+
+    @slit_position.setter
+    def slit_position(self, value):
+        self._slit_position = value
+
+    @x_range.setter
+    def x_range(self, value):
+        self._x_range = value
+
+    @x_nr_pts.setter
+    def x_nr_pts(self, value):
+        self._x_nr_pts = value
+
+    @y_range.setter
+    def y_range(self, value):
+        self._y_range = value
+
+    @y_nr_pts.setter
+    def y_nr_pts(self, value):
+        self._y_nr_pts = value
+
+    @e_range.setter
+    def e_range(self, value):
+        self._e_range = value
+
+    @e_nr_pts.setter
+    def e_nr_pts(self, value):
+        self._e_nr_pts = value
+
+    @gap_lim.setter
+    def gap_lim(self, value):
+        self._gap_lim = value
+
+    @figsize.setter
+    def figsize(self, value):
+        self._figsize = value
+
+    @savefig.setter
+    def savefig(self, value):
+        self._savefig = value
+
+    @plotfig.setter
+    def plotfig(self, value):
+        self._plotfig = value
+
+    @export_data.setter
+    def export_data(self, value):
+        self._export_data = value
+
+    @linewidth.setter
+    def linewidth(self, value):
+        self._linewidth = value
+
+    @dpi.setter
+    def dpi(self, value):
+        self._dpi = value
+
+
 class FunctionsManipulation:
     """Manipulation generic Spectra Interface functions to generate graphs"""
 
@@ -1707,432 +2133,6 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
-
-
-class IDParameters:
-    def __init__(self):
-        self._polarization = None
-        self._type = None
-        self._material = None
-        self._period = None
-        self._length = None
-        self._phase_error = None
-        self._label = None
-        self._vc_tolerance = None
-        self._halbach_coef = None
-
-    @property
-    def polarization(self):
-        return self._polarization
-
-    @property
-    def type(self):
-        return self._type
-
-    @property
-    def material(self):
-        return self._material
-
-    @property
-    def period(self):
-        return self._period
-
-    @property
-    def length(self):
-        return self._length
-
-    @property
-    def phase_error(self):
-        return self._phase_error
-
-    @property
-    def label(self):
-        return self._label
-
-    @property
-    def vc_tolerance(self):
-        return self._vc_tolerance
-
-    @property
-    def halbach_coef(self):
-        return self._halbach_coef
-
-    @polarization.setter
-    def polarization(self, value):
-        self._polarization = value
-
-    @type.setter
-    def type(self, value):
-        self._type = value
-
-    @material.setter
-    def material(self, value):
-        self._material = value
-
-    @period.setter
-    def period(self, value):
-        self._period = value
-
-    @length.setter
-    def length(self, value):
-        self._length = value
-
-    @phase_error.setter
-    def phase_error(self, value):
-        self._phase_error = value
-
-    @label.setter
-    def label(self, value):
-        self._label = value
-
-    @vc_tolerance.setter
-    def vc_tolerance(self, value):
-        self._vc_tolerance = value
-
-    @halbach_coef.setter
-    def halbach_coef(self, value):
-        self._halbach_coef = value
-
-
-class Calculations:
-    def __init__(self):
-        self._gap_energy = False
-        self._gap_field = False
-        self._gap_k = False
-        self._phase_energy = False
-        self._phase_field = False
-        self._phase_k = False
-        self._table_parameters = False
-        self._flux = False
-        self._flux_curve_generic = False
-        self._brilliance = False
-        self._beam_size = False
-        self._beam_divergence = False
-        self._beam_div_size_wigner = False
-        self._power = False
-        self._degree_polarization = False
-        self._degree_coherence = False
-        self._flux_distribution_2d = False
-
-    @property
-    def gap_energy(self):
-        return self._gap_energy
-
-    @property
-    def gap_field(self):
-        return self._gap_field
-
-    @property
-    def gap_k(self):
-        return self._gap_k
-
-    @property
-    def phase_energy(self):
-        return self._phase_energy
-
-    @property
-    def phase_k(self):
-        return self._phase_k
-
-    @property
-    def phase_field(self):
-        return self._phase_field
-
-    @property
-    def table_parameters(self):
-        return self._table_parameters
-
-    @property
-    def flux(self):
-        return self._flux
-
-    @property
-    def flux_curve_generic(self):
-        return self._flux_curve_generic
-
-    @property
-    def brilliance(self):
-        return self._brilliance
-
-    @property
-    def beam_size(self):
-        return self._beam_size
-
-    @property
-    def beam_divergence(self):
-        return self._beam_divergence
-
-    @property
-    def beam_div_size_wigner(self):
-        return self._beam_div_size_wigner
-
-    @property
-    def power(self):
-        return self._power
-
-    @property
-    def degree_polarization(self):
-        return self._degree_polarization
-
-    @property
-    def degree_coherence(self):
-        return self._degree_coherence
-
-    @property
-    def flux_distribution_2d(self):
-        return self._flux_distribution_2d
-
-    @gap_energy.setter
-    def gap_energy(self, value):
-        self._gap_energy = value
-
-    @gap_field.setter
-    def gap_field(self, value):
-        self._gap_field = value
-
-    @gap_k.setter
-    def gap_k(self, value):
-        self._gap_k = value
-
-    @phase_energy.setter
-    def phase_energy(self, value):
-        self._phase_energy = value
-
-    @phase_field.setter
-    def phase_field(self, value):
-        self._phase_field = value
-
-    @phase_k.setter
-    def phase_k(self, value):
-        self._phase_k = value
-
-    @table_parameters.setter
-    def table_parameters(self, value):
-        self._table_parameters = value
-
-    @flux.setter
-    def flux(self, value):
-        self._flux = value
-
-    @flux_curve_generic.setter
-    def flux_curve_generic(self, value):
-        self._flux_curve_generic = value
-
-    @brilliance.setter
-    def brilliance(self, value):
-        self._brilliance = value
-
-    @beam_size.setter
-    def beam_size(self, value):
-        self._beam_size = value
-
-    @beam_divergence.setter
-    def beam_divergence(self, value):
-        self._beam_divergence = value
-
-    @beam_div_size_wigner.setter
-    def beam_div_size_wigner(self, value):
-        self._beam_div_size_wigner = value
-
-    @power.setter
-    def power(self, value):
-        self._power = value
-
-    @degree_polarization.setter
-    def degree_polarization(self, value):
-        self._degree_polarization = value
-
-    @degree_coherence.setter
-    def degree_coherence(self, value):
-        self._degree_coherence = value
-
-    @flux_distribution_2d.setter
-    def flux_distribution_2d(self, value):
-        self._flux_distribution_2d = value
-
-
-class CalcParameters:
-    def __init__(self):
-        self._beta_section = None
-        self._target_energy = None
-        self._target_k = None
-        self._distance_from_source = None
-        self._slit_shape = None
-        self._slit_acceptance = None
-        self._slit_position = None
-        self._x_range = None
-        self._x_nr_pts = None
-        self._y_range = None
-        self._y_nr_pts = None
-        self._e_range = None
-        self._e_nr_pts = None
-        self._gap_lim = None
-        self._figsize = None
-        self._savefig = None
-        self._plotfig = None
-        self._export_data = False
-        self._linewidth = None
-        self._dpi = None
-
-    @property
-    def beta_section(self):
-        return self._beta_section
-
-    @property
-    def target_energy(self):
-        return self._target_energy
-
-    @property
-    def target_k(self):
-        return self._target_k
-
-    @property
-    def distance_from_source(self):
-        return self._distance_from_source
-
-    @property
-    def slit_shape(self):
-        return self._slit_shape
-
-    @property
-    def slit_acceptance(self):
-        return self._slit_acceptance
-
-    @property
-    def slit_position(self):
-        return self._slit_position
-
-    @property
-    def x_range(self):
-        return self._x_range
-
-    @property
-    def x_nr_pts(self):
-        return self._x_nr_pts
-
-    @property
-    def y_range(self):
-        return self._y_range
-
-    @property
-    def y_nr_pts(self):
-        return self._y_nr_pts
-
-    @property
-    def e_range(self):
-        return self._e_range
-
-    @property
-    def e_nr_pts(self):
-        return self._e_nr_pts
-
-    @property
-    def gap_lim(self):
-        return self._gap_lim
-
-    @property
-    def figsize(self):
-        return self._figsize
-
-    @property
-    def savefig(self):
-        return self._savefig
-
-    @property
-    def plotfig(self):
-        return self._plotfig
-
-    @property
-    def export_data(self):
-        return self._export_data
-
-    @property
-    def linewidth(self):
-        return self._linewidth
-
-    @property
-    def dpi(self):
-        return self._dpi
-
-    @beta_section.setter
-    def beta_section(self, value):
-        self._beta_section = value
-
-    @target_energy.setter
-    def target_energy(self, value):
-        self._target_energy = value
-
-    @target_k.setter
-    def target_k(self, value):
-        self._target_k = value
-
-    @distance_from_source.setter
-    def distance_from_source(self, value):
-        self._distance_from_source = value
-
-    @slit_shape.setter
-    def slit_shape(self, value):
-        self._slit_shape = value
-
-    @slit_acceptance.setter
-    def slit_acceptance(self, value):
-        self._slit_acceptance = value
-
-    @slit_position.setter
-    def slit_position(self, value):
-        self._slit_position = value
-
-    @x_range.setter
-    def x_range(self, value):
-        self._x_range = value
-
-    @x_nr_pts.setter
-    def x_nr_pts(self, value):
-        self._x_nr_pts = value
-
-    @y_range.setter
-    def y_range(self, value):
-        self._y_range = value
-
-    @y_nr_pts.setter
-    def y_nr_pts(self, value):
-        self._y_nr_pts = value
-
-    @e_range.setter
-    def e_range(self, value):
-        self._e_range = value
-
-    @e_nr_pts.setter
-    def e_nr_pts(self, value):
-        self._e_nr_pts = value
-
-    @gap_lim.setter
-    def gap_lim(self, value):
-        self._gap_lim = value
-
-    @figsize.setter
-    def figsize(self, value):
-        self._figsize = value
-
-    @savefig.setter
-    def savefig(self, value):
-        self._savefig = value
-
-    @plotfig.setter
-    def plotfig(self, value):
-        self._plotfig = value
-
-    @export_data.setter
-    def export_data(self, value):
-        self._export_data = value
-
-    @linewidth.setter
-    def linewidth(self, value):
-        self._linewidth = value
-
-    @dpi.setter
-    def dpi(self, value):
-        self._dpi = value
 
 
 class Process(FunctionsManipulation):
