@@ -5,6 +5,7 @@ import matplotlib.pyplot as _plt
 from matplotlib import colors
 import matplotlib.patches as _patches
 from spectrainterface.interface import SpectraInterface
+from spectrainterface.sources import Undulator
 import copy
 import mathphys
 import importlib
@@ -449,7 +450,7 @@ class FunctionsManipulation:
     """Manipulation generic Spectra Interface functions to generate graphs"""
 
     @staticmethod
-    def process_flux_distribution_2d(spectra, source, calc_params):
+    def process_flux_distribution_2d(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         distance_from_source = calc_params.distance_from_source
         slit_shape = calc_params.slit_shape
         slit_acceptance = calc_params.slit_acceptance
@@ -638,7 +639,7 @@ class FunctionsManipulation:
             _plt.savefig(figname, dpi=dpi)
 
     @staticmethod
-    def process_beam_size(spectra, source, calc_params):
+    def process_beam_size(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
@@ -740,7 +741,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_beam_divergence(spectra, source, calc_params):
+    def process_beam_divergence(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
@@ -842,7 +843,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_table_parameters(spectra, source, calc_params):
+    def process_table_parameters(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         figsize = calc_params.figsize
         savefig = calc_params.savefig
@@ -944,7 +945,7 @@ class FunctionsManipulation:
                 )
 
     @staticmethod
-    def process_gap_energy(spectra, source, calc_params):
+    def process_gap_energy(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
@@ -1057,7 +1058,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_gap_k(spectra, source, calc_params):
+    def process_gap_k(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
@@ -1116,7 +1117,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_gap_field(spectra, source, calc_params):
+    def process_gap_field(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
@@ -1185,7 +1186,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_phase_field(spectra, source, calc_params):
+    def process_phase_field(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
@@ -1250,7 +1251,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_phase_k(spectra, source, calc_params):
+    def process_phase_k(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
@@ -1304,7 +1305,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_phase_energy(spectra, source, calc_params):
+    def process_phase_energy(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
             return 0
@@ -1399,7 +1400,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_flux(spectra, source, calc_params):
+    def process_flux(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type != "bendingmagnet":
             if source.use_recovery_params and source.add_phase_errors:
@@ -1492,7 +1493,7 @@ class FunctionsManipulation:
         del spectra_calc
 
     @staticmethod
-    def process_brilliance(spectra, source, calc_params):
+    def process_brilliance(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
         if source.source_type != "bendingmagnet":
             if source.use_recovery_params and source.add_phase_errors:
@@ -1591,7 +1592,7 @@ class FunctionsManipulation:
         del spectra_calc
 
     @staticmethod
-    def process_degree_polarization(spectra, source, calc_params):
+    def process_degree_polarization(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc: SpectraInterface = copy.deepcopy(spectra)
         distance_from_source = calc_params.distance_from_source
         slit_acceptance = calc_params.slit_acceptance
@@ -1685,11 +1686,11 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_degree_coherence(spectra, source, calc_params):
+    def process_degree_coherence(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         pass
 
     @staticmethod
-    def process_power(spectra, source, calc_params):
+    def process_power(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra = copy.deepcopy(spectra)
         k_max = source.calc_max_k(spectra.accelerator)
         distance_from_source = calc_params.distance_from_source
@@ -1867,7 +1868,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_beam_div_size_wigner(spectra, source, calc_params):
+    def process_beam_div_size_wigner(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc: SpectraInterface = copy.deepcopy(spectra)
 
         if source.source_type == "bendingmagnet" or source.source_type == "wiggler":
@@ -1995,7 +1996,7 @@ class FunctionsManipulation:
             )
 
     @staticmethod
-    def process_flux_curve_generic(spectra, source, calc_params):
+    def process_flux_curve_generic(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc: SpectraInterface = copy.deepcopy(spectra)
         if source.source_type != "bendingmagnet":
             if source.use_recovery_params and source.add_phase_errors:
