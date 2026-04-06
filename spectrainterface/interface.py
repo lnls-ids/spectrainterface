@@ -2254,6 +2254,7 @@ class SpectraInterface:
 
         return x_list_trunc, y_list_trunc
 
+    @staticmethod
     def export_data(data: dict, filename: str):
         """Export data function.
 
