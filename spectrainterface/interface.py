@@ -4376,8 +4376,9 @@ class SpectraInterface:
         degree_pl = spectra_calc.calc._pl
         degree_pc = spectra_calc.calc._pc
         degree_pl45 = spectra_calc.calc._pl45
+        flux = spectra_calc.flux
         del spectra_calc
-        return energies, degree_pl, degree_pc, degree_pl45
+        return energies.T, degree_pl.T, degree_pc.T, degree_pl45.T, flux.T
 
     def calc_power_density(
         self,
