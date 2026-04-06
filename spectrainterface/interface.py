@@ -1804,7 +1804,7 @@ class Calc(GeneralConfigs, SpectraTools):
                     self._pl = data[:, 3, :]
                     self._pc = data[:, 4, :]
                     self._pl45 = data[:, 5, :]
-                if self.source_type == self.SourceType.elliptic_undulator:
+                elif self.source_type == self.SourceType.elliptic_undulator:
                     self._kx = data[:, 1, :]
                     self._ky = data[:, 2, :]
                     self._flux = data[:, 3, :]
@@ -2254,6 +2254,7 @@ class SpectraInterface:
 
         return x_list_trunc, y_list_trunc
 
+    @staticmethod
     def export_data(data: dict, filename: str):
         """Export data function.
 
@@ -4278,7 +4279,6 @@ class SpectraInterface:
                 kmax = source.undulator_b_to_k(b=beff, period=source.period)
             else:
                 kmax = source.calc_max_k(spectra_calc.accelerator)
-            kmax = source.calc_max_k(spectra_calc.accelerator)
             fst_energy = source.get_harmonic_energy(
                 n=1,
                 gamma=spectra_calc.accelerator.gamma,
@@ -4374,8 +4374,9 @@ class SpectraInterface:
         degree_pl = spectra_calc.calc._pl
         degree_pc = spectra_calc.calc._pc
         degree_pl45 = spectra_calc.calc._pl45
+        flux = spectra_calc.flux
         del spectra_calc
-        return energies, degree_pl, degree_pc, degree_pl45
+        return energies.T, degree_pl.T, degree_pc.T, degree_pl45.T, flux.T
 
     def calc_power_density(
         self,
