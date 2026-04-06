@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - trigger-to-repo-sirius-beamlines-data
     paths:
       - 'spectrainterface/sirius.py' # if sirius is updated
 
