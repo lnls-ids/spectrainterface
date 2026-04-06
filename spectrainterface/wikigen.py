@@ -1969,6 +1969,7 @@ class CalcParameters:
         self._gap_lim = None
         self._figsize = None
         self._savefig = None
+        self._plotfig = None
         self._linewidth = None
         self._dpi = None
 
@@ -2035,6 +2036,10 @@ class CalcParameters:
     @property
     def savefig(self):
         return self._savefig
+
+    @property
+    def plotfig(self):
+        return self._plotfig
 
     @property
     def linewidth(self):
@@ -2107,6 +2112,10 @@ class CalcParameters:
     @savefig.setter
     def savefig(self, value):
         self._savefig = value
+
+    @plotfig.setter
+    def plotfig(self, value):
+        self._plotfig = value
 
     @linewidth.setter
     def linewidth(self, value):
