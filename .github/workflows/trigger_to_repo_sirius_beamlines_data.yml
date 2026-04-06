@@ -15,8 +15,8 @@ jobs:
           TOKEN: ${{ secrets.PAT_TOKEN }} 
         run: |
           # Repo git clone
-          git clone https://x-access-token:$TOKEN@://github.com sirius-beamlines-data
-          cd sirius-beamlines-data
+          git clone https://x-access-token:${TOKEN}@://github.com/lnls-ids/sirius-beamlines-data target_repo
+          cd target_repo
           
           # Update the trigger file
           echo "Last update from spectrainterface/sirius.py at $(date)" > trigger_version.txt
