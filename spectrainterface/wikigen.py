@@ -740,6 +740,34 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['eV', 'um', 'urad']
+
+            data['energy'] = energies
+            idx = _np.isnan(data['energy'])
+            data['energy'] = _np.array(data['energy'], dtype='object')
+            data['energy'][idx] = None
+            data['energy'] = data['energy'].tolist()
+
+            data['RMS beam size x'] = dimensions_beam[:, 0] * 1e6
+            idx = _np.isnan(data['RMS beam size x'])
+            data['RMS beam size x'] = _np.array(data['RMS beam size x'], dtype='object')
+            data['RMS beam size x'][idx] = None
+            data['RMS beam size x'] = data['RMS beam size x'].tolist()
+
+            data['RMS beam size y'] = dimensions_beam[:, 1] * 1e6
+            idx = _np.isnan(data['RMS beam size y'])
+            data['RMS beam size y'] = _np.array(data['RMS beam size y'], dtype='object')
+            data['RMS beam size y'][idx] = None
+            data['RMS beam size y'] = data['RMS beam size y'].tolist()
+
+            SpectraInterface.export_data(data=data, filename="beam_size_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
+
     @staticmethod
     def process_beam_divergence(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
@@ -841,6 +869,34 @@ class FunctionsManipulation:
                 ),
                 dpi=300,
             )
+
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['eV', 'um', 'urad']
+
+            data['energy'] = energies
+            idx = _np.isnan(data['energy'])
+            data['energy'] = _np.array(data['energy'], dtype='object')
+            data['energy'][idx] = None
+            data['energy'] = data['energy'].tolist()
+
+            data['RMS beam divergence x'] = dimensions_beam[:, 2] * 1e6
+            idx = _np.isnan(data['RMS beam divergence x'])
+            data['RMS beam divergence x'] = _np.array(data['RMS beam divergence x'], dtype='object')
+            data['RMS beam divergence x'][idx] = None
+            data['RMS beam divergence x'] = data['RMS beam divergence x'].tolist()
+
+            data['RMS beam divergence y'] = dimensions_beam[:, 3] * 1e6
+            idx = _np.isnan(data['RMS beam divergence y'])
+            data['RMS beam divergence y'] = _np.array(data['RMS beam divergence y'], dtype='object')
+            data['RMS beam divergence y'][idx] = None
+            data['RMS beam divergence y'] = data['RMS beam divergence y'].tolist()
+
+            SpectraInterface.export_data(data=data, filename="beam_div_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
 
     @staticmethod
     def process_table_parameters(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
@@ -971,6 +1027,8 @@ class FunctionsManipulation:
 
         _plt.figure(figsize=figsize)
         _plt.title(title)
+
+        ES = list()
         for i in range(17):
             Es = source.get_harmonic_energy(
                 n=2 * i + 1, gamma=gamma, theta=0, period=source.period, k=Ks
@@ -981,6 +1039,7 @@ class FunctionsManipulation:
                 "-C0",
                 linewidth=linewidth,
             )
+            ES.append(Es.tolist())
 
         _plt.plot(
             [*xlim],
@@ -1011,6 +1070,18 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
+
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['mm', 'eV']
+            data['gap'] = gaps.tolist()
+            data['energy'] = ES
+
+            SpectraInterface.export_data(data=data, filename="gap_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
 
         # Fundamental Energy
         gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
@@ -1056,6 +1127,18 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
+
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['mm', 'eV']
+            data['gap'] = gaps.tolist()
+            data['energy'] = Es.tolist()
+
+            SpectraInterface.export_data(data=data, filename="gap_fundamental_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
 
     @staticmethod
     def process_gap_k(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
@@ -1115,6 +1198,18 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
+
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['mm', 'a.u.']
+            data['gap'] = gaps.tolist()
+            data['k'] = Ks.tolist()
+
+            SpectraInterface.export_data(data=data, filename="gap_k_parameter_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
 
     @staticmethod
     def process_gap_field(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
@@ -1184,6 +1279,18 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
+
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['mm', 'T']
+            data['gap'] = gaps.tolist()
+            data['field'] = Bs.tolist()
+
+            SpectraInterface.export_data(data=data, filename="gap_field_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
 
     @staticmethod
     def process_phase_field(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
@@ -1490,6 +1597,29 @@ class FunctionsManipulation:
             xlim=xlim,
             ylim=ylim,
         )
+
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['eV', 'ph/s/0.1%/100mA']
+
+            data['energy'] = _np.array(spectra_calc.energies[0], dtype='float')
+            idx = _np.isnan(data['energy'])
+            data['energy'] = _np.array(data['energy'], dtype='object')
+            data['energy'][idx] = None
+            data['energy'] = data['energy'].tolist()
+
+            data['flux'] = _np.array(spectra_calc.fluxes[0], dtype='float')
+            idx = _np.isnan(data['flux'])
+            data['flux'] = _np.array(data['flux'], dtype='object')
+            data['flux'][idx] = None
+            data['flux'] = data['flux'].tolist()
+
+            SpectraInterface.export_data(data=data, filename='flux_curve_{:}_{:.0f}m_{:.0f}mm.png'.format(
+                source.label, source.source_length, source.period
+            ) if source.source_type != 'bendingmagnet' else "flux_curve_{:}.png".format(source.label))
+
         del spectra_calc
 
     @staticmethod
@@ -1589,6 +1719,30 @@ class FunctionsManipulation:
             legend_fs=legend_fs,
             legend_properties=legend_properties,
         )
+
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['eV', 'ph/s/0.1%/mm²/mrad²/100mA']
+
+            data['energy'] = _np.array(spectra_calc.energies[0], dtype='float')
+            idx = _np.isnan(data['energy'])
+            data['energy'] = _np.array(data['energy'], dtype='object')
+            data['energy'][idx] = None
+            data['energy'] = data['energy'].tolist()
+
+            data['brilliance'] = _np.array(spectra_calc.brilliances[0], dtype='float')
+            idx = _np.isnan(data['brilliance'])
+            data['brilliance'] = _np.array(data['brilliance'], dtype='object')
+            data['brilliance'][idx] = None
+            data['brilliance'] = data['brilliance'].tolist()
+
+            SpectraInterface.export_data(data=data, filename='brilliance_curve_{:}_{:.0f}m_{:.0f}mm.png'.format(
+                source.label, source.source_length, source.period
+            ) if source.source_type != 'bendingmagnet' else "brilliance_curve_{:}.png".format(source.label))
+
+
         del spectra_calc
 
     @staticmethod
@@ -1896,14 +2050,15 @@ class FunctionsManipulation:
         )
 
         # Plot Beam Divergence
+        title = "Beam Divergence ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
+            spectra_calc.accelerator._extraction_point,
+            source.label,
+            source.source_length,
+            source.period,
+        )
         _plt.figure(figsize=figsize)
         _plt.title(
-            "Beam Divergence ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
-                spectra_calc.accelerator._extraction_point,
-                source.label,
-                source.source_length,
-                source.period,
-            )
+            title
         )
         _plt.plot(
             energies * 1e-3,
@@ -1944,15 +2099,48 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
+        if calc_params.export_data:
+
+            data = dict()
+
+            data['title'] = title
+            data['units'] = ['eV', 'um', 'urad']
+
+            data['energy'] = energies
+            idx = _np.isnan(data['energy'])
+            data['energy'] = _np.array(data['energy'], dtype='object')
+            data['energy'][idx] = None
+            data['energy'] = data['energy'].tolist()
+
+            data['RMS beam divergence x'] = div_size_x[:, 0] * 1e3
+            idx = _np.isnan(data['RMS beam divergence x'])
+            data['RMS beam divergence x'] = _np.array(data['RMS beam divergence x'], dtype='object')
+            data['RMS beam divergence x'][idx] = None
+            data['RMS beam divergence x'] = data['RMS beam divergence x'].tolist()
+
+            data['RMS beam divergence y'] = div_size_y[:, 0] * 1e3
+            idx = _np.isnan(data['RMS beam divergence y'])
+            data['RMS beam divergence y'] = _np.array(data['RMS beam divergence y'], dtype='object')
+            data['RMS beam divergence y'][idx] = None
+            data['RMS beam divergence y'] = data['RMS beam divergence y'].tolist()
+
+            SpectraInterface.export_data(data=data, filename="numerical_beam_divergence{:}_{:.0f}m_{:.0f}mm_{:}_beta.png".format(
+                source.label,
+                source.source_length,
+                source.period,
+                spectra_calc.accelerator._extraction_point,
+            ))
+
         # Plot Beam Size
         _plt.figure(figsize=figsize)
-        _plt.title(
-            "Beam Size ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
+        title = "Beam Size ({:})\n{:} ({:.2f} m, {:.2f} mm)".format(
                 spectra_calc.accelerator._extraction_point,
                 source.label,
                 source.source_length,
                 source.period,
             )
+        _plt.title(
+            title
         )
         _plt.plot(
             energies * 1e-3,
@@ -1994,6 +2182,38 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
+
+        if calc_params.export_data:
+
+            data = dict()
+
+            data['title'] = title
+            data['units'] = ['eV', 'um', 'um']
+
+            data['energy'] = energies
+            idx = _np.isnan(data['energy'])
+            data['energy'] = _np.array(data['energy'], dtype='object')
+            data['energy'][idx] = None
+            data['energy'] = data['energy'].tolist()
+
+            data['RMS beam size x'] = div_size_x[:, 1] * 1e3
+            idx = _np.isnan(data['RMS beam size x'])
+            data['RMS beam size x'] = _np.array(data['RMS beam size x'], dtype='object')
+            data['RMS beam size x'][idx] = None
+            data['RMS beam size x'] = data['RMS beam size x'].tolist()
+
+            data['RMS beam size y'] = div_size_y[:, 1] * 1e3
+            idx = _np.isnan(data['RMS beam size y'])
+            data['RMS beam size y'] = _np.array(data['RMS beam size y'], dtype='object')
+            data['RMS beam size y'][idx] = None
+            data['RMS beam size y'] = data['RMS beam size y'].tolist()
+
+            SpectraInterface.export_data(data=data, filename="numerical_beam_size{:}_{:.0f}m_{:.0f}mm_{:}_beta.png".format(
+                source.label,
+                source.source_length,
+                source.period,
+                spectra_calc.accelerator._extraction_point,
+            ))
 
     @staticmethod
     def process_flux_curve_generic(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
@@ -2070,14 +2290,16 @@ class FunctionsManipulation:
             )
         )
 
+        title = "Flux curve\n{:} ({:.2f} m, {:.2f} mm)".format(
+            source.label,
+            source.source_length,
+            source.period,
+        )
+
         # Plot flux curve
         _plt.figure(figsize=figsize)
         _plt.title(
-            "Flux curve\n{:} ({:.2f} m, {:.2f} mm)".format(
-                source.label,
-                source.source_length,
-                source.period,
-            ),
+            title,
             fontsize=10,
         )
 
@@ -2135,6 +2357,45 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['eV', 'ph/s/0.1%/100mA']
+
+            data['at ressonance'] = dict()
+            data['at ressonance']['energy'] = list()
+            data['at ressonance']['flux'] = list()
+
+            for es, fs in zip(es_at_res, fs_at_res):
+                idx = _np.isnan(es)
+                es = _np.array(es, dtype='float')
+                es[idx] = None
+                data['at ressonance']['energy'].append(es.tolist())
+
+                idx = _np.isnan(fs)
+                fs = _np.array(fs, dtype='float')
+                fs[idx] = None
+                data['at ressonance']['flux'].append(fs.tolist())
+
+            data['at peak'] = dict()
+            data['at peak']['energy'] = list()
+            data['at peak']['flux'] = list()
+
+            for es, fs in zip(es_out_res, fs_out_res):
+                idx = _np.isnan(es)
+                es = _np.array(es, dtype='float')
+                es[idx] = None
+                data['at peak']['energy'].append(es.tolist())
+
+                idx = _np.isnan(fs)
+                fs = _np.array(fs, dtype='float')
+                fs[idx] = None
+                data['at peak']['flux'].append(fs.tolist())
+
+            SpectraInterface.export_data(data=data, filename='flux_generic_curve_{:}_{:.0f}m_{:.0f}mm.png'.format(
+                source.label, source.source_length, source.period
+            ) if source.source_type != 'bendingmagnet' else "flux_curve_{:}.png".format(source.label))
 
 class Process(FunctionsManipulation):
     def __init__(self):
