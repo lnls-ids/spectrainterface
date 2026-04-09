@@ -4374,7 +4374,7 @@ class SpectraInterface:
         degree_pl = spectra_calc.calc._pl
         degree_pc = spectra_calc.calc._pc
         degree_pl45 = spectra_calc.calc._pl45
-        flux = spectra_calc.flux
+        flux = spectra_calc.calc.flux
         del spectra_calc
         return energies.T, degree_pl.T, degree_pc.T, degree_pl45.T, flux.T
 
