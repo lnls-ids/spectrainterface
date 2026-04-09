@@ -1,8 +1,11 @@
 name: Trigger SIRIUS Data Update (to GitLab)
 on:
   push:
-    branches: [master]
-    paths: ['spectrainterface/sirius.py']
+    branches:
+      - master
+      - trigger-to-repo-sirius-beamlines-data
+    paths:
+      - 'spectrainterface/sirius.py' # if sirius is updated
 
 jobs:
   ping-gitlab-repo:
@@ -11,7 +14,7 @@ jobs:
       - name: Update Version in GitLab
         env:
           GL_TOKEN: ${{ secrets.GITLAB_PAT }}
-          # Define o fuso horário para Brasília
+
           TZ: America/Sao_Paulo 
         run: |
           # Create bot informations
