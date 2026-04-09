@@ -1018,9 +1018,7 @@ class FunctionsManipulation:
 
         gapmin, gapmax = calc_params.gap_lim if calc_params.gap_lim is not None else (source.min_gap, 25)
 
-        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-
-        gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
+        gaps = _np.linspace(source.min_gap, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         gamma = spectra_calc.accelerator.gamma
@@ -1084,7 +1082,7 @@ class FunctionsManipulation:
             ))
 
         # Fundamental Energy
-        gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
+        gaps = _np.linspace(source.min_gap, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
         Es = source.get_harmonic_energy(
@@ -1157,8 +1155,7 @@ class FunctionsManipulation:
 
         gapmin, gapmax = calc_params.gap_lim if calc_params is not None else (source.min_gap, 25)
 
-        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-        gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
+        gaps = _np.linspace(source.min_gap, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
         Ks = (ECHARGE * Bs * source.period * 1e-3) / (EMASS * LSPEED * 2 * PI)
 
@@ -1228,8 +1225,7 @@ class FunctionsManipulation:
 
         gapmin, gapmax = calc_params.gap_lim if calc_params.gap_lim is None else (source.min_gap, 25)
 
-        gapv, gaph = source.calc_min_gap(spectra_calc.accelerator)
-        gaps = _np.linspace(gapv if source.polarization == "hp" else gaph, gapmax, 501)
+        gaps = _np.linspace(source.min_gap if source.polarization == "hp" else source.min_gap, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
 
         _plt.figure(figsize=figsize)
@@ -1553,7 +1549,7 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         figsize = calc_params.figsize
         dpi = calc_params.dpi
-        legend_fs = 10
+        legend_fs = 9
         legend_properties = True
 
         spectra_calc.sources = [source]
@@ -1666,7 +1662,7 @@ class FunctionsManipulation:
             )
         )
         dpi = calc_params.dpi
-        legend_fs = 10
+        legend_fs = 9
         legend_properties = True
         spectra_calc.sources = [source]
         spectra_calc.calc_brilliance_curve(
@@ -1781,8 +1777,49 @@ class FunctionsManipulation:
         )
         dpi = calc_params.dpi
         legend_fs = 9
+        nr_pts_k = 31
+        kmin = 0.2
+        superp_value = 1.5e3
 
-        energies, degree_pl, degree_pc, degree_pl45 = (
+
+        if source.source_type != "wiggler" and source.source_type != "bendingmagnet":
+            source_k_max = source.calc_max_k(spectra_calc.accelerator)
+
+            first_hamonic_energy = source.get_harmonic_energy(
+                1, spectra_calc.accelerator.gamma, 0, source.period, source_k_max
+            )
+            n = int(energy_range[1] / first_hamonic_energy)
+            n_harmonic = n - 1 if n % 2 == 0 else n
+            if source.polarization == "cp":
+                n_harmonic = 1
+        else:
+            n_harmonic = 1
+        harmonic_range = [1, n_harmonic]
+
+        spectra_calc.sources = [source]
+        spectra_calc.calc_flux_curve(
+            energy_range=energy_range,
+            harmonic_range=[harmonic_range],
+            nr_pts_k=nr_pts_k,
+            kmin=kmin,
+            slit_shape=slit_shape,
+            slit_acceptances=[slit_acceptance],
+            extraction_points=[spectra_calc.accelerator.extraction_point],
+        )
+
+        energies, flux = spectra_calc.calc.process_brilliance_curve(
+            spectra_calc.energies[0],
+            spectra_calc.fluxes[0],
+            superp_value=superp_value,
+        )
+
+        E_LIMITS = list()
+        for energy_, flux_ in zip(energies, flux):
+            E_LIMITS.append((_np.nanmin(energy_), _np.nanmax(energy_)))
+
+        spectra_calc: SpectraInterface = copy.deepcopy(spectra)
+
+        energies, degree_pl, degree_pc, degree_pl45, flux = (
             spectra_calc.calc_degree_polarization(
                 source=source,
                 slit_shape=slit_shape,
@@ -1794,23 +1831,31 @@ class FunctionsManipulation:
             )
         )
 
+        for i in range(energies.shape[1]):
+            if i < len(E_LIMITS):
+                mask = (energies[:, i] <= E_LIMITS[i][1]) * (energies[:, i] >= E_LIMITS[i][0])
+                degree_pl[~mask, i] = _np.nan
+                degree_pl45[~mask, i] = _np.nan
+                degree_pc[~mask, i] = _np.nan
+                energies[~mask, i] = _np.nan
+
         _plt.figure(figsize=figsize)
         _plt.title(title)
         pl_plot = _plt.plot(
-            energies.T * 1e-3,
-            degree_pl.T**2,
+            energies[:, :len(E_LIMITS)] * 1e-3,
+            degree_pl[:, :len(E_LIMITS)]**2,
             "-C0",
             linewidth=linewidth,
         )
         pc_plot = _plt.plot(
-            energies.T * 1e-3,
-            degree_pc.T**2,
+            energies[:, :len(E_LIMITS)] * 1e-3,
+            degree_pc[:, :len(E_LIMITS)]**2,
             "-C1",
             linewidth=linewidth,
         )
         pl45_plot = _plt.plot(
-            energies.T * 1e-3,
-            degree_pl45.T**2,
+            energies[:, :len(E_LIMITS)] * 1e-3,
+            degree_pl45[:, :len(E_LIMITS)]**2,
             "-C2",
             linewidth=linewidth - 1,
         )
@@ -1839,6 +1884,46 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['eV', 'a.u.']
+
+            data['energy'] = _np.array(energies[:, :len(E_LIMITS)], dtype='float').T
+            idx = _np.isnan(data['energy'])
+            data['energy'] = _np.array(data['energy'], dtype='object')
+            data['energy'][idx] = None
+            data['energy'] = data['energy'].tolist()
+
+            data['PL²'] = _np.array(degree_pl[:, :len(E_LIMITS)]**2, dtype='float').T
+            idx = _np.isnan(data['PL²'])
+            data['PL²'] = _np.array(data['PL²'], dtype='object')
+            data['PL²'][idx] = None
+            data['PL²'] = data['PL²'].tolist()
+
+            data['PC²'] = _np.array(degree_pc[:, :len(E_LIMITS)]**2, dtype='float').T
+            idx = _np.isnan(data['PC²'])
+            data['PC²'] = _np.array(data['PC²'], dtype='object')
+            data['PC²'][idx] = None
+            data['PC²'] = data['PC²'].tolist()
+
+            data['PL45²'] = _np.array(degree_pl45[:, :len(E_LIMITS)]**2, dtype='float').T
+            idx = _np.isnan(data['PL45²'])
+            data['PL45²'] = _np.array(data['PL45²'], dtype='object')
+            data['PL45²'][idx] = None
+            data['PL45²'] = data['PL45²'].tolist()
+
+            SpectraInterface.export_data(data=data, filename="degree_polarization_{:}".format(source.label)
+                if source.source_type == "bendingmagnet"
+                else (
+                    "degree_polarization_{:}_{:.0f}m_{:.0f}mm".format(
+                        source.label, source.source_length, source.period
+                    )
+                )
+            )
+
+
     @staticmethod
     def process_degree_coherence(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         pass
@@ -1846,7 +1931,8 @@ class FunctionsManipulation:
     @staticmethod
     def process_power(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra = copy.deepcopy(spectra)
-        k_max = source.calc_max_k(spectra.accelerator)
+        source.gap = source.min_gap
+        k_max = source.get_k()
         distance_from_source = calc_params.distance_from_source
         x_nr_pts = calc_params.x_nr_pts
         y_nr_pts = calc_params.y_nr_pts
@@ -2235,7 +2321,7 @@ class FunctionsManipulation:
         savefig = calc_params.savefig
         linewidth = calc_params.linewidth
         dpi = calc_params.dpi
-        superb = 1e3
+        superb = 1.5e3
         deltak = 0.99
         k_nr_pts = 11
 
@@ -2316,7 +2402,6 @@ class FunctionsManipulation:
             "-C1",
             label="At Peak Flux",
             linewidth=linewidth,
-            alpha=0.6,
         )
         for i in range(1, len(es_at_res)):
             _plt.plot(
@@ -2325,12 +2410,12 @@ class FunctionsManipulation:
                 "-C0",
                 linewidth=linewidth,
             )
+        for i in range(1, len(es_out_res)):
             _plt.plot(
                 _np.array(es_out_res[i]) * 1e-3,
                 fs_out_res[i],
                 "-C1",
                 linewidth=linewidth,
-                alpha=0.6,
             )
 
         _plt.legend(fontsize=8)
@@ -2396,6 +2481,7 @@ class FunctionsManipulation:
             SpectraInterface.export_data(data=data, filename='flux_generic_curve_{:}_{:.0f}m_{:.0f}mm.png'.format(
                 source.label, source.source_length, source.period
             ) if source.source_type != 'bendingmagnet' else "flux_curve_{:}.png".format(source.label))
+
 
 class Process(FunctionsManipulation):
     def __init__(self):
