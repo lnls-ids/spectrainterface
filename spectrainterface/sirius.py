@@ -254,7 +254,7 @@ class SIRIUS:
                 self._undulator_type = 'CPMU'
                 self._label = 'CPMU15-TIB'
                 self._gap = 3.8
-                self._min_gap = 3.6  # VCA
+                self._min_gap = 3.8
                 self.vc_tolerance = 0.210
 
         class CPMU13_HIB(sources.CPMU_PrFeB_HEPS):  # noqa: N801
@@ -654,7 +654,7 @@ class SIRIUS:
                 self._undulator_type = 'CPMU'
                 self._label = 'CPMU14-QRI'
                 self._gap = 3.8
-                self._min_gap = 3.6  # VCA
+                self._min_gap = 3.8
                 self.vc_tolerance = 0.210
 
         # class INGÁ 19SP (low_beta)
