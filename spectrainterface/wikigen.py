@@ -2107,6 +2107,58 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
+        spectra_calc: SpectraInterface = copy.deepcopy(spectra)
+        slit_acceptances = _np.linspace(0, 0.240, 31)
+        powers = _np.zeros_like(slit_acceptances)
+
+        for i, slit_acceptance in enumerate(slit_acceptances):
+            power = spectra_calc.calc_partial_power(
+                source=source,
+                slit_shape='retslit',
+                slit_position= (0, 0),
+                slit_acceptance=(slit_acceptance, slit_acceptance),
+                distance_from_source=45,
+                current=350
+            )
+
+            powers[i] = power
+        del spectra_calc
+
+        title = (
+            "Power vs Aperture @ 350 mA\n{:} ({:.1f} m, {:.2f} mm)".format(
+                source.label, source.source_length, source.period
+            )
+            if source.source_type != "bendingmagnet"
+            else "Power Density @ 350 mA\n{:}\n".format(source.label)
+        )
+        figname = (
+            "partial_power_vs_aperture_{:}.png".format(source.label)
+            if source.source_type == "bendingmagnet"
+            else (
+                "partial_power_vs_aperture_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                )
+            )
+        )
+
+        _plt.figure(figsize=figsize)
+        _plt.title(title)
+        _plt.plot(slit_acceptances*1e3, powers * 1e3)
+        _plt.xlabel('Slit acceptances [urad²]', fontsize=8)
+        _plt.ylabel('Power [W]', fontsize=8)
+        _plt.xticks(ticks=(slit_acceptances*1e3)[::5], labels=[f'{slit_acceptance * 1e3:.0f} x {slit_acceptance * 1e3:.0f}' for slit_acceptance in slit_acceptances][::5], rotation=-30, fontsize=8)
+        _plt.yticks(fontsize=8)
+        _plt.minorticks_on()
+        _plt.grid(which='major', alpha=0.3)
+        _plt.grid(which='minor', alpha=0.1)
+        _plt.tight_layout()
+        if savefig:
+            _plt.savefig(
+                figname,
+                dpi=dpi
+            )
+
+
     @staticmethod
     def process_beam_div_size_wigner(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc: SpectraInterface = copy.deepcopy(spectra)
