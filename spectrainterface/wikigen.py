@@ -1949,6 +1949,7 @@ class FunctionsManipulation:
         )
         figsize = calc_params.figsize
         savefig = calc_params.savefig
+        linewidth = calc_params.linewidth
         dpi = calc_params.dpi
         figname = (
             "partial_power_{:}.png".format(source.label)
@@ -2143,7 +2144,7 @@ class FunctionsManipulation:
 
         _plt.figure(figsize=figsize)
         _plt.title(title)
-        _plt.plot(slit_acceptances*1e3, powers * 1e3)
+        _plt.plot(slit_acceptances*1e3, powers * 1e3, linewidth=linewidth)
         _plt.xlabel('Slit acceptances [urad²]', fontsize=8)
         _plt.ylabel('Power [W]', fontsize=8)
         _plt.xticks(ticks=(slit_acceptances*1e3)[::5], labels=[f'{slit_acceptance * 1e3:.0f} x {slit_acceptance * 1e3:.0f}' for slit_acceptance in slit_acceptances][::5], rotation=-30, fontsize=8)
