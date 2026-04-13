@@ -1,4 +1,4 @@
-name: Trigger SIRIUS Data Update
+name: Trigger SIRIUS Data Update (to GitLab)
 on:
   push:
     branches:
@@ -8,22 +8,29 @@ on:
       - 'spectrainterface/sirius.py' # if sirius is updated
 
 jobs:
-  ping-repo-b:
+  ping-gitlab-repo:
     runs-on: ubuntu-latest
     steps:
-      - name: Update Version in sirius-beamlines-data
+      - name: Update Version in GitLab
         env:
-          TOKEN: ${{ secrets.PAT_TOKEN }} 
+          GL_TOKEN: ${{ secrets.GITLAB_PAT }}
+
+          TZ: America/Sao_Paulo 
         run: |
-          # Repo git clone
-          git clone https://x-access-token:${TOKEN}@://github.com/lnls-ids/sirius-beamlines-data.git target_repo
+          # Create bot informations
+          git config --global user.name "github-actions-bot"
+          git config --global user.email "github-actions@github.com"
+
+          # Cloning the GitLab repository
+          git clone https://oauth2:${GL_TOKEN}@gitlab.com/lnls-ids/sirius-beamlines-data.git target_repo
           cd target_repo
           
           # Update the trigger file
-          echo "Last update from spectrainterface/sirius.py at $(date)" > trigger_version.txt
+          echo "Last update from GitHub spectrainterface at $(date '+%d/%m/%Y %H:%M:%S')" > trigger_version.txt
           
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add trigger_version.txt
-          git commit -m "Trigger: spectrainterface/sirius.py updated"
-          git push
+          # Add modifications and Commit
+          git add trigger_version.txt          
+          git commit -m "Trigger: spectrainterface/sirius.py updated in GitHub" || exit 0
+          
+          # push
+          git push origin main
