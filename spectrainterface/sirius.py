@@ -659,7 +659,27 @@ class SIRIUS:
 
         # class INGÁ 19SP (low_beta)
 
-        # class ARIRANHA 20SB (low_beta)
+        class APU22_ARI(sources.APU):  # noqa: N801
+            """APU22 1991c class (ARIRANHA Beamline).
+
+            Info:
+                Sector: 20SB (low_beta)
+
+
+            Args:
+                Undulator (APU class): Undulator class
+            """
+
+            def __init__(self, period=22, length=1.2):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = 'APU22-ARI'
+                self._gap = 8
+                self._min_gap = 8
+                self._br = 1.34
+                self._phase_coef = {
+                    'hp': {'ef':  0.95723, 'z0': -0.18569},
+                }
 
         class EPU50(sources.APPLE2):
             """EPU50 class."""
