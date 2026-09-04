@@ -534,16 +534,16 @@ class FunctionsManipulation:
         im = ax.imshow(
             result,
             extent=[
-                x_range[0],
-                x_range[1],
-                y_range[0],
-                y_range[1],
+                x_range[0]*distance_from_source,
+                x_range[1]*distance_from_source,
+                y_range[0]*distance_from_source,
+                y_range[1]*distance_from_source,
             ],
             aspect="equal",
         )
         ax.text(
-            x=x_range[0] * (1 - 0.05),
-            y=y_range[1] * (1 - 0.13),
+            x=x_range[0] * distance_from_source * (1 - 0.05),
+            y=y_range[1] * distance_from_source * (1 - 0.13),
             s="Tot.Flux: {:.2e} [ph/s/0.1%/100mA]".format(flux_total[0]),
             fontsize=8,
             c="white",
@@ -551,8 +551,8 @@ class FunctionsManipulation:
 
         if slit_shape == "retslit":
             ax.text(
-                x=x_range[0] * (1 - 0.05),
-                y=y_range[0] * (1 - 0.05),
+                x=x_range[0] * distance_from_source * (1 - 0.05),
+                y=y_range[0] * distance_from_source * (1 - 0.05),
                 s="{:.3f} x {:.3f} mm²".format(
                     slit_acceptance[0] * distance_from_source,
                     slit_acceptance[1] * distance_from_source,
@@ -562,11 +562,11 @@ class FunctionsManipulation:
             )
             patch = _patches.Rectangle(
                 (
-                    (slit_position[0] - slit_acceptance[0] / 2),
-                    (slit_position[1] - slit_acceptance[1] / 2),
+                    (slit_position[0] * distance_from_source - slit_acceptance[0]  * distance_from_source / 2),
+                    (slit_position[1] * distance_from_source - slit_acceptance[1] * distance_from_source / 2),
                 ),
-                slit_acceptance[0],
-                slit_acceptance[1],
+                slit_acceptance[0] * distance_from_source,
+                slit_acceptance[1] * distance_from_source,
                 fc=(0, 0, 0, 0),
                 ec="black",
                 lw=1,
