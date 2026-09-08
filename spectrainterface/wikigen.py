@@ -1353,6 +1353,18 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['mm', 'T']
+            data['phase'] = phases.tolist()
+            data['field'] = Bs.tolist()
+
+            SpectraInterface.export_data(data=data, filename="phase_field_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
+
     @staticmethod
     def process_phase_k(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
@@ -1407,6 +1419,18 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['mm', 'a.u.']
+            data['phase'] = phases.tolist()
+            data['k'] = Ks.tolist()
+
+            SpectraInterface.export_data(data=data, filename="phase_k_parameter_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
+
     @staticmethod
     def process_phase_energy(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         spectra_calc = copy.deepcopy(spectra)
@@ -1431,6 +1455,8 @@ class FunctionsManipulation:
 
         _plt.figure(figsize=figsize)
         _plt.title(title)
+
+        ES = list()
         for i in range(17):
             Es = source.get_harmonic_energy(
                 n=2 * i + 1, gamma=gamma, theta=0, period=source.period, k=Ks
@@ -1441,6 +1467,7 @@ class FunctionsManipulation:
                 "-C0",
                 linewidth=linewidth,
             )
+            ES.append(Es.tolist())
         _plt.xlabel("Energy [keV]")
         _plt.xscale(xscale)
         _plt.ylabel("Phase [mm]")
@@ -1461,6 +1488,18 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
+
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['mm', 'eV']
+            data['phase'] = phases.tolist()
+            data['energy'] = ES
+
+            SpectraInterface.export_data(data=data, filename="phase_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
 
         # Fundamental Energy
         phases = _np.linspace(0, source.period / 2, 501)
@@ -1501,6 +1540,18 @@ class FunctionsManipulation:
                 ),
                 dpi=dpi,
             )
+
+        if calc_params.export_data:
+
+            data = dict()
+            data['title'] = title
+            data['units'] = ['mm', 'eV']
+            data['gap'] = phases.tolist()
+            data['energy'] = Es.tolist()
+
+            SpectraInterface.export_data(data=data, filename="phase_fundamental_energy_{:}_{:.0f}m_{:.0f}mm.png".format(
+                source.label, source.source_length, source.period
+            ))
 
     @staticmethod
     def process_flux(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
