@@ -609,7 +609,28 @@ class SIRIUS:
 
         # class SUSSUARANA 15SP (low_beta)
 
-        # class SAGUI 16SB (low_beta)
+        class APU58_SAG(sources.APU):  # noqa: N801
+            """APU58 1995 class (SAGUI Beamline).
+            Calibrated with magetic measurements: https://github.com/lnls-ima/id-ipe/tree/main/commissioning_id/measurement/magnetic/lnls/hallprobe/vertical_position_0mm/on-axis
+
+            Info:
+                Sector: 16SB (low_beta)
+
+
+            Args:
+                Undulator (APU class): Undulator class
+            """
+
+            def __init__(self, period=58, length=1.2):
+                """Class constructor."""
+                super().__init__(period, length)
+                self._label = 'APU58-SAG'
+                self._gap = 15.8
+                self._min_gap = 15.8
+                self._br = 1.34
+                self._phase_coef = {
+                    'hp': {'ef': 0.73876, 'z0': -0.47382},
+                }
 
         class APU22_SPU(sources.APU):  # noqa: N801
             """APU22 1991d class (SAPUCAIA Beamline).
