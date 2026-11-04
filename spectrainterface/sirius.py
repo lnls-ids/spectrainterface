@@ -630,7 +630,7 @@ class SIRIUS:
                 self._min_gap = 15.8
                 self._br = 1.32
                 self._phase_coef = {
-                    'hp': {'ef': 0.73876, 'z0': -0.47382},
+                    'hp': {'ef': 0.74178, 'z0': -0.59751},
                 }
 
         class APU22_SPU(sources.APU):  # noqa: N801
