@@ -4374,7 +4374,7 @@ class SpectraInterface:
         degree_pl = spectra_calc.calc._pl
         degree_pc = spectra_calc.calc._pc
         degree_pl45 = spectra_calc.calc._pl45
-        flux = spectra_calc.flux
+        flux = spectra_calc.calc.flux
         del spectra_calc
         return energies.T, degree_pl.T, degree_pc.T, degree_pl45.T, flux.T
 
@@ -4421,7 +4421,11 @@ class SpectraInterface:
             spectra_calc.calc.CalcConfigs.Output.power_density
         )
         if source.source_type != 'bendingmagnet':
-            kmax = source.calc_max_k(spectra_calc.accelerator)
+            if source.min_gap != 0:
+                beff = source.get_beff(source.min_gap / source.period)
+                kmax = source.undulator_b_to_k(b=beff, period=source.period)
+            else:
+                kmax = source.calc_max_k(spectra_calc.accelerator)
             if source.polarization == 'hp':
                 spectra_calc.calc.source_type = (
                     spectra_calc.calc.SourceType.horizontal_undulator
@@ -4501,7 +4505,11 @@ class SpectraInterface:
 
         spectra_calc.calc.target_energy = 0
         if source.source_type != 'bendingmagnet':
-            kmax = source.calc_max_k(spectra_calc.accelerator)
+            if source.min_gap != 0:
+                beff = source.get_beff(source.min_gap / source.period)
+                kmax = source.undulator_b_to_k(b=beff, period=source.period)
+            else:
+                kmax = source.calc_max_k(spectra_calc.accelerator)
             if source.polarization == 'hp':
                 spectra_calc.calc.source_type = (
                     spectra_calc.calc.SourceType.horizontal_undulator
