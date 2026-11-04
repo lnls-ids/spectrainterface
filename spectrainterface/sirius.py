@@ -627,7 +627,7 @@ class SIRIUS:
                 self._label = 'APU58-SAG'
                 self._gap = 15.8
                 self._min_gap = 15.8
-                self._br = 1.34
+                self._br = 1.32
                 self._phase_coef = {
                     'hp': {'ef': 0.73876, 'z0': -0.47382},
                 }
