@@ -612,7 +612,8 @@ class SIRIUS:
         class APU58_SAG(sources.APU):  # noqa: N801
             """APU58 1995 class (SAGUI Beamline).
             Calibrated with magetic measurements: https://github.com/lnls-ima/id-ipe/tree/main/commissioning_id/measurement/magnetic/lnls/hallprobe/vertical_position_0mm/on-axis
-
+            APU58 informations: https://cnpemcamp.sharepoint.com/sites/lnls/projects/Undulators/Shared%20Documents/APU58/2_1995-ReportFiles/02_1995-Design/1995-KTF-MAGD/1995-TPR-MADE/1995-TPR-MagneticDesign_U58_R00.pdf?CT=1793799865413&OR=ItemsView&wdslf=spodoclib-t
+            
             Info:
                 Sector: 16SB (low_beta)
 
