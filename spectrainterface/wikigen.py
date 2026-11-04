@@ -10,6 +10,7 @@ import copy
 import mathphys
 import importlib
 import inspect
+import multiprocessing as _mp
 
 ECHARGE = mathphys.constants.elementary_charge
 EMASS = mathphys.constants.electron_mass
@@ -121,6 +122,7 @@ class Calculations:
         self._beam_divergence = False
         self._beam_div_size_wigner = False
         self._power = False
+        self._power_map = False
         self._degree_polarization = False
         self._degree_coherence = False
         self._flux_distribution_2d = False
@@ -180,6 +182,10 @@ class Calculations:
     @property
     def power(self):
         return self._power
+
+    @property
+    def power_map(self):
+        return self._power_map
 
     @property
     def degree_polarization(self):
@@ -248,6 +254,10 @@ class Calculations:
     @power.setter
     def power(self, value):
         self._power = value
+
+    @power_map.setter
+    def power_map(self, value):
+        self._power_map = value
 
     @degree_polarization.setter
     def degree_polarization(self, value):
@@ -1223,7 +1233,7 @@ class FunctionsManipulation:
         figsize = calc_params.figsize
         dpi = calc_params.dpi
 
-        gapmin, gapmax = calc_params.gap_lim if calc_params.gap_lim is None else (source.min_gap, 25)
+        gapmin, gapmax = calc_params.gap_lim if not calc_params.gap_lim is None else (source.min_gap, 25)
 
         gaps = _np.linspace(source.min_gap if source.polarization == "hp" else source.min_gap, gapmax, 501)
         Bs = source.get_beff(gaps / source.period)
@@ -1974,7 +1984,6 @@ class FunctionsManipulation:
                 )
             )
 
-
     @staticmethod
     def process_degree_coherence(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
         pass
@@ -2159,29 +2168,73 @@ class FunctionsManipulation:
                 dpi=dpi,
             )
 
-        spectra_calc: SpectraInterface = copy.deepcopy(spectra)
-        slit_acceptances = _np.linspace(0, 0.240, 31)
-        powers = _np.zeros_like(slit_acceptances)
+    def _calc_parallel_partial_power(args):
+        slit_acceptance, xparam, source, is_gap, spectra = args
 
-        for i, slit_acceptance in enumerate(slit_acceptances):
-            power = spectra_calc.calc_partial_power(
-                source=source,
-                slit_shape='retslit',
-                slit_position= (0, 0),
-                slit_acceptance=(slit_acceptance, slit_acceptance),
-                distance_from_source=45,
-                current=350
+        if is_gap:
+            source.min_gap = xparam
+        else:
+            source.phase = xparam
+        source_ = copy.deepcopy(source)
+        spectra_calc : SpectraInterface = copy.deepcopy(spectra)
+
+        power = spectra_calc.calc_partial_power(
+            source=source_,
+            slit_shape='retslit',
+            slit_position= (0, 0),
+            slit_acceptance=(slit_acceptance, slit_acceptance),
+            distance_from_source=45,
+            current=350
+        )
+
+        return power
+
+    @staticmethod
+    def process_power_map(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
+        spectra = copy.deepcopy(spectra)
+        source.gap = source.min_gap
+        savefig = calc_params.savefig
+        dpi = calc_params.dpi
+        figname = (
+            "partial_power_{:}.png".format(source.label)
+            if source.source_type == "bendingmagnet"
+            else (
+                "partial_power_{:}_{:.0f}m_{:.0f}mm.png".format(
+                    source.label, source.source_length, source.period
+                )
             )
+        )
 
-            powers[i] = power
-        del spectra_calc
+        slit_acceptances = _np.linspace(0, 0.240, 21)
+
+        is_gap = source.undulator_type in ['Hybrid', 'IVU', 'VPU', 'CPMU']
+        xparams = _np.linspace(
+            source.min_gap if is_gap else 0,
+            20 if is_gap else source.period/2,
+            21
+        )
+
+        SLITS_ACC, XPARAMS = _np.meshgrid(slit_acceptances, xparams)
+
+        all_slits = SLITS_ACC.flatten()
+        all_xparams = XPARAMS.flatten()
+
+        arglist = list()
+        for slit_value, xparam_value in zip(all_slits, all_xparams):
+            arglist.append((slit_value, xparam_value, source, is_gap, spectra))
+
+
+        with _mp.Pool(processes=_mp.cpu_count() - 1) as pool:
+            data = pool.map(FunctionsManipulation._calc_parallel_partial_power, arglist)
+
+        data = _np.reshape(data, (xparams.size, slit_acceptances.size)) * 1e3
 
         title = (
-            "Power vs Aperture @ 350 mA\n{:} ({:.1f} m, {:.2f} mm)".format(
+            "Power vs Acceptance @ 350 mA\n{:} ({:.1f} m, {:.2f} mm)".format(
                 source.label, source.source_length, source.period
             )
             if source.source_type != "bendingmagnet"
-            else "Power Density @ 350 mA\n{:}\n".format(source.label)
+            else "Power Acceptance @ 350 mA\n{:}\n".format(source.label)
         )
         figname = (
             "partial_power_vs_aperture_{:}.png".format(source.label)
@@ -2193,23 +2246,36 @@ class FunctionsManipulation:
             )
         )
 
-        _plt.figure(figsize=figsize)
+        _plt.figure(figsize=(5, 4.5))
         _plt.title(title)
-        _plt.plot(slit_acceptances*1e3, powers * 1e3, linewidth=linewidth)
-        _plt.xlabel('Slit acceptances [urad²]', fontsize=8)
-        _plt.ylabel('Power [W]', fontsize=8)
-        _plt.xticks(ticks=(slit_acceptances*1e3)[::5], labels=[f'{slit_acceptance * 1e3:.0f} x {slit_acceptance * 1e3:.0f}' for slit_acceptance in slit_acceptances][::5], rotation=-30, fontsize=8)
-        _plt.yticks(fontsize=8)
+
+        z_min = data.min()
+        z_max = data.max()
+
+        levels = _np.linspace(z_min, z_max, 21)
+        map = _plt.contourf(XPARAMS, SLITS_ACC*1e3, data, cmap="jet", levels=levels)
+
+        _plt.ylim(slit_acceptances[0]*1e3, slit_acceptances[-1]*1e3)
+        _plt.yticks(
+            ticks=(slit_acceptances * 1e3)[::5],
+            labels=[
+                f"{slit_acceptance * 1e3:.0f} x {slit_acceptance * 1e3:.0f}"
+                for slit_acceptance in slit_acceptances
+            ][::5],
+            rotation=-30,
+            fontsize=8,
+        )
+        _plt.xlim(xparams[0], xparams[-1])
+        _plt.xlabel("Phases [mm]" if not is_gap else "Gap [mm]")
+        _plt.ylabel("Slit acceptances [urad²]")
+        _plt.colorbar(map, shrink=0.8, label='Power [W]')
         _plt.minorticks_on()
-        _plt.grid(which='major', alpha=0.3)
-        _plt.grid(which='minor', alpha=0.1)
         _plt.tight_layout()
         if savefig:
             _plt.savefig(
                 figname,
                 dpi=dpi
             )
-
 
     @staticmethod
     def process_beam_div_size_wigner(spectra: SpectraInterface, source: Undulator, calc_params: CalcParameters):
